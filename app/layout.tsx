@@ -19,6 +19,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          src={
+            process.env.NEXT_PUBLIC_MANTLE_APP_BRIDGE_SRC ??
+            "https://app.heymantle.com/app-bridge.js"
+          }
+        />
+      </head>
       <body className={inter.className}>
         <SessionProvider>
           <MantleProviderWrapper>
