@@ -17,6 +17,7 @@ export default function SetupPage() {
   // Server-side environment variable validation
   const requiredEnvVars = [
     "NEXT_PUBLIC_MANTLE_APP_ID",
+    "NEXT_PUBLIC_MANTLE_API_URL",
     "MANTLE_APP_API_KEY",
     "MANTLE_ELEMENT_ID",
     "MANTLE_ELEMENT_SECRET",
