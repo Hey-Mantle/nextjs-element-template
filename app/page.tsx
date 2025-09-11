@@ -1,6 +1,26 @@
 import { Page, Text, VerticalStack } from "@heymantle/litho";
+import { redirect } from "next/navigation";
 
 export default function Home() {
+  // Server-side environment variable validation
+  const requiredEnvVars = [
+    "NEXT_PUBLIC_MANTLE_APP_ID",
+    "MANTLE_APP_API_KEY",
+    "MANTLE_ELEMENT_ID",
+    "MANTLE_ELEMENT_SECRET",
+  ];
+
+  const setup = requiredEnvVars.every((varName) => {
+    const value = process.env[varName];
+    return value !== undefined && value !== "";
+  });
+
+  // If setup is not complete, redirect to setup page
+  if (!setup) {
+    redirect("/setup");
+  }
+
+  // If setup is complete, render the main application
   return (
     <Page title="Typography Test" subtitle="Testing Litho typography variants">
       <VerticalStack gap="6">
@@ -22,22 +42,6 @@ export default function Home() {
           <Text variant="bodyLg">Body LG - This should be medium</Text>
           <Text variant="bodyMd">Body MD - This should be base size</Text>
           <Text variant="bodySm">Body SM - This should be small</Text>
-        </VerticalStack>
-
-        <VerticalStack gap="2">
-          <Text variant="headingMd">Font Weight Test</Text>
-          <Text variant="bodyMd" fontWeight="normal">
-            Normal weight text
-          </Text>
-          <Text variant="bodyMd" fontWeight="medium">
-            Medium weight text
-          </Text>
-          <Text variant="bodyMd" fontWeight="semibold">
-            Semibold weight text
-          </Text>
-          <Text variant="bodyMd" fontWeight="bold">
-            Bold weight text
-          </Text>
         </VerticalStack>
       </VerticalStack>
     </Page>
