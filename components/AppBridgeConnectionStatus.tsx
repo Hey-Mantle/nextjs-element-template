@@ -10,12 +10,19 @@ import {
   Text,
   VerticalStack,
 } from "@heymantle/litho";
+import { useEffect, useState } from "react";
 
 export default function AppBridgeConnectionStatus() {
   const { isConnected, isConnecting, connectionError, connect } =
     useMantleAppBridge();
 
-  const isInIframe = isRunningInIframe();
+  const [isInIframe, setIsInIframe] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsInIframe(isRunningInIframe());
+    setIsMounted(true);
+  }, []);
 
   const getConnectionStatus = () => {
     if (isConnecting) {
@@ -50,6 +57,30 @@ export default function AppBridgeConnectionStatus() {
   };
 
   const status = getConnectionStatus();
+
+  // Prevent hydration mismatch by not rendering iframe-dependent content until mounted
+  if (!isMounted) {
+    return (
+      <Card>
+        <VerticalStack gap="4">
+          <Text variant="headingMd">Environment Detection</Text>
+          <VerticalStack gap="3">
+            <HorizontalStack gap="3" align="center">
+              <Text variant="bodyMd" fontWeight="medium">
+                Iframe Status:
+              </Text>
+              <Badge status="info">
+                <Text variant="bodySm">Detecting...</Text>
+              </Badge>
+            </HorizontalStack>
+            <Text variant="bodyMd" color="subdued">
+              Detecting environment...
+            </Text>
+          </VerticalStack>
+        </VerticalStack>
+      </Card>
+    );
+  }
 
   return (
     <Card>
