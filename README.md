@@ -6,6 +6,8 @@ A modern, production-ready Next.js starter template for building Mantle Elements
 
 - **Next.js 15** with App Router
 - **TypeScript** for type safety
+- **NextAuth.js v5** with JWT sessions for authentication
+- **Mantle OAuth** integration for Extension users
 - **Litho UI Framework** for Mantle-compatible components
 - **Tailwind CSS** for utility-first styling
 - **Dark Mode** support with system preference detection
@@ -17,6 +19,9 @@ A modern, production-ready Next.js starter template for building Mantle Elements
 
 - Pre-configured Next.js 15 project with App Router
 - TypeScript setup with strict configuration
+- NextAuth.js v5 with JWT sessions and Mantle OAuth provider
+- Authentication pages (signin, error handling)
+- Auth utility functions for server-side session management
 - Tailwind CSS with Litho integration
 - Example pages demonstrating Litho components for Mantle Elements
 - Dark mode provider setup
@@ -52,7 +57,22 @@ A modern, production-ready Next.js starter template for building Mantle Elements
    pnpm install
    ```
 
-3. **Start the development server**
+3. **Set up environment variables**
+   Create a `.env.local` file in the root directory with the following variables:
+   ```bash
+   # NextAuth.js
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your-secret-key-here
+
+   # Mantle OAuth
+   MANTLE_CLIENT_ID=your-mantle-client-id
+   MANTLE_CLIENT_SECRET=your-mantle-client-secret
+   MANTLE_AUTHORIZE_URL=https://heymantle.com/oauth/authorize
+   MANTLE_TOKEN_URL=https://heymantle.com/oauth/token
+   MANTLE_USER_INFO_URL=https://heymantle.com/oauth/userinfo
+   ```
+
+4. **Start the development server**
    ```bash
    npm run dev
    # or
@@ -61,7 +81,7 @@ A modern, production-ready Next.js starter template for building Mantle Elements
    pnpm dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000) to see your application.
 
 ## 📁 Project Structure
@@ -69,12 +89,25 @@ A modern, production-ready Next.js starter template for building Mantle Elements
 ```
 mantle-element-starter/
 ├── app/                    # Next.js App Router directory
-│   ├── components/         # Example components page
+│   ├── api/               # API routes
+│   │   └── auth/          # NextAuth.js API routes
+│   ├── auth/              # Authentication pages
+│   │   ├── signin/        # Sign in page
+│   │   └── error/         # Auth error page
+│   ├── components/        # App-specific components
+│   │   ├── ClientAppProvider.tsx
+│   │   ├── MantleProviderWrapper.tsx
+│   │   └── SessionProvider.tsx
 │   ├── globals.css        # Global styles with Litho CSS
-│   ├── layout.tsx         # Root layout with Litho AppProvider
+│   ├── layout.tsx         # Root layout with providers
 │   └── page.tsx           # Home page
 ├── components/            # Reusable components
-│   └── ExampleComponent.tsx
+│   ├── ExampleComponent.tsx
+│   └── AuthExample.tsx    # Authentication example
+├── lib/                   # Utility libraries
+│   ├── auth.ts           # NextAuth.js configuration
+│   ├── auth-utils.ts     # Auth utility functions
+│   └── mantle-client.ts  # Mantle client setup
 ├── public/               # Static assets
 ├── .eslintrc.json       # ESLint configuration
 ├── .gitignore           # Git ignore rules
@@ -86,6 +119,78 @@ mantle-element-starter/
 ├── tsconfig.json        # TypeScript configuration
 └── README.md            # This file
 ```
+
+## 🔐 Authentication
+
+This template includes NextAuth.js v5 with Mantle OAuth integration for Extension users. Here's how to use it:
+
+### Server-Side Authentication
+
+```tsx
+import { requireAuth, getServerSession } from "@/lib/auth-utils"
+
+// Require authentication for a page
+export default async function ProtectedPage() {
+  const session = await requireAuth()
+  
+  return (
+    <div>
+      <h1>Welcome, {session.user.name}!</h1>
+      <p>Organization: {session.user.organizationName}</p>
+    </div>
+  )
+}
+
+// Or get session without redirecting
+export default async function OptionalAuthPage() {
+  const session = await getServerSession()
+  
+  return (
+    <div>
+      {session ? (
+        <p>Welcome back, {session.user.name}!</p>
+      ) : (
+        <p>Please sign in to continue.</p>
+      )}
+    </div>
+  )
+}
+```
+
+### Client-Side Authentication
+
+```tsx
+"use client"
+
+import { useSession, signIn, signOut } from "next-auth/react"
+
+export default function AuthButton() {
+  const { data: session, status } = useSession()
+
+  if (status === "loading") return <p>Loading...</p>
+
+  if (session) {
+    return (
+      <div>
+        <p>Signed in as {session.user.email}</p>
+        <button onClick={() => signOut()}>Sign out</button>
+      </div>
+    )
+  }
+
+  return (
+    <button onClick={() => signIn("MantleOAuth")}>
+      Sign in with Mantle
+    </button>
+  )
+}
+```
+
+### Auth Utility Functions
+
+- `requireAuth()` - Requires authentication, redirects to signin if not authenticated
+- `getServerSession()` - Gets current session without redirecting
+- `getMantleAccessToken()` - Gets the user's Mantle access token
 
 ## 🎨 Using Litho Components for Mantle Elements
 

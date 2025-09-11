@@ -11,25 +11,45 @@ interface EnvVarStatus {
   name: string;
   ok: boolean;
   value?: string;
+  description: string;
 }
 
 export default function SetupPage() {
   // Server-side environment variable validation
   const requiredEnvVars = [
-    "NEXT_PUBLIC_MANTLE_APP_ID",
-    "NEXT_PUBLIC_MANTLE_API_URL",
-    "MANTLE_APP_API_KEY",
-    "MANTLE_ELEMENT_ID",
-    "MANTLE_ELEMENT_SECRET",
+    {
+      name: "NEXT_PUBLIC_MANTLE_APP_ID",
+      description:
+        "Your Mantle App ID, found in your API Settings for the Mantle App",
+    },
+    {
+      name: "NEXT_PUBLIC_MANTLE_ELEMENT_ID",
+      description: "Your Mantle Element ID found in your Element settings",
+    },
+    {
+      name: "MANTLE_APP_API_KEY",
+      description:
+        "Your Mantle App API Key secret found in your API Settings for the Mantle App",
+    },
+    {
+      name: "MANTLE_ELEMENT_SECRET",
+      description: "Your Mantle Element Secret found in your Element settings",
+    },
+    {
+      name: "AUTH_SECRET",
+      description:
+        "Generated for your environment by running `npx auth secret`",
+    },
   ];
 
-  const statuses: EnvVarStatus[] = requiredEnvVars.map((varName) => {
-    const value = process.env[varName];
+  const statuses: EnvVarStatus[] = requiredEnvVars.map((envVar) => {
+    const value = process.env[envVar.name];
     const isSet = value !== undefined && value !== "";
 
     return {
-      name: varName,
+      name: envVar.name,
       ok: isSet,
+      description: envVar.description,
     };
   });
 
@@ -42,19 +62,10 @@ export default function SetupPage() {
 
   return (
     <Page
-      title="Environment Setup"
-      subtitle="Configure your environment variables"
+      title="Setup Required!"
+      subtitle="Configure your environment variables to continue"
     >
       <VerticalStack gap="6">
-        <div className="text-center">
-          <Text variant="headingXl" className="mb-4">
-            Environment Setup Required
-          </Text>
-          <Text variant="bodyLg" color="subdued">
-            Please configure the following environment variables to continue
-          </Text>
-        </div>
-
         <Card>
           <VerticalStack gap="4">
             <Text variant="headingMd">Environment Variable Status</Text>
@@ -73,20 +84,27 @@ export default function SetupPage() {
 
 function EnvironmentVariableStatus({ status }: { status: EnvVarStatus }) {
   return (
-    <HorizontalStack gap="3" align="center">
-      <div
-        className={`w-3 h-3 rounded-full ${
-          status.ok ? "bg-green-500" : "bg-red-500"
-        }`}
-      />
-      <div className="flex-1">
-        <Text variant="bodyMd" fontWeight="medium">
-          {status.name}
+    <VerticalStack gap="2">
+      <HorizontalStack gap="3" align="center">
+        <div
+          className={`w-3 h-3 rounded-full ${
+            status.ok ? "bg-green-500" : "bg-red-500"
+          }`}
+        />
+        <div className="flex-1">
+          <Text variant="bodyMd" fontWeight="medium">
+            {status.name}
+          </Text>
+        </div>
+        <Text variant="bodySm" color={status.ok ? "success" : "critical"}>
+          {status.ok ? "Set" : "Missing"}
+        </Text>
+      </HorizontalStack>
+      <div className="ml-6">
+        <Text variant="bodySm" color="subdued">
+          {status.description}
         </Text>
       </div>
-      <Text variant="bodySm" color={status.ok ? "success" : "critical"}>
-        {status.ok ? "Set" : "Missing"}
-      </Text>
-    </HorizontalStack>
+    </VerticalStack>
   );
 }
