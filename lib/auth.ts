@@ -1,5 +1,7 @@
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import { JWT } from "next-auth/jwt";
+import { prisma } from "./prisma";
 
 // Mantle OAuth provider configuration
 const MantleOAuth = {
@@ -35,17 +37,24 @@ const MantleOAuth = {
       id,
       email, // note, this could conflict cross-org with the same user email
       name,
-      organizationId: organization.id,
-      organizationName: organization.name,
-      accessToken: access_token,
     };
   },
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
   providers: [MantleOAuth],
   session: {
-    strategy: "jwt",
+    strategy: "database",
+  },
+  events: {
+    async createUser({ user }) {
+      // This event is called after the user is created
+      console.log("User created:", user);
+
+      // Try to get the organization data from the current OAuth flow
+      // We'll handle this in the session callback instead since we have access to the account there
+    },
   },
   // Custom session cookie names to avoid conflicts with other localhost apps
   cookies: {
@@ -80,31 +89,69 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // Ensure HTTPS is used in production and development
   trustHost: true,
   callbacks: {
-    async jwt({ token, user, account }) {
-      // Persist the OAuth access_token and user info to the token right after signin
-      if (account && user) {
-        return {
-          ...token,
-          id: user.id,
-          organizationId: user.organizationId,
-          organizationName: user.organizationName,
-          accessToken: account.access_token as string,
-        };
-      }
-      return token;
+    async signIn({ user, account, profile }) {
+      return true;
     },
-    async session({ session, token }) {
-      // Send properties to the client
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id as string,
-          organizationId: token.organizationId as string,
-          organizationName: token.organizationName as string,
+    async session({ session, user }) {
+      // Get the latest user data including organization info
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+          accounts: {
+            where: { provider: "MantleOAuth" },
+            select: { access_token: true },
+          },
         },
-        accessToken: token.accessToken,
-      };
+      });
+
+      if (dbUser) {
+        // If organization data is missing, try to fetch it from the user info endpoint
+        if (!dbUser.organizationId && dbUser.accounts[0]?.access_token) {
+          try {
+            const userInfoUrl =
+              process.env.MANTLE_USER_INFO_URL ??
+              "https://api.heymantle.com/v1/me";
+            const response = await fetch(userInfoUrl, {
+              headers: {
+                Authorization: `Bearer ${dbUser.accounts[0].access_token}`,
+              },
+            });
+
+            if (response.ok) {
+              const userInfo = await response.json();
+              if (userInfo.organization) {
+                // Update the user with organization info
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: {
+                    organizationId: userInfo.organization.id,
+                    organizationName: userInfo.organization.name,
+                  },
+                });
+
+                // Update the dbUser object for the response
+                dbUser.organizationId = userInfo.organization.id;
+                dbUser.organizationName = userInfo.organization.name;
+              }
+            }
+          } catch (error) {
+            console.error("Failed to fetch user organization data:", error);
+          }
+        }
+
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: dbUser.id,
+            organizationId: dbUser.organizationId,
+            organizationName: dbUser.organizationName,
+          },
+          accessToken: dbUser.accounts[0]?.access_token || null,
+        } as any; // Type assertion to handle complex type intersection
+      }
+
+      return session;
     },
     async redirect({ url, baseUrl }) {
       const mantleUrl =
@@ -128,19 +175,16 @@ declare module "next-auth" {
     id: string;
     name: string;
     email: string;
-    organizationId: string;
-    organizationName: string;
-  }
-
-  interface Organization {
-    id: string;
-    name: string;
+    organizationId?: string | null;
+    organizationName?: string | null;
   }
 
   interface Session {
-    user: User;
-    organization: Organization;
-    accessToken: string;
+    user: User & {
+      organizationId?: string | null;
+      organizationName?: string | null;
+    };
+    accessToken?: string | null;
   }
 }
 

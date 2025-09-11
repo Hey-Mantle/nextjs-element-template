@@ -65,14 +65,14 @@ export default function AuthExample() {
             <Text variant="bodyMd" fontWeight="medium">
               Organization ID:
             </Text>
-            <Text variant="bodyMd">{session.organization?.id}</Text>
+            <Text variant="bodyMd">{session.user.organizationId}</Text>
           </HorizontalStack>
 
           <HorizontalStack gap="3" align="start">
             <Text variant="bodyMd" fontWeight="medium">
               Organization Name:
             </Text>
-            <Text variant="bodyMd">{session.organization?.name}</Text>
+            <Text variant="bodyMd">{session.user.organizationName}</Text>
           </HorizontalStack>
 
           <HorizontalStack gap="3" align="start">
