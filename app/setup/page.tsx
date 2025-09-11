@@ -27,6 +27,10 @@ export default function SetupPage() {
       description: "Your Mantle Element ID found in your Element settings",
     },
     {
+      name: "NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE",
+      description: "Your Mantle Element Handle found in your Element settings",
+    },
+    {
       name: "MANTLE_APP_API_KEY",
       description:
         "Your Mantle App API Key secret found in your API Settings for the Mantle App",

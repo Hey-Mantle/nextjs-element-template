@@ -7,7 +7,7 @@ const MantleOAuth = {
   name: "Mantle Extension OAuth",
   type: "oauth" as const,
   checks: ["state"] as ("state" | "pkce" | "none")[],
-  clientId: process.env.MANTLE_ELEMENT_ID!,
+  clientId: process.env.NEXT_PUBLIC_MANTLE_ELEMENT_ID!,
   clientSecret: process.env.MANTLE_ELEMENT_SECRET!,
   authorization: {
     url:
@@ -20,7 +20,8 @@ const MantleOAuth = {
   },
   token: {
     url:
-      process.env.MANTLE_TOKEN_URL ?? "https://app.heymantle.com/oauth/token",
+      process.env.MANTLE_TOKEN_URL ??
+      "https://app.heymantle.com/api/oauth/token",
   },
   issuer: "heymantle.com",
   userinfo: {
@@ -46,6 +47,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
   },
+  // Ensure HTTPS is used in production and development
+  trustHost: true,
   callbacks: {
     async jwt({ token, user, account }) {
       // Persist the OAuth access_token and user info to the token right after signin
@@ -53,7 +56,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return {
           ...token,
           id: user.id,
-
+          organizationId: user.organizationId,
+          organizationName: user.organizationName,
           accessToken: account.access_token as string,
         };
       }
@@ -65,14 +69,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ...session,
         user: {
           ...session.user,
-          mantleId: token.mantleId,
-          actualEmail: token.actualEmail,
-          organizationId: token.organizationId,
-          organizationName: token.organizationName,
-          type: token.type,
+          id: token.id as string,
+          organizationId: token.organizationId as string,
+          organizationName: token.organizationName as string,
         },
         accessToken: token.accessToken,
       };
+    },
+    async redirect({ url, baseUrl }) {
+      const mantleUrl =
+        process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com";
+      return `${mantleUrl}/extensions/${process.env.NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE}`;
+      // // Handle redirect after OAuth - check if there's a state parameter with HMAC params
+      // if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // if (new URL(url).origin === baseUrl) return url;
+      // return baseUrl;
     },
   },
   pages: {
@@ -87,6 +98,8 @@ declare module "next-auth" {
     id: string;
     name: string;
     email: string;
+    organizationId: string;
+    organizationName: string;
   }
 
   interface Organization {

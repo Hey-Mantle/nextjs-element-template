@@ -154,6 +154,7 @@ export default async function Home({
   const requiredEnvVars = [
     "NEXT_PUBLIC_MANTLE_APP_ID",
     "NEXT_PUBLIC_MANTLE_ELEMENT_ID",
+    "NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE",
     "MANTLE_APP_API_KEY",
     "MANTLE_ELEMENT_SECRET",
     "AUTH_SECRET",
@@ -192,7 +193,6 @@ export default async function Home({
         subtitle="This page is only accessible through Mantle"
       >
         <VerticalStack gap="4">
-          <HmacVerificationStatus {...hmacVerificationStatus} />
           <div className="text-center p-8">
             <h2 className="text-xl font-semibold mb-4">
               Direct Access Not Allowed
@@ -241,6 +241,17 @@ export default async function Home({
           Object.fromEntries(urlSearchParams.entries())
         );
 
+        // Extract organization and user information from HMAC request parameters
+        const requestOrganizationId = urlSearchParams.get("organizationId");
+        const requestUserId = urlSearchParams.get("userId");
+        const requestUserEmail = urlSearchParams.get("userEmail");
+
+        console.log("HMAC request parameters:", {
+          organizationId: requestOrganizationId,
+          userId: requestUserId,
+          userEmail: requestUserEmail,
+        });
+
         // Check if there's an existing session
         const session = await getServerSession();
 
@@ -250,13 +261,55 @@ export default async function Home({
             "Session organization ID:",
             (session.user as any)?.organizationId
           );
-          // TODO: Implement session comparison logic
+
+          // Compare session with HMAC request parameters
+          const sessionOrganizationId = (session.user as any)?.organizationId;
+          const sessionUserId = (session.user as any)?.id;
+          const sessionUserEmail = session.user?.email;
+
+          const organizationMatch =
+            sessionOrganizationId === requestOrganizationId;
+          const userMatch =
+            sessionUserId === requestUserId ||
+            sessionUserEmail === requestUserEmail;
+
+          console.log("Session comparison results:", {
+            organizationMatch,
+            userMatch,
+            sessionOrgId: sessionOrganizationId,
+            requestOrgId: requestOrganizationId,
+            sessionUserId,
+            requestUserId,
+            sessionEmail: sessionUserEmail,
+            requestEmail: requestUserEmail,
+          });
+
+          if (!organizationMatch || !userMatch) {
+            console.log(
+              "Session mismatch detected - redirecting to re-authenticate"
+            );
+          } else {
+            console.log(
+              "Session matches HMAC request - proceeding with existing session"
+            );
+          }
         } else {
-          console.log("No existing session found - user needs to authenticate");
-          // TODO: Handle new installation flow
+          console.log("No existing session found - initiating OAuth flow");
+          // No existing session - initiate OAuth flow
+          // Pass only the organization ID for OAuth context
+          const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
+            requestOrganizationId || ""
+          )}`;
+          redirect(initiateUrl);
         }
       }
     } catch (error) {
+      // Check if this is a NEXT_REDIRECT error (expected behavior)
+      if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+        // Re-throw to let Next.js handle the redirect properly
+        throw error;
+      }
+
       console.error("Error during HMAC verification:", error);
       hmacVerificationStatus.errorMessage = `Verification error: ${
         error instanceof Error ? error.message : "Unknown error"

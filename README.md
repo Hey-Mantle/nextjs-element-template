@@ -61,28 +61,44 @@ A modern, production-ready Next.js starter template for building Mantle Elements
    Create a `.env.local` file in the root directory with the following variables:
    ```bash
    # NextAuth.js
-   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_URL=https://localhost:3000
    NEXTAUTH_SECRET=your-secret-key-here
 
    # Mantle OAuth
-   MANTLE_CLIENT_ID=your-mantle-client-id
-   MANTLE_CLIENT_SECRET=your-mantle-client-secret
-   MANTLE_AUTHORIZE_URL=https://heymantle.com/oauth/authorize
-   MANTLE_TOKEN_URL=https://heymantle.com/oauth/token
-   MANTLE_USER_INFO_URL=https://heymantle.com/oauth/userinfo
+   NEXT_PUBLIC_MANTLE_ELEMENT_ID=your-mantle-element-id
+   MANTLE_ELEMENT_SECRET=your-mantle-element-secret
    ```
 
-4. **Start the development server**
+4. **Set up HTTPS for local development (Recommended for OAuth)**
+   Many OAuth providers require HTTPS for security. Set up local HTTPS:
    ```bash
+   # Run the HTTPS setup script
+   npm run setup:https
+   
+   # This will:
+   # - Install mkcert (if not already installed)
+   # - Generate SSL certificates for localhost
+   # - Configure your system to trust the certificates
+   ```
+
+5. **Start the development server**
+   ```bash
+   # For regular HTTP development
    npm run dev
+   
+   # For HTTPS development (recommended for OAuth)
+   npm run dev:https
+   
    # or
    yarn dev
    # or
    pnpm dev
    ```
 
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000) to see your application.
+6. **Open your browser**
+   Navigate to:
+   - [http://localhost:3000](http://localhost:3000) for HTTP
+   - [https://localhost:3000](https://localhost:3000) for HTTPS (recommended for OAuth)
 
 ## 📁 Project Structure
 
@@ -232,10 +248,37 @@ Dark mode is automatically configured and will:
 
 ## 🎯 Available Scripts
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server (HTTP)
+- `npm run dev:https` - Start development server with HTTPS (recommended for OAuth)
+- `npm run setup:https` - Set up local HTTPS certificates
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+
+## 🔒 HTTPS Development
+
+### Why HTTPS for OAuth?
+
+Many OAuth providers (including Mantle) require HTTPS for security reasons. This is especially important for:
+- OAuth redirects
+- Secure cookie handling
+- API calls with sensitive data
+
+### Troubleshooting HTTPS Issues
+
+If you encounter issues with HTTPS setup:
+
+1. **Certificate not trusted**: Make sure you ran `npm run setup:https` and that mkcert installed the local CA
+2. **Port conflicts**: If port 3000 is in use, Next.js will automatically use the next available port
+3. **Browser warnings**: You may see a security warning the first time - click "Advanced" and "Proceed to localhost"
+4. **OAuth redirects**: Ensure your OAuth app configuration uses `https://localhost:3000` (or the correct port) for redirect URLs
+
+### Alternative HTTPS Setup
+
+If mkcert doesn't work on your system, you can also use:
+- [ngrok](https://ngrok.com/) for tunneling
+- [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/) for secure tunneling
+- Self-signed certificates (less secure, may require additional browser configuration)
 
 ## 📚 Learn More
 
