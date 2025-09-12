@@ -16,6 +16,8 @@
     "@heymantle/litho": "^0.0.4",
     "@heymantle/react": "^0.0.66",
     "@prisma/client": "^6.16.1",
+    "@types/jsonwebtoken": "^9.0.10",
+    "jsonwebtoken": "^9.0.2",
     "next": "^15.5.3",
     "next-auth": "^5.0.0-beta.29",
     "prisma": "^6.16.1",

@@ -18,6 +18,7 @@ model User {
   image            String?
   organizationId   String?
   organizationName String?
+  userId           String?   // Mantle's internal user ID for session token matching
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
