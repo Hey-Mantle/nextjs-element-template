@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import { JWT } from "next-auth/jwt";
+import type { Provider } from "next-auth/providers";
 import { prisma } from "./prisma";
 
 // Mantle OAuth provider configuration
@@ -41,11 +42,193 @@ const MantleOAuth = {
   },
 };
 
+// Session Token provider for authenticating with session tokens from the main platform
+const SessionTokenProvider: Provider = {
+  id: "session-token",
+  name: "Session Token",
+  type: "credentials",
+  credentials: {
+    sessionToken: { label: "Session Token", type: "text" },
+  },
+  async authorize(credentials) {
+    if (!credentials?.sessionToken) {
+      console.log("Session token provider - no session token provided");
+      return null;
+    }
+
+    try {
+      // The sessionToken is a JWT from the app bridge - verify it locally
+      const jwt = credentials.sessionToken;
+      console.log(
+        "Session token provider - received JWT:",
+        jwt.substring(0, 50) + "..."
+      );
+
+      // Decode the JWT payload first to get organization info
+      const jwtParts = jwt.split(".");
+      if (jwtParts.length !== 3) {
+        console.log("Session token provider - invalid JWT format");
+        return null;
+      }
+
+      // Decode the payload (base64url decode)
+      const payload = JSON.parse(
+        Buffer.from(jwtParts[1], "base64url").toString()
+      );
+      console.log("Session token provider - JWT payload:", payload);
+
+      // Look up the organization by mantleId
+      const organization = await prisma.organization.findUnique({
+        where: { mantleId: payload.organizationId },
+      });
+
+      if (!organization) {
+        console.log(
+          "Session token provider - organization not found:",
+          payload.organizationId
+        );
+        return null;
+      }
+
+      console.log("Session token provider - found organization:", {
+        id: organization.id,
+        mantleId: organization.mantleId,
+        name: organization.name,
+        accessTokenLength: organization.accessToken.length,
+      });
+
+      // Verify the signature using the organization's access token
+      const crypto = require("crypto");
+      const expectedSignature = crypto
+        .createHmac("sha256", organization.accessToken)
+        .update(jwtParts[0] + "." + jwtParts[1])
+        .digest("base64url");
+
+      console.log("Session token provider - signature verification details:", {
+        organizationAccessTokenLength: organization.accessToken.length,
+        organizationAccessTokenPreview:
+          organization.accessToken.substring(0, 10) + "...",
+        receivedSignature: jwtParts[2],
+        expectedSignature: expectedSignature,
+        signaturesMatch: expectedSignature === jwtParts[2],
+      });
+
+      if (expectedSignature !== jwtParts[2]) {
+        console.log(
+          "Session token provider - JWT signature verification failed"
+        );
+        return null;
+      }
+
+      // Check if JWT is expired
+      if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+        console.log("Session token provider - JWT expired");
+        return null;
+      }
+
+      // Extract user info from JWT payload
+      const user = {
+        id: payload.userId,
+        email:
+          payload.userEmail ||
+          payload.email ||
+          `${payload.userId}@mantle.local`, // Fallback email if not provided
+        name:
+          payload.userName ||
+          payload.name ||
+          `User ${payload.userId.substring(0, 8)}`, // Fallback name if not provided
+      };
+
+      console.log("Session token provider - extracted user info:", {
+        user,
+        organizationId: organization.id,
+        organizationName: organization.name,
+      });
+
+      if (!user?.id) {
+        console.log("Session token provider - missing user ID in JWT");
+        return null;
+      }
+
+      // Check if user exists in our database
+      console.log("Session token provider - searching for user with:", {
+        userId: user.id,
+        email: user.email,
+      });
+
+      let dbUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { userId: user.id }, // Match by Mantle's internal user ID
+            { email: user.email }, // Fallback to email match
+          ],
+        },
+      });
+
+      console.log("Session token provider - found existing user:", !!dbUser);
+      if (dbUser) {
+        console.log("Session token provider - existing user details:", {
+          id: dbUser.id,
+          email: dbUser.email,
+          userId: dbUser.userId,
+          organizationId: dbUser.organizationId,
+        });
+      }
+
+      // Create or update user
+      if (!dbUser) {
+        console.log("Session token provider - creating new user");
+        dbUser = await prisma.user.create({
+          data: {
+            email: user.email,
+            name: user.name || null,
+            userId: user.id,
+            organizationId: organization.id,
+          },
+        });
+        console.log("Session token provider - created user:", {
+          id: dbUser.id,
+          email: dbUser.email,
+          userId: dbUser.userId,
+          organizationId: dbUser.organizationId,
+        });
+      } else {
+        console.log("Session token provider - updating existing user");
+        dbUser = await prisma.user.update({
+          where: { id: dbUser.id },
+          data: {
+            userId: user.id,
+            organizationId: organization.id,
+            name: user.name || dbUser.name,
+          },
+        });
+        console.log("Session token provider - updated user:", {
+          id: dbUser.id,
+          email: dbUser.email,
+          userId: dbUser.userId,
+          organizationId: dbUser.organizationId,
+        });
+      }
+
+      return {
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name || "",
+        organizationId: organization.mantleId,
+        organizationName: organization.name,
+      };
+    } catch (error) {
+      console.error("Session token authentication failed:", error);
+      return null;
+    }
+  },
+};
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  providers: [MantleOAuth],
+  providers: [MantleOAuth, SessionTokenProvider],
   session: {
-    strategy: "database",
+    strategy: "jwt", // Use JWT for credentials-based authentication
   },
   events: {
     async createUser({ user }) {
@@ -57,12 +240,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   // Custom session cookie names to avoid conflicts with other localhost apps
+  // Updated for iframe compatibility
   cookies: {
     sessionToken: {
       name: `mantle-element-session-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
@@ -71,7 +255,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: `mantle-element-callback-url`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
@@ -80,7 +264,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: `mantle-element-csrf-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
@@ -92,65 +276,75 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       return true;
     },
-    async session({ session, user }) {
-      // Get the latest user data including organization info
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        include: {
-          accounts: {
-            where: { provider: "MantleOAuth" },
-            select: { access_token: true },
-          },
-        },
+    async jwt({ token, user, account }) {
+      console.log("JWT callback - called with:", {
+        hasToken: !!token,
+        hasUser: !!user,
+        accountProvider: account?.provider,
+        tokenKeys: token ? Object.keys(token) : [],
       });
 
-      if (dbUser) {
-        // If organization data is missing, try to fetch it from the user info endpoint
-        if (!dbUser.organizationId && dbUser.accounts[0]?.access_token) {
-          try {
-            const userInfoUrl =
-              process.env.MANTLE_USER_INFO_URL ??
-              "https://api.heymantle.com/v1/me";
-            const response = await fetch(userInfoUrl, {
-              headers: {
-                Authorization: `Bearer ${dbUser.accounts[0].access_token}`,
-              },
-            });
+      // If this is a credentials provider (session-token), pass the user data to the token
+      if (account?.provider === "session-token" && user) {
+        console.log("JWT callback - processing session-token user:", {
+          userId: user.id,
+          email: user.email,
+          name: user.name,
+          organizationId: (user as any).organizationId,
+          organizationName: (user as any).organizationName,
+        });
 
-            if (response.ok) {
-              const userInfo = await response.json();
-              if (userInfo.organization) {
-                // Update the user with organization info
-                await prisma.user.update({
-                  where: { id: user.id },
-                  data: {
-                    organizationId: userInfo.organization.id,
-                    organizationName: userInfo.organization.name,
-                  },
-                });
+        token.userId = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.organizationId = (user as any).organizationId;
+        token.organizationName = (user as any).organizationName;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      console.log("Session callback - called with:", {
+        hasSession: !!session,
+        hasToken: !!token,
+        sessionUser: session?.user,
+        tokenKeys: token ? Object.keys(token) : [],
+      });
 
-                // Update the dbUser object for the response
-                dbUser.organizationId = userInfo.organization.id;
-                dbUser.organizationName = userInfo.organization.name;
-              }
-            }
-          } catch (error) {
-            console.error("Failed to fetch user organization data:", error);
-          }
-        }
+      // For JWT strategy, get user data from token
+      if (token) {
+        console.log("Session callback - token data:", {
+          userId: token.userId,
+          email: token.email,
+          name: token.name,
+          organizationId: token.organizationId,
+          organizationName: token.organizationName,
+        });
 
-        return {
+        const sessionResult = {
           ...session,
           user: {
             ...session.user,
-            id: dbUser.id,
-            organizationId: dbUser.organizationId,
-            organizationName: dbUser.organizationName,
+            id: token.userId as string,
+            email: token.email as string,
+            name: token.name as string,
+            organizationId: token.organizationId as string,
+            organizationName: token.organizationName as string,
           },
-          accessToken: dbUser.accounts[0]?.access_token || null,
         } as any; // Type assertion to handle complex type intersection
+
+        console.log("Session callback - returning session:", {
+          hasUser: !!sessionResult.user,
+          userId: sessionResult.user?.id,
+          email: sessionResult.user?.email,
+          name: sessionResult.user?.name,
+        });
+
+        return sessionResult;
       }
 
+      console.log(
+        "Session callback - no token data, returning original session"
+      );
       return session;
     },
     async redirect({ url, baseUrl }) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMantleAppBridge } from "@/lib/use-mantle-app-bridge";
+import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
 import {
   Badge,
   Button,
@@ -22,7 +22,7 @@ export default function AppBridgeSessionUser() {
     userError,
     refreshSession,
     refreshUser,
-  } = useMantleAppBridge();
+  } = useSharedMantleAppBridge();
 
   if (!isConnected) {
     return null;

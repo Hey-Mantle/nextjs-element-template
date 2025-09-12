@@ -34,28 +34,61 @@ export interface UseMantleAppBridgeReturn {
   appBridge: MantleAppBridge | null;
 }
 
+// Global state to prevent multiple connection attempts
+let globalConnectionState = {
+  isConnecting: false,
+  isConnected: false,
+  connectionError: null as string | null,
+  appBridge: null as any,
+  session: null as any,
+  user: null as any,
+  listeners: new Set<() => void>(),
+};
+
 export function useMantleAppBridge(): UseMantleAppBridgeReturn {
   // Connection state
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(
+    globalConnectionState.isConnected
+  );
+  const [isConnecting, setIsConnecting] = useState(
+    globalConnectionState.isConnecting
+  );
+  const [connectionError, setConnectionError] = useState<string | null>(
+    globalConnectionState.connectionError
+  );
 
   // Session state
-  const [session, setSession] = useState<MantleSession | null>(null);
+  const [session, setSession] = useState<MantleSession | null>(
+    globalConnectionState.session
+  );
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   // User state
-  const [user, setUser] = useState<MantleUser | null>(null);
+  const [user, setUser] = useState<MantleUser | null>(
+    globalConnectionState.user
+  );
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
 
   // App Bridge instance
-  const [appBridge, setAppBridge] = useState<any | null>(null);
+  const [appBridge, setAppBridge] = useState<any | null>(
+    globalConnectionState.appBridge
+  );
+
+  // Function to update all listeners
+  const updateAllListeners = useCallback(() => {
+    globalConnectionState.listeners.forEach((listener) => listener());
+  }, []);
 
   // Connect to App Bridge
   const connect = useCallback(async () => {
-    if (isConnecting || isConnected) return;
+    if (
+      globalConnectionState.isConnecting ||
+      globalConnectionState.isConnected
+    ) {
+      return;
+    }
 
     setIsConnecting(true);
     setConnectionError(null);
@@ -72,6 +105,7 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
       };
 
       const handleAppBridgeError = (error: any) => {
+        console.log("useMantleAppBridge - handleAppBridgeError called:", error);
         setConnectionError("App Bridge connection failed");
         setIsConnected(false);
         setIsConnecting(false);
@@ -142,6 +176,15 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
 
         window.addEventListener("message", messageHandler);
 
+        // Send initial handshake message to parent frame to trigger ready event
+        window.parent.postMessage(
+          {
+            type: "mantle:app-bridge:init",
+            source: "iframe",
+          },
+          "*"
+        );
+
         // Clean up timeout when component unmounts or connection succeeds
         const cleanup = () => {
           timeoutCleared = true;
@@ -157,6 +200,7 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
         error instanceof Error
           ? error.message
           : "Failed to connect to App Bridge";
+      console.error("App Bridge connection error:", errorMessage);
       setConnectionError(errorMessage);
       setIsConnected(false);
       setAppBridge(null);
@@ -225,13 +269,23 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
-  // Auto-fetch session and user when connected
+  // Auto-fetch session and user when connected (only if we don't have them yet)
   useEffect(() => {
-    if (isConnected && appBridge) {
+    if (isConnected && appBridge && !session && !isSessionLoading) {
+      console.log(
+        "useMantleAppBridge - auto-fetching session and user on connection"
+      );
       refreshSession();
       refreshUser();
     }
-  }, [isConnected, appBridge, refreshSession, refreshUser]);
+  }, [
+    isConnected,
+    appBridge,
+    session,
+    isSessionLoading,
+    refreshSession,
+    refreshUser,
+  ]);
 
   // Cleanup event listeners on unmount
   useEffect(() => {

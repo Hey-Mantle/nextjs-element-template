@@ -1,6 +1,7 @@
 import AppBridgeConnectionStatus from "@/components/AppBridgeConnectionStatus";
 import AppBridgeSessionUser from "@/components/AppBridgeSessionUser";
 import AuthExample from "@/components/AuthExample";
+import ClientPageWrapper from "@/components/ClientPageWrapper";
 import HmacVerificationStatus from "@/components/HmacVerificationStatus";
 import { getServerSession } from "@/lib/auth-utils";
 import { Page, VerticalStack } from "@heymantle/litho";
@@ -181,32 +182,11 @@ export default async function Home({
     requestParams: Object.fromEntries(urlSearchParams.entries()),
   };
 
-  // If no HMAC parameter and setup is complete, this is a direct access
+  // If no HMAC parameter and setup is complete, this might be direct access or iframe access
+  // AppBridgeAuth will handle the distinction and authentication
   if (!hmac) {
     console.log(
-      "Direct access detected - this page should only be accessed through Mantle"
-    );
-    // Show a message that this page is only accessible through Mantle
-    return (
-      <Page
-        title="Access Restricted"
-        subtitle="This page is only accessible through Mantle"
-      >
-        <VerticalStack gap="4">
-          <div className="text-center p-8">
-            <h2 className="text-xl font-semibold mb-4">
-              Direct Access Not Allowed
-            </h2>
-            <p className="text-gray-600 mb-4">
-              This page is designed to be accessed through Mantle's platform
-              only.
-            </p>
-            <p className="text-sm text-gray-500">
-              Please access this application through your Mantle dashboard.
-            </p>
-          </div>
-        </VerticalStack>
-      </Page>
+      "No HMAC parameter - could be direct access or iframe access through app bridge"
     );
   }
 
@@ -294,13 +274,28 @@ export default async function Home({
             );
           }
         } else {
-          console.log("No existing session found - initiating OAuth flow");
-          // No existing session - initiate OAuth flow
-          // Pass only the organization ID for OAuth context
-          const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
-            requestOrganizationId || ""
-          )}`;
-          redirect(initiateUrl);
+          console.log("No existing session found");
+
+          // Check if this is an embedded iframe request
+          const hasEmbeddedParam = urlSearchParams.get("embedded") === "1";
+
+          if (hasEmbeddedParam) {
+            console.log(
+              "Embedded iframe request detected - letting client-side handle authentication"
+            );
+            // For iframe requests, let the client-side AppBridgeAuth component handle authentication
+            // using the app bridge session token. Don't redirect to OAuth.
+          } else {
+            console.log("Non-embedded request - initiating OAuth flow", {
+              organizationId: requestOrganizationId,
+            });
+
+            // For non-iframe requests, initiate OAuth flow
+            const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
+              requestOrganizationId || ""
+            )}`;
+            redirect(initiateUrl);
+          }
         }
       }
     } catch (error) {
@@ -318,15 +313,17 @@ export default async function Home({
     }
   }
 
-  // If setup is complete, render the main application
+  // If setup is complete, render the main application wrapped with client-side authentication
   return (
-    <Page title="Your Mantle Element" subtitle="Build it out!">
-      <VerticalStack gap="4">
-        <HmacVerificationStatus {...hmacVerificationStatus} />
-        <AppBridgeConnectionStatus />
-        <AppBridgeSessionUser />
-        <AuthExample />
-      </VerticalStack>
-    </Page>
+    <ClientPageWrapper hmacVerificationStatus={hmacVerificationStatus}>
+      <Page title="Your Mantle Element" subtitle="Build it out!">
+        <VerticalStack gap="4">
+          <HmacVerificationStatus {...hmacVerificationStatus} />
+          <AppBridgeConnectionStatus />
+          <AppBridgeSessionUser />
+          <AuthExample />
+        </VerticalStack>
+      </Page>
+    </ClientPageWrapper>
   );
 }

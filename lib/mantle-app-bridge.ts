@@ -99,7 +99,8 @@ export function isRunningInIframe(): boolean {
   }
 
   try {
-    return window.self !== window.top;
+    const isInIframe = window.self !== window.top;
+    return isInIframe;
   } catch (error) {
     // If we can't access window.top, we're likely in an iframe with cross-origin restrictions
     return true;
@@ -136,6 +137,8 @@ export function waitForMantleAppBridge(timeout = 5000): Promise<any> {
 
     const startTime = Date.now();
     const checkInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+
       if (window.MantleAppBridge) {
         clearInterval(checkInterval);
         // Check if MantleAppBridge is a class constructor that needs to be instantiated
@@ -154,7 +157,7 @@ export function waitForMantleAppBridge(timeout = 5000): Promise<any> {
         } else {
           resolve(window.MantleAppBridge as MantleAppBridge);
         }
-      } else if (Date.now() - startTime > timeout) {
+      } else if (elapsed > timeout) {
         clearInterval(checkInterval);
         reject(new Error("Mantle App Bridge not available after timeout"));
       }

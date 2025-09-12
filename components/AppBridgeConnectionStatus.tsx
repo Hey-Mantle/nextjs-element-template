@@ -1,7 +1,7 @@
 "use client";
 
 import { isRunningInIframe } from "@/lib/mantle-app-bridge";
-import { useMantleAppBridge } from "@/lib/use-mantle-app-bridge";
+import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
 import {
   Badge,
   Card,
@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 
 export default function AppBridgeConnectionStatus() {
   const { isConnected, isConnecting, connectionError, connect } =
-    useMantleAppBridge();
+    useSharedMantleAppBridge();
 
   const [isInIframe, setIsInIframe] = useState(false);
   const [isMounted, setIsMounted] = useState(false);

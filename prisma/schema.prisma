@@ -11,21 +11,34 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  emailVerified    DateTime?
-  name             String?
-  image            String?
-  organizationId   String?
-  organizationName String?
-  userId           String?   // Mantle's internal user ID for session token matching
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  email          String    @unique
+  emailVerified  DateTime?
+  name           String?
+  image          String?
+  userId         String?   // Mantle's internal user ID for session token matching
+  organizationId String?   // Foreign key to Organization
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
+  accounts    Account[]
+  sessions    Session[]
+  organization Organization? @relation(fields: [organizationId], references: [id])
 
   @@map("users")
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  mantleId    String   @unique // Mantle's organization ID
+  name        String
+  accessToken String   // OAuth access token for JWT verification
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@map("organizations")
 }
 
 model Account {
