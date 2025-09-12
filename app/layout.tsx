@@ -22,8 +22,8 @@ export default function RootLayout({
       <head>
         <script
           src={
-            process.env.NEXT_PUBLIC_MANTLE_APP_BRIDGE_SRC ??
-            "https://app.heymantle.com/app-bridge.js"
+            (process.env.NEXT_PUBLIC_MANTLE_URL ??
+              "https://app.heymantle.com") + "/app-bridge.js"
           }
         />
       </head>

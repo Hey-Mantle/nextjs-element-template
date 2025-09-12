@@ -11,6 +11,10 @@ export interface MantleAppBridge {
   // User management
   getUser(): Promise<MantleUser | null>;
 
+  // PostMessage-based session and user requests
+  requestSession(): void;
+  requestUser(): void;
+
   // Navigation APIs
   navigate(url: string): void;
   openTab(url: string): void;

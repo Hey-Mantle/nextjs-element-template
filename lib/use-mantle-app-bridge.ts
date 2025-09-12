@@ -77,20 +77,12 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
         setIsConnecting(false);
       };
 
-      // Listen for the mantle:app-bridge:ready event
+      // Listen for events from the app bridge instance
       if (typeof window !== "undefined") {
-        window.addEventListener(
-          "mantle:app-bridge:ready",
-          handleAppBridgeReady
-        );
-        window.addEventListener(
-          "mantle:app-bridge:error",
-          handleAppBridgeError
-        );
-
         // Set a timeout to handle cases where the ready event never fires
+        let timeoutCleared = false;
         const timeout = setTimeout(() => {
-          if (!isConnected) {
+          if (!timeoutCleared) {
             setConnectionError(
               "App Bridge ready event not received. Make sure the app is running in an iframe within the Mantle platform."
             );
@@ -99,17 +91,62 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
           }
         }, 5000);
 
+        // Listen for the mantle:app-bridge postMessage events
+        const messageHandler = (event: MessageEvent) => {
+          const { type, session, user, error, organizationId } =
+            event.data || {};
+
+          switch (type) {
+            case "mantle:app-bridge:ready":
+              // Clear the timeout immediately when ready event is received
+              timeoutCleared = true;
+              clearTimeout(timeout);
+
+              // Initialize with the data sent from the parent frame
+              if (session) {
+                setSession(session);
+                setSessionError(null);
+                setIsSessionLoading(false);
+              }
+
+              handleAppBridgeReady();
+              break;
+
+            case "mantle:app-bridge:sessionResponse":
+              if (error) {
+                setSessionError(error);
+                setSession(null);
+              } else if (session) {
+                setSession(session);
+                setSessionError(null);
+              }
+              setIsSessionLoading(false);
+              break;
+
+            case "mantle:app-bridge:userResponse":
+              if (error) {
+                setUserError(error);
+                setUser(null);
+              } else if (user) {
+                setUser(user);
+                setUserError(null);
+              }
+              setIsUserLoading(false);
+              break;
+
+            case "mantle:app-bridge:error":
+              handleAppBridgeError(event.data);
+              break;
+          }
+        };
+
+        window.addEventListener("message", messageHandler);
+
         // Clean up timeout when component unmounts or connection succeeds
         const cleanup = () => {
+          timeoutCleared = true;
           clearTimeout(timeout);
-          window.removeEventListener(
-            "mantle:app-bridge:ready",
-            handleAppBridgeReady
-          );
-          window.removeEventListener(
-            "mantle:app-bridge:error",
-            handleAppBridgeError
-          );
+          window.removeEventListener("message", messageHandler);
         };
 
         // Store cleanup function for later use
@@ -136,19 +173,20 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
     setSessionError(null);
 
     try {
-      if (typeof appBridge.getSession === "function") {
-        const sessionData = await appBridge.getSession();
-        setSession(sessionData);
+      if (typeof appBridge.requestSession === "function") {
+        // Use the postMessage-based method
+        appBridge.requestSession();
+        // Response will be handled by the messageHandler
       } else {
-        setSessionError("getSession method not available");
+        setSessionError("requestSession method not available");
         setSession(null);
+        setIsSessionLoading(false);
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch session";
+        error instanceof Error ? error.message : "Failed to request session";
       setSessionError(errorMessage);
       setSession(null);
-    } finally {
       setIsSessionLoading(false);
     }
   }, [appBridge, isConnected]);
@@ -161,19 +199,20 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
     setUserError(null);
 
     try {
-      if (typeof appBridge.getUser === "function") {
-        const userData = await appBridge.getUser();
-        setUser(userData);
+      if (typeof appBridge.requestUser === "function") {
+        // Use the postMessage-based method
+        appBridge.requestUser();
+        // Response will be handled by the messageHandler
       } else {
-        setUserError("getUser method not available");
+        setUserError("requestUser method not available");
         setUser(null);
+        setIsUserLoading(false);
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch user";
+        error instanceof Error ? error.message : "Failed to request user";
       setUserError(errorMessage);
       setUser(null);
-    } finally {
       setIsUserLoading(false);
     }
   }, [appBridge, isConnected]);
@@ -183,7 +222,8 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
     if (typeof window !== "undefined") {
       connect();
     }
-  }, [connect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   // Auto-fetch session and user when connected
   useEffect(() => {
