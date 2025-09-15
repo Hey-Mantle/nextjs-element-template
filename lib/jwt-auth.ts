@@ -55,12 +55,46 @@ export async function verifyJWTToken(
       return null;
     }
 
-    // Extract user info from JWT payload
+    // Look up or create user in database using email as unique identifier
+    let dbUser = await prisma.user.findUnique({
+      where: { email: payload.user.email },
+    });
+
+    if (!dbUser) {
+      // Create user if not found
+      dbUser = await prisma.user.create({
+        data: {
+          userId: payload.user.id,
+          email: payload.user.email,
+          name: payload.user.name || "",
+          organizationId: organization.id,
+        },
+      });
+    } else {
+      // Update user if name or userId has changed
+      const needsUpdate =
+        dbUser.name !== (payload.user.name || "") ||
+        dbUser.userId !== payload.user.id ||
+        dbUser.organizationId !== organization.id;
+
+      if (needsUpdate) {
+        dbUser = await prisma.user.update({
+          where: { email: payload.user.email },
+          data: {
+            userId: payload.user.id,
+            name: payload.user.name || "",
+            organizationId: organization.id,
+          },
+        });
+      }
+    }
+
+    // Extract user info from JWT payload and database
     const user: AuthenticatedUser = {
-      id: payload.user.id,
-      email: payload.user.email,
-      name: payload.user.name,
-      userId: payload.user.id,
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name || "",
+      userId: dbUser.userId || payload.user.id,
       organizationId: organization.mantleId,
       organizationName: organization.name,
     };
@@ -82,15 +116,10 @@ export async function getAuthenticatedUser(
     let sessionToken: string | null = null;
 
     if (request) {
-      // Check Authorization header first (Bearer token)
+      // Check Authorization header (Bearer token)
       const authHeader = request.headers.get("authorization");
       if (authHeader && authHeader.startsWith("Bearer ")) {
         sessionToken = authHeader.substring(7);
-      }
-
-      // Fallback to custom header
-      if (!sessionToken) {
-        sessionToken = request.headers.get("x-session-token");
       }
 
       // Fallback to cookie
@@ -103,10 +132,6 @@ export async function getAuthenticatedUser(
       const authHeader = headersList.get("authorization");
       if (authHeader && authHeader.startsWith("Bearer ")) {
         sessionToken = authHeader.substring(7);
-      }
-
-      if (!sessionToken) {
-        sessionToken = headersList.get("x-session-token");
       }
     }
 
