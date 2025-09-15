@@ -78,7 +78,7 @@ const MantleOAuth = {
     }
 
     return {
-      id: existingUser?.id,
+      id: existingUser?.id || id, // Use Mantle user ID as fallback
       email, // note, this could conflict cross-org with the same user email
       name,
       userId: id,
@@ -132,7 +132,9 @@ const SessionTokenProvider: Provider = {
           "Session token provider - organization not found:",
           payload.organizationId
         );
-        return null;
+
+        // Throw a specific error that can be caught and handled
+        throw new Error(`ORGANIZATION_NOT_FOUND:${payload.organizationId}`);
       }
 
       console.log("Session token provider - found organization:", {

@@ -21,7 +21,6 @@ export interface UseMantleAppBridgeReturn {
 
   // User state
   user: MantleUser | null;
-
   isUserLoading: boolean;
   userError: string | null;
 
@@ -34,59 +33,28 @@ export interface UseMantleAppBridgeReturn {
   appBridge: MantleAppBridge | null;
 }
 
-// Global state to prevent multiple connection attempts
-let globalConnectionState = {
-  isConnecting: false,
-  isConnected: false,
-  connectionError: null as string | null,
-  appBridge: null as any,
-  session: null as any,
-  user: null as any,
-  listeners: new Set<() => void>(),
-};
-
 export function useMantleAppBridge(): UseMantleAppBridgeReturn {
   // Connection state
-  const [isConnected, setIsConnected] = useState(
-    globalConnectionState.isConnected
-  );
-  const [isConnecting, setIsConnecting] = useState(
-    globalConnectionState.isConnecting
-  );
-  const [connectionError, setConnectionError] = useState<string | null>(
-    globalConnectionState.connectionError
-  );
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   // Session state
-  const [session, setSession] = useState<MantleSession | null>(
-    globalConnectionState.session
-  );
+  const [session, setSession] = useState<MantleSession | null>(null);
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   // User state
-  const [user, setUser] = useState<MantleUser | null>(
-    globalConnectionState.user
-  );
+  const [user, setUser] = useState<MantleUser | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [userError, setUserError] = useState<string | null>(null);
 
   // App Bridge instance
-  const [appBridge, setAppBridge] = useState<any | null>(
-    globalConnectionState.appBridge
-  );
-
-  // Function to update all listeners
-  const updateAllListeners = useCallback(() => {
-    globalConnectionState.listeners.forEach((listener) => listener());
-  }, []);
+  const [appBridge, setAppBridge] = useState<MantleAppBridge | null>(null);
 
   // Connect to App Bridge
   const connect = useCallback(async () => {
-    if (
-      globalConnectionState.isConnecting ||
-      globalConnectionState.isConnected
-    ) {
+    if (isConnecting || isConnected) {
       return;
     }
 
@@ -97,104 +65,85 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
       const bridge = await waitForMantleAppBridge();
       setAppBridge(bridge);
 
-      // Set up event listeners for App Bridge connection
-      const handleAppBridgeReady = () => {
+      // Flag to track if ready event was received
+      let readyEventReceived = false;
+
+      // Set up event listeners using App Bridge's event system
+      const handleReady = (data: {
+        session?: MantleSession;
+        organizationId?: string;
+      }) => {
+        console.log("App Bridge ready:", data);
+        readyEventReceived = true;
         setIsConnected(true);
-        setConnectionError(null);
         setIsConnecting(false);
+        setConnectionError(null);
+
+        // Initialize with session data if provided
+        if (data.session) {
+          setSession(data.session);
+          setSessionError(null);
+        }
       };
 
-      const handleAppBridgeError = (error: any) => {
-        console.log("useMantleAppBridge - handleAppBridgeError called:", error);
+      const handleSession = (data: {
+        session: MantleSession;
+        organizationId?: string;
+      }) => {
+        console.log("Session received:", data);
+        setSession(data.session);
+        setSessionError(null);
+        setIsSessionLoading(false);
+      };
+
+      const handleSessionError = (error: string) => {
+        console.log("Session error:", error);
+        setSessionError(error);
+        setSession(null);
+        setIsSessionLoading(false);
+      };
+
+      const handleUser = (userData: MantleUser) => {
+        console.log("User received:", userData);
+        setUser(userData);
+        setUserError(null);
+        setIsUserLoading(false);
+      };
+
+      const handleConnectionError = (error: any) => {
+        console.log("Connection error:", error);
         setConnectionError("App Bridge connection failed");
         setIsConnected(false);
         setIsConnecting(false);
       };
 
-      // Listen for events from the app bridge instance
-      if (typeof window !== "undefined") {
-        // Set a timeout to handle cases where the ready event never fires
-        let timeoutCleared = false;
-        const timeout = setTimeout(() => {
-          if (!timeoutCleared) {
-            setConnectionError(
-              "App Bridge ready event not received. Make sure the app is running in an iframe within the Mantle platform."
-            );
-            setIsConnected(false);
-            setIsConnecting(false);
-          }
-        }, 5000);
+      // Register event listeners using App Bridge API
+      bridge.on("ready", handleReady);
+      bridge.on("session", handleSession);
+      bridge.on("sessionError", handleSessionError);
+      bridge.on("user", handleUser);
+      bridge.on("error", handleConnectionError);
 
-        // Listen for the mantle:app-bridge postMessage events
-        const messageHandler = (event: MessageEvent) => {
-          const { type, session, user, error, organizationId } =
-            event.data || {};
+      // Set a timeout to handle cases where the ready event never fires
+      const timeout = setTimeout(() => {
+        if (!readyEventReceived) {
+          setConnectionError(
+            "App Bridge ready event not received. Make sure the app is running in an iframe within the Mantle platform."
+          );
+          setIsConnected(false);
+          setIsConnecting(false);
+        }
+      }, 5000);
 
-          switch (type) {
-            case "mantle:app-bridge:ready":
-              // Clear the timeout immediately when ready event is received
-              timeoutCleared = true;
-              clearTimeout(timeout);
-
-              // Initialize with the data sent from the parent frame
-              if (session) {
-                setSession(session);
-                setSessionError(null);
-                setIsSessionLoading(false);
-              }
-
-              handleAppBridgeReady();
-              break;
-
-            case "mantle:app-bridge:sessionResponse":
-              if (error) {
-                setSessionError(error);
-                setSession(null);
-              } else if (session) {
-                setSession(session);
-                setSessionError(null);
-              }
-              setIsSessionLoading(false);
-              break;
-
-            case "mantle:app-bridge:userResponse":
-              if (error) {
-                setUserError(error);
-                setUser(null);
-              } else if (user) {
-                setUser(user);
-                setUserError(null);
-              }
-              setIsUserLoading(false);
-              break;
-
-            case "mantle:app-bridge:error":
-              handleAppBridgeError(event.data);
-              break;
-          }
-        };
-
-        window.addEventListener("message", messageHandler);
-
-        // Send initial handshake message to parent frame to trigger ready event
-        window.parent.postMessage(
-          {
-            type: "mantle:app-bridge:init",
-            source: "iframe",
-          },
-          "*"
-        );
-
-        // Clean up timeout when component unmounts or connection succeeds
-        const cleanup = () => {
-          timeoutCleared = true;
-          clearTimeout(timeout);
-          window.removeEventListener("message", messageHandler);
-        };
-
-        // Store cleanup function for later use
-        (bridge as any)._cleanup = cleanup;
-      }
+      // Store cleanup function for later use
+      (bridge as any)._cleanup = () => {
+        clearTimeout(timeout);
+        bridge.off("ready", handleReady);
+        bridge.off("session", handleSession);
+        bridge.off("sessionError", handleSessionError);
+        bridge.off("user", handleUser);
+        bridge.off("error", handleConnectionError);
+      };
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -204,7 +153,6 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
       setConnectionError(errorMessage);
       setIsConnected(false);
       setAppBridge(null);
-    } finally {
       setIsConnecting(false);
     }
   }, [isConnecting, isConnected]);
@@ -217,15 +165,9 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
     setSessionError(null);
 
     try {
-      if (typeof appBridge.requestSession === "function") {
-        // Use the postMessage-based method
-        appBridge.requestSession();
-        // Response will be handled by the messageHandler
-      } else {
-        setSessionError("requestSession method not available");
-        setSession(null);
-        setIsSessionLoading(false);
-      }
+      // Use App Bridge's requestSession method
+      appBridge.requestSession();
+      // Response will be handled by the 'session' or 'sessionError' event listeners
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to request session";
@@ -243,15 +185,9 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
     setUserError(null);
 
     try {
-      if (typeof appBridge.requestUser === "function") {
-        // Use the postMessage-based method
-        appBridge.requestUser();
-        // Response will be handled by the messageHandler
-      } else {
-        setUserError("requestUser method not available");
-        setUser(null);
-        setIsUserLoading(false);
-      }
+      // Use App Bridge's requestUser method
+      appBridge.requestUser();
+      // Response will be handled by the 'user' event listener
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to request user";

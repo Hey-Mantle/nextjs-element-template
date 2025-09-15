@@ -1,6 +1,5 @@
 import AppBridgeConnectionStatus from "@/components/AppBridgeConnectionStatus";
 import AppBridgeSessionUser from "@/components/AppBridgeSessionUser";
-import AuthExample from "@/components/AuthExample";
 import ClientPageWrapper from "@/components/ClientPageWrapper";
 import HmacVerificationStatus from "@/components/HmacVerificationStatus";
 import { getServerSession } from "@/lib/auth-utils";
@@ -280,16 +279,30 @@ export default async function Home({
             );
           }
         } else {
-          console.log("No existing session found - initiating OAuth flow", {
+          console.log("No existing session found", {
             organizationId: requestOrganizationId,
           });
 
-          // If no session exists, always redirect to OAuth flow
-          // The client-side will handle iframe detection and authentication appropriately
-          const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
-            requestOrganizationId || ""
-          )}`;
-          redirect(initiateUrl);
+          // Check if this is likely an iframe request by looking for 'embedded=1' parameter
+          const isEmbedded = urlSearchParams.get("embedded") === "1";
+
+          if (isEmbedded) {
+            console.log(
+              "Embedded request detected - allowing client-side app bridge authentication to handle"
+            );
+            // For embedded/iframe requests, don't redirect to OAuth immediately
+            // Let the client-side AppBridgeAuth component handle the authentication flow
+            // It will use the session token from app bridge to authenticate
+          } else {
+            console.log("Non-embedded request - initiating OAuth flow", {
+              organizationId: requestOrganizationId,
+            });
+            // For non-embedded requests, redirect to OAuth flow
+            const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
+              requestOrganizationId || ""
+            )}`;
+            redirect(initiateUrl);
+          }
         }
       }
     } catch (error) {
@@ -315,7 +328,6 @@ export default async function Home({
           <HmacVerificationStatus {...hmacVerificationStatus} />
           <AppBridgeConnectionStatus />
           <AppBridgeSessionUser />
-          <AuthExample />
         </VerticalStack>
       </Page>
     </ClientPageWrapper>

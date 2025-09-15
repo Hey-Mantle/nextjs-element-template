@@ -40,6 +40,7 @@ export default function AppBridgeAuth({
     sessionError,
     connectionError,
     refreshSession,
+    appBridge,
   } = useSharedMantleAppBridge();
 
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -125,6 +126,30 @@ export default function AppBridgeAuth({
         .catch((error) => {
           const errorMessage = error.message || "Authentication failed";
           console.error("AppBridgeAuth - authentication failed:", errorMessage);
+
+          // Check if this is an organization not found error
+          if (errorMessage.startsWith("ORGANIZATION_NOT_FOUND:")) {
+            const organizationId = errorMessage.split(":")[1];
+            console.log(
+              "Organization not found, redirecting parent window to OAuth:",
+              organizationId
+            );
+
+            // Get the current URL with HMAC parameters to redirect parent window
+            if (typeof window !== "undefined") {
+              const currentUrl = window.location.href;
+
+              // Use app bridge to redirect parent window to OAuth
+              if (appBridge && typeof appBridge.navigate === "function") {
+                appBridge.navigate(currentUrl);
+              } else {
+                // Fallback: redirect parent window directly
+                window.parent.location.href = currentUrl;
+              }
+            }
+            return; // Don't set error state for this case
+          }
+
           setAuthError(errorMessage);
           handleAuthError(errorMessage);
         })
@@ -208,7 +233,11 @@ export default function AppBridgeAuth({
           </h2>
           <p className="text-gray-600 mb-4">{connectionError}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.location.reload();
+              }
+            }}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Try Again
@@ -243,7 +272,11 @@ export default function AppBridgeAuth({
           </h2>
           <p className="text-gray-600 mb-4">{sessionError}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.location.reload();
+              }
+            }}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Try Again
@@ -310,7 +343,9 @@ export default function AppBridgeAuth({
                 onClick={() => {
                   // Redirect to OAuth by reloading without any special parameters
                   // The server-side will handle the redirect to OAuth
-                  window.location.reload();
+                  if (typeof window !== "undefined") {
+                    window.location.reload();
+                  }
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
@@ -322,9 +357,12 @@ export default function AppBridgeAuth({
       );
     } else {
       // Not in iframe - check if we have HMAC parameters indicating this is a valid Mantle request
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasHmac = urlParams.has("hmac");
-      const hasOrgId = urlParams.has("organizationId");
+      const hasHmac =
+        typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).has("hmac");
+      const hasOrgId =
+        typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).has("organizationId");
 
       if (hasHmac && hasOrgId) {
         // This is a valid Mantle request but accessed directly - redirect to OAuth
@@ -381,7 +419,11 @@ export default function AppBridgeAuth({
               Unable to retrieve session from Mantle platform.
             </p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.location.reload();
+                }
+              }}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Refresh
