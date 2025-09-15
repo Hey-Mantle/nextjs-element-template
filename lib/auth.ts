@@ -1,8 +1,11 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import crypto from "crypto";
 import NextAuth from "next-auth";
-import { JWT } from "next-auth/jwt";
 import type { Provider } from "next-auth/providers";
 import { prisma } from "./prisma";
+
+// this needs to be left in for the declare module below
+import { JWT } from "next-auth/jwt";
 
 // Mantle OAuth provider configuration
 const MantleOAuth = {
@@ -82,7 +85,8 @@ const MantleOAuth = {
       email, // note, this could conflict cross-org with the same user email
       name,
       userId: id,
-      organizationId: orgRecord.id,
+      organizationId: orgRecord.mantleId,
+      organizationName: orgRecord.name,
     };
   },
 };
@@ -145,7 +149,7 @@ const SessionTokenProvider: Provider = {
       });
 
       // Verify the signature using the organization's access token
-      const crypto = require("crypto");
+
       const expectedSignature = crypto
         .createHmac("sha256", organization.accessToken)
         .update(jwtParts[0] + "." + jwtParts[1])
@@ -346,19 +350,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // If this is a credentials provider (session-token), pass the user data to the token
       if (account?.provider === "session-token" && user) {
-        console.log("JWT callback - processing session-token user:", {
-          userId: user.id,
-          email: user.email,
-          name: user.name,
-          organizationId: (user as any).organizationId,
-          organizationName: (user as any).organizationName,
-        });
-
         token.userId = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.organizationId = (user as any).organizationId;
-        token.organizationName = (user as any).organizationName;
+        token.organizationId = user.organizationId;
+        token.organizationName = user.organizationName;
       }
 
       // If this is MantleOAuth provider, handle user-organization linking for new users
@@ -461,14 +457,14 @@ declare module "next-auth" {
     id: string;
     name: string;
     email: string;
-    organizationId?: string | null;
-    organizationName?: string | null;
+    organizationId: string;
+    organizationName: string;
   }
 
   interface Session {
     user: User & {
-      organizationId?: string | null;
-      organizationName?: string | null;
+      organizationId: string;
+      organizationName: string;
     };
     accessToken?: string | null;
   }

@@ -1,8 +1,6 @@
-import AppBridgeConnectionStatus from "@/components/AppBridgeConnectionStatus";
 import AppBridgeSessionUser from "@/components/AppBridgeSessionUser";
 import ClientPageWrapper from "@/components/ClientPageWrapper";
 import HmacVerificationStatus from "@/components/HmacVerificationStatus";
-import { getServerSession } from "@/lib/auth-utils";
 import { Page, VerticalStack } from "@heymantle/litho";
 import crypto from "crypto";
 import { redirect } from "next/navigation";
@@ -147,8 +145,9 @@ export default async function Home({
     }
   });
 
-  // Check for HMAC parameter - indicates a validated request from Mantle
+  // Check for HMAC parameter - indicates an initial install request from Mantle
   const hmac = urlSearchParams.get("hmac");
+  const isEmbedded = urlSearchParams.get("embedded") === "1";
 
   // Server-side environment variable validation
   const requiredEnvVars = [
@@ -181,14 +180,6 @@ export default async function Home({
     requestParams: Object.fromEntries(urlSearchParams.entries()),
   };
 
-  // If no HMAC parameter and setup is complete, this might be direct access or iframe access
-  // AppBridgeAuth will handle the distinction and authentication
-  if (!hmac) {
-    console.log(
-      "No HMAC parameter - could be direct access or iframe access through app bridge"
-    );
-  }
-
   if (hmac) {
     try {
       // Verify HMAC signature
@@ -220,89 +211,23 @@ export default async function Home({
           Object.fromEntries(urlSearchParams.entries())
         );
 
-        // Extract organization and user information from HMAC request parameters
         const requestOrganizationId = urlSearchParams.get("organizationId");
-        const requestUserId = urlSearchParams.get("userId");
-        const requestUserEmail = urlSearchParams.get("userEmail");
 
-        console.log("HMAC request parameters:", {
-          organizationId: requestOrganizationId,
-          userId: requestUserId,
-          userEmail: requestUserEmail,
-        });
+        console.log(
+          "Valid HMAC request for organization:",
+          requestOrganizationId
+        );
 
-        // Check if there's an existing session
-        const session = await getServerSession();
-
-        if (session) {
-          console.log("Existing session found for user:", session.user?.email);
-          console.log(
-            "Session organization ID:",
-            (session.user as any)?.organizationId
-          );
-
-          // Compare session with HMAC request parameters
-          const sessionOrganizationId = (session.user as any)?.organizationId;
-          const sessionUserId = (session.user as any)?.id;
-          const sessionUserEmail = session.user?.email;
-
-          const organizationMatch =
-            sessionOrganizationId === requestOrganizationId;
-          const userMatch =
-            sessionUserId === requestUserId ||
-            sessionUserEmail === requestUserEmail;
-
-          console.log("Session comparison results:", {
-            organizationMatch,
-            userMatch,
-            sessionOrgId: sessionOrganizationId,
-            requestOrgId: requestOrganizationId,
-            sessionUserId,
-            requestUserId,
-            sessionEmail: sessionUserEmail,
-            requestEmail: requestUserEmail,
-          });
-
-          if (!organizationMatch || !userMatch) {
-            console.log(
-              "Session mismatch detected - redirecting to re-authenticate"
-            );
-
-            // Session doesn't match the HMAC request - redirect to re-authenticate
-            const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
-              requestOrganizationId || ""
-            )}`;
-            redirect(initiateUrl);
-          } else {
-            console.log(
-              "Session matches HMAC request - proceeding with existing session"
-            );
-          }
+        // For embedded requests, let the client-side handle authentication
+        if (isEmbedded) {
+          console.log("Embedded request - will authenticate via app bridge");
         } else {
-          console.log("No existing session found", {
-            organizationId: requestOrganizationId,
-          });
-
-          // Check if this is likely an iframe request by looking for 'embedded=1' parameter
-          const isEmbedded = urlSearchParams.get("embedded") === "1";
-
-          if (isEmbedded) {
-            console.log(
-              "Embedded request detected - allowing client-side app bridge authentication to handle"
-            );
-            // For embedded/iframe requests, don't redirect to OAuth immediately
-            // Let the client-side AppBridgeAuth component handle the authentication flow
-            // It will use the session token from app bridge to authenticate
-          } else {
-            console.log("Non-embedded request - initiating OAuth flow", {
-              organizationId: requestOrganizationId,
-            });
-            // For non-embedded requests, redirect to OAuth flow
-            const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
-              requestOrganizationId || ""
-            )}`;
-            redirect(initiateUrl);
-          }
+          // For non-embedded requests (initial install), redirect to OAuth
+          console.log("Initial install request - redirecting to OAuth");
+          const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
+            requestOrganizationId || ""
+          )}`;
+          redirect(initiateUrl);
         }
       }
     } catch (error) {
@@ -320,13 +245,12 @@ export default async function Home({
     }
   }
 
-  // If setup is complete, render the main application wrapped with client-side authentication
+  // Render the embedded app (handles authentication internally)
   return (
     <ClientPageWrapper hmacVerificationStatus={hmacVerificationStatus}>
       <Page title="Your Mantle Element" subtitle="Build it out!">
         <VerticalStack gap="4">
           <HmacVerificationStatus {...hmacVerificationStatus} />
-          <AppBridgeConnectionStatus />
           <AppBridgeSessionUser />
         </VerticalStack>
       </Page>

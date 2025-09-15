@@ -15,7 +15,7 @@ export interface UseMantleAppBridgeReturn {
   connectionError: string | null;
 
   // Session state
-  session: MantleSession | null;
+  session: MantleSession | string | null;
   isSessionLoading: boolean;
   sessionError: string | null;
 
@@ -40,7 +40,7 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   // Session state
-  const [session, setSession] = useState<MantleSession | null>(null);
+  const [session, setSession] = useState<MantleSession | string | null>(null);
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
@@ -70,7 +70,7 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
 
       // Set up event listeners using App Bridge's event system
       const handleReady = (data: {
-        session?: MantleSession;
+        session?: MantleSession | string;
         organizationId?: string;
       }) => {
         console.log("App Bridge ready:", data);
@@ -87,7 +87,7 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
       };
 
       const handleSession = (data: {
-        session: MantleSession;
+        session: MantleSession | string;
         organizationId?: string;
       }) => {
         console.log("Session received:", data);

@@ -32,6 +32,12 @@ export interface MantleAppBridge {
   // Event listeners
   on(event: string, callback: (...args: any[]) => void): void;
   off(event: string, callback: (...args: any[]) => void): void;
+
+  // Organization ID and session getters (from app-bridge.js)
+  currentOrganizationId: string | null;
+  currentSession: MantleSession | string | null;
+  currentUser: MantleUser | null;
+  ready: boolean;
 }
 
 export interface MantleSession {
@@ -48,7 +54,6 @@ export interface MantleUser {
   email: string;
   name: string;
   organizationId: string;
-  organizationName: string;
   avatar?: string;
   role?: string;
 }
