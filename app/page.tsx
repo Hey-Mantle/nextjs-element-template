@@ -1,5 +1,6 @@
 import AppBridgeSessionUser from "@/components/AppBridgeSessionUser";
 import ClientPageWrapper from "@/components/ClientPageWrapper";
+import CustomAuthTestComponent from "@/components/CustomAuthTestComponent";
 import HmacVerificationStatus from "@/components/HmacVerificationStatus";
 import { Page, VerticalStack } from "@heymantle/litho";
 import crypto from "crypto";
@@ -251,6 +252,7 @@ export default async function Home({
       <Page title="Your Mantle Element" subtitle="Build it out!">
         <VerticalStack gap="4">
           <HmacVerificationStatus {...hmacVerificationStatus} />
+          <CustomAuthTestComponent />
           <AppBridgeSessionUser />
         </VerticalStack>
       </Page>

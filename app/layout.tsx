@@ -23,7 +23,7 @@ export default function RootLayout({
         <script
           src={
             (process.env.NEXT_PUBLIC_MANTLE_URL ??
-              "https://app.heymantle.com") + "/app-bridge.js"
+              "https://mantle-kristian.ngrok.io") + "/app-bridge.js"
           }
         />
       </head>
