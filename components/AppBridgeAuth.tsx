@@ -308,10 +308,9 @@ export default function AppBridgeAuth({
               </p>
               <button
                 onClick={() => {
-                  // Remove embedded parameter and redirect to OAuth
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete("embedded");
-                  window.location.href = url.toString();
+                  // Redirect to OAuth by reloading without any special parameters
+                  // The server-side will handle the redirect to OAuth
+                  window.location.reload();
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
@@ -322,26 +321,50 @@ export default function AppBridgeAuth({
         )
       );
     } else {
-      // Not in iframe - direct access not allowed
-      return (
-        fallback || (
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center max-w-md">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Direct Access Not Allowed
-              </h2>
-              <p className="text-gray-600 mb-4">
-                This application must be accessed through the Mantle platform.
-                Please complete the OAuth installation first.
-              </p>
-              <p className="text-sm text-gray-500">
-                If you're setting up this element, please follow the
-                installation process.
-              </p>
+      // Not in iframe - check if we have HMAC parameters indicating this is a valid Mantle request
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasHmac = urlParams.has("hmac");
+      const hasOrgId = urlParams.has("organizationId");
+
+      if (hasHmac && hasOrgId) {
+        // This is a valid Mantle request but accessed directly - redirect to OAuth
+        return (
+          fallback || (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-center max-w-md">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  Redirecting to Setup
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  This element needs to be set up. Redirecting to OAuth...
+                </p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              </div>
             </div>
-          </div>
-        )
-      );
+          )
+        );
+      } else {
+        // Direct access without valid parameters
+        return (
+          fallback || (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-center max-w-md">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  Direct Access Not Allowed
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  This application must be accessed through the Mantle platform.
+                  Please complete the OAuth installation first.
+                </p>
+                <p className="text-sm text-gray-500">
+                  If you're setting up this element, please follow the
+                  installation process.
+                </p>
+              </div>
+            </div>
+          )
+        );
+      }
     }
   }
 

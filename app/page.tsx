@@ -268,34 +268,28 @@ export default async function Home({
             console.log(
               "Session mismatch detected - redirecting to re-authenticate"
             );
+
+            // Session doesn't match the HMAC request - redirect to re-authenticate
+            const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
+              requestOrganizationId || ""
+            )}`;
+            redirect(initiateUrl);
           } else {
             console.log(
               "Session matches HMAC request - proceeding with existing session"
             );
           }
         } else {
-          console.log("No existing session found");
+          console.log("No existing session found - initiating OAuth flow", {
+            organizationId: requestOrganizationId,
+          });
 
-          // Check if this is an embedded iframe request
-          const hasEmbeddedParam = urlSearchParams.get("embedded") === "1";
-
-          if (hasEmbeddedParam) {
-            console.log(
-              "Embedded iframe request detected - letting client-side handle authentication"
-            );
-            // For iframe requests, let the client-side AppBridgeAuth component handle authentication
-            // using the app bridge session token. Don't redirect to OAuth.
-          } else {
-            console.log("Non-embedded request - initiating OAuth flow", {
-              organizationId: requestOrganizationId,
-            });
-
-            // For non-iframe requests, initiate OAuth flow
-            const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
-              requestOrganizationId || ""
-            )}`;
-            redirect(initiateUrl);
-          }
+          // If no session exists, always redirect to OAuth flow
+          // The client-side will handle iframe detection and authentication appropriately
+          const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
+            requestOrganizationId || ""
+          )}`;
+          redirect(initiateUrl);
         }
       }
     } catch (error) {

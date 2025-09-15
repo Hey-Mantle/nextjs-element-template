@@ -34,10 +34,55 @@ const MantleOAuth = {
     { user: { id, email, name }, organization }: any,
     { access_token }: any
   ) {
+    console.log("MantleOAuth profile - received data:", {
+      user: { id, email, name },
+      organization: { id: organization?.id, name: organization?.name },
+      hasAccessToken: !!access_token,
+    });
+
+    // Create or update organization directly in profile
+    const orgRecord = await prisma.organization.upsert({
+      where: { mantleId: organization.id },
+      update: {
+        name: organization.name,
+        accessToken: access_token,
+      },
+      create: {
+        mantleId: organization.id,
+        name: organization.name,
+        accessToken: access_token,
+      },
+    });
+
+    console.log("MantleOAuth profile - organization created/updated:", {
+      id: orgRecord.id,
+      mantleId: orgRecord.mantleId,
+      name: orgRecord.name,
+    });
+
+    // Check if user already exists and update their organization
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      await prisma.user.update({
+        where: { id: existingUser.id },
+        data: { organizationId: orgRecord.id },
+      });
+
+      console.log("MantleOAuth profile - updated existing user organization:", {
+        userId: existingUser.id,
+        organizationId: orgRecord.id,
+      });
+    }
+
     return {
-      id,
+      id: existingUser?.id,
       email, // note, this could conflict cross-org with the same user email
       name,
+      userId: id,
+      organizationId: orgRecord.id,
     };
   },
 };
@@ -58,7 +103,7 @@ const SessionTokenProvider: Provider = {
 
     try {
       // The sessionToken is a JWT from the app bridge - verify it locally
-      const jwt = credentials.sessionToken;
+      const jwt = credentials.sessionToken as string;
       console.log(
         "Session token provider - received JWT:",
         jwt.substring(0, 50) + "..."
@@ -274,6 +319,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log("SignIn callback - called with:", {
+        provider: account?.provider,
+        userId: user?.id,
+        userEmail: user?.email,
+        hasProfile: !!profile,
+      });
+
+      // SignIn callback runs before user creation, so we can't update the user here
+      // User-organization linking will be handled in the JWT callback after user creation
+      console.log(
+        "SignIn callback - user will be linked to organization in JWT callback"
+      );
+
       return true;
     },
     async jwt({ token, user, account }) {
@@ -300,6 +358,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.organizationId = (user as any).organizationId;
         token.organizationName = (user as any).organizationName;
       }
+
+      // If this is MantleOAuth provider, handle user-organization linking for new users
+      if (account?.provider === "MantleOAuth" && user) {
+        console.log("JWT callback - processing MantleOAuth user:", {
+          userId: user.id,
+          email: user.email,
+          name: user.name,
+        });
+
+        // Get the user's organization info for the token
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            include: { organization: true },
+          });
+
+          if (dbUser?.organization) {
+            token.organizationId = dbUser.organization.mantleId;
+            token.organizationName = dbUser.organization.name;
+          }
+        } catch (error) {
+          console.error(
+            "JWT callback - error fetching user organization:",
+            error
+          );
+        }
+
+        token.userId = user.id;
+        token.email = user.email;
+        token.name = user.name;
+      }
+
       return token;
     },
     async session({ session, token }) {
