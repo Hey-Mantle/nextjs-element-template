@@ -32,6 +32,7 @@ model Organization {
   mantleId    String   @unique // Mantle's organization ID
   name        String
   accessToken String   // OAuth access token for JWT verification
+  apiToken    String?  // Mantle API token for customer identification
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
