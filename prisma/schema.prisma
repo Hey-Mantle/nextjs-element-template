@@ -11,19 +11,18 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  emailVerified  DateTime?
-  name           String?
-  image          String?
-  userId         String?   // Mantle's internal user ID for session token matching
-  organizationId String?   // Foreign key to Organization
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  userId        String?   // Mantle's internal user ID for session token matching
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  organization Organization? @relation(fields: [organizationId], references: [id])
+  accounts           Account[]
+  sessions           Session[]
+  userOrganizations  UserOrganization[]
 
   @@map("users")
 }
@@ -36,9 +35,23 @@ model Organization {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users User[]
+  userOrganizations UserOrganization[]
 
   @@map("organizations")
+}
+
+model UserOrganization {
+  id             String @id @default(cuid())
+  userId         String
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("user_organizations")
 }
 
 model Account {

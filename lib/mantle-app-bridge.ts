@@ -5,6 +5,8 @@ export interface MantleAppBridge {
   // Connection status
   isConnected: boolean;
 
+  isInIframe(): boolean;
+
   // Session management
   getSession(): Promise<MantleSession | null>;
 
@@ -16,9 +18,9 @@ export interface MantleAppBridge {
   requestUser(): void;
 
   // Navigation APIs
-  navigate(url: string): void;
-  openTab(url: string): void;
-  openWindow(url: string, features?: string): void;
+  redirect(url: string): void;
+  openInNewTab(url: string): void;
+  openInNewWindow(url: string, features?: string): void;
 
   // Toast notifications
   showToast(message: string, type?: "success" | "error"): void;

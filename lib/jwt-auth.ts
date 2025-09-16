@@ -55,38 +55,62 @@ export async function verifyJWTToken(
       return null;
     }
 
-    // Look up or create user in database using email as unique identifier
-    let dbUser = await prisma.user.findUnique({
-      where: { email: payload.user.email },
+    // Look up user by userId first (Mantle's internal user ID) for more accurate matching
+    let dbUser = await prisma.user.findFirst({
+      where: { userId: payload.user.id },
     });
 
+    // If not found by userId, try by email as fallback
     if (!dbUser) {
-      // Create user if not found
+      dbUser = await prisma.user.findUnique({
+        where: { email: payload.user.email },
+      });
+    }
+
+    if (!dbUser) {
+      // Create new user if not found
       dbUser = await prisma.user.create({
         data: {
           userId: payload.user.id,
           email: payload.user.email,
           name: payload.user.name || "",
-          organizationId: organization.id,
         },
       });
     } else {
-      // Update user if name or userId has changed
+      // Update user if name has changed
       const needsUpdate =
         dbUser.name !== (payload.user.name || "") ||
-        dbUser.userId !== payload.user.id ||
-        dbUser.organizationId !== organization.id;
+        dbUser.userId !== payload.user.id;
 
       if (needsUpdate) {
         dbUser = await prisma.user.update({
-          where: { email: payload.user.email },
+          where: { id: dbUser.id },
           data: {
             userId: payload.user.id,
             name: payload.user.name || "",
-            organizationId: organization.id,
           },
         });
       }
+    }
+
+    // Check if user-organization association exists
+    const existingUserOrg = await prisma.userOrganization.findUnique({
+      where: {
+        userId_organizationId: {
+          userId: dbUser.id,
+          organizationId: organization.id,
+        },
+      },
+    });
+
+    // Create user-organization association if it doesn't exist
+    if (!existingUserOrg) {
+      await prisma.userOrganization.create({
+        data: {
+          userId: dbUser.id,
+          organizationId: organization.id,
+        },
+      });
     }
 
     // Extract user info from JWT payload and database

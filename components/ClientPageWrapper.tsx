@@ -17,10 +17,20 @@ export default function ClientPageWrapper({
   children,
   hmacVerificationStatus,
 }: ClientPageWrapperProps) {
+  console.log(
+    "ClientPageWrapper - hmacVerificationStatus:",
+    hmacVerificationStatus
+  );
+
   return (
     <SessionProvider>
       <MantleAppBridgeProvider>
-        <EmbeddedAuth>{children}</EmbeddedAuth>
+        <EmbeddedAuth
+          needsOAuthRedirect={hmacVerificationStatus.needsOAuthRedirect}
+          organizationId={hmacVerificationStatus.organizationId}
+        >
+          {children}
+        </EmbeddedAuth>
       </MantleAppBridgeProvider>
     </SessionProvider>
   );

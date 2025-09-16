@@ -1,7 +1,5 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import crypto from "crypto";
 import NextAuth from "next-auth";
-import type { Provider } from "next-auth/providers";
 import { prisma } from "./prisma";
 
 // this needs to be left in for the declare module below
@@ -18,7 +16,9 @@ const MantleOAuth = {
   authorization: {
     url:
       process.env.MANTLE_AUTHORIZE_URL ??
-      "https://app.heymantle.com/oauth/authorize",
+      `${
+        process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com"
+      }/oauth/authorize`,
     params: {
       scope: "read:apps",
       mode: "offline",
@@ -27,129 +27,167 @@ const MantleOAuth = {
   token: {
     url:
       process.env.MANTLE_TOKEN_URL ??
-      "https://app.heymantle.com/api/oauth/token",
+      `${
+        process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com"
+      }/api/oauth/token`,
   },
   issuer: "heymantle.com",
   userinfo: {
-    url: process.env.MANTLE_USER_INFO_URL ?? "https://api.heymantle.com/v1/me",
+    url:
+      process.env.MANTLE_USER_INFO_URL ??
+      `${
+        process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com"
+      }/api/v1/me`,
   },
-  async profile(
-    { user: { id, email, name }, organization }: any,
-    { access_token }: any
-  ) {
-    // Create or update organization directly in profile
-    const orgRecord = await prisma.organization.upsert({
-      where: { mantleId: organization.id },
-      update: {
-        name: organization.name,
-        accessToken: access_token,
-      },
-      create: {
-        mantleId: organization.id,
-        name: organization.name,
-        accessToken: access_token,
-      },
-    });
-
-    // Create or update user with organization link
-    const userRecord = await prisma.user.upsert({
-      where: { email },
-      update: {
-        name: name, // Update name from OAuth provider
-        userId: id, // Update Mantle user ID
-        organizationId: orgRecord.id,
-      },
-      create: {
-        email,
-        name: name, // Use name from OAuth provider
-        userId: id,
-        organizationId: orgRecord.id,
-      },
-    });
-
-    return {
-      id: userRecord.id, // Use database user ID
-      email: userRecord.email,
-      name: userRecord.name || "", // Ensure name is never null
-      userId: userRecord.userId,
-      organizationId: orgRecord.mantleId,
-      organizationName: orgRecord.name,
-    };
-  },
-};
-
-// Session Token provider for authenticating with session tokens from the main platform
-export const SessionTokenProvider: Provider = {
-  id: "session-token",
-  name: "Session Token",
-  type: "credentials",
-  credentials: {
-    sessionToken: { label: "Session Token", type: "text" },
-  },
-  async authorize(credentials) {
-    if (!credentials?.sessionToken) {
-      return null;
-    }
+  // Ensure proper state handling
+  state: true,
+  // Allow account linking for this provider
+  allowDangerousEmailAccountLinking: true,
+  async profile(profileData: any, tokens: any) {
+    console.log("[MantleOAuth Profile] Starting profile function");
+    console.log(
+      "[MantleOAuth Profile] Profile data:",
+      JSON.stringify(profileData, null, 2)
+    );
+    console.log(
+      "[MantleOAuth Profile] Tokens:",
+      JSON.stringify(tokens, null, 2)
+    );
 
     try {
-      // The sessionToken is a JWT from the app bridge - verify it locally
-      const jwt = credentials.sessionToken as string;
+      // Extract user and organization data with error handling
+      const { user, organization } = profileData;
+      const { access_token } = tokens;
 
-      // Decode the JWT payload first to get organization info
-      const jwtParts = jwt.split(".");
-      if (jwtParts.length !== 3) {
-        console.log("Session token provider - invalid JWT format");
-        return null;
-      }
-
-      // Decode the payload (base64url decode)
-      const payload = JSON.parse(
-        Buffer.from(jwtParts[1], "base64url").toString()
+      console.log(
+        "[MantleOAuth Profile] Extracted user:",
+        JSON.stringify(user, null, 2)
+      );
+      console.log(
+        "[MantleOAuth Profile] Extracted organization:",
+        JSON.stringify(organization, null, 2)
+      );
+      console.log(
+        "[MantleOAuth Profile] Access token:",
+        access_token ? "Present" : "Missing"
       );
 
-      // Look up the organization by mantleId to get the access token for verification
-      const organization = await prisma.organization.findUnique({
-        where: { mantleId: payload.organizationId },
-      });
+      if (!user) {
+        throw new Error("User data is missing from profile response");
+      }
 
       if (!organization) {
-        throw new Error(`ORGANIZATION_NOT_FOUND:${payload.organizationId}`);
+        throw new Error("Organization data is missing from profile response");
       }
 
-      // Verify the signature using the organization's access token
-      const expectedSignature = crypto
-        .createHmac("sha256", organization.accessToken)
-        .update(jwtParts[0] + "." + jwtParts[1])
-        .digest("base64url");
-
-      if (expectedSignature !== jwtParts[2]) {
-        return null;
+      if (!access_token) {
+        throw new Error("Access token is missing from tokens");
       }
 
-      // Check if JWT is expired
-      if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-        return null;
-      }
+      const { id, email, name } = user;
 
-      // Extract and return user info from JWT payload
-      const user = {
-        id: payload.user.id,
-        email: payload.user.email,
-        name: payload.user.name,
-        organizationId: organization.id,
+      console.log(
+        "[MantleOAuth Profile] User details - ID:",
+        id,
+        "Email:",
+        email,
+        "Name:",
+        name
+      );
+      console.log(
+        "[MantleOAuth Profile] Organization details - ID:",
+        organization.id,
+        "Name:",
+        organization.name
+      );
+
+      // Create or update organization directly in profile
+      console.log("[MantleOAuth Profile] Creating/updating organization...");
+      const orgRecord = await prisma.organization.upsert({
+        where: { mantleId: organization.id },
+        update: {
+          name: organization.name,
+          accessToken: access_token,
+        },
+        create: {
+          mantleId: organization.id,
+          name: organization.name,
+          accessToken: access_token,
+        },
+      });
+      console.log(
+        "[MantleOAuth Profile] Organization record:",
+        JSON.stringify(orgRecord, null, 2)
+      );
+
+      // Create or update user
+      console.log("[MantleOAuth Profile] Creating/updating user...");
+      const userRecord = await prisma.user.upsert({
+        where: { email },
+        update: {
+          name: name, // Update name from OAuth provider
+          userId: id, // Update Mantle user ID
+        },
+        create: {
+          email,
+          name: name, // Use name from OAuth provider
+          userId: id,
+        },
+      });
+      console.log(
+        "[MantleOAuth Profile] User record:",
+        JSON.stringify(userRecord, null, 2)
+      );
+
+      // Create or update user-organization association
+      console.log(
+        "[MantleOAuth Profile] Creating/updating user-organization association..."
+      );
+      await prisma.userOrganization.upsert({
+        where: {
+          userId_organizationId: {
+            userId: userRecord.id,
+            organizationId: orgRecord.id,
+          },
+        },
+        update: {}, // No fields to update for existing associations
+        create: {
+          userId: userRecord.id,
+          organizationId: orgRecord.id,
+        },
+      });
+      console.log(
+        "[MantleOAuth Profile] User-organization association created/updated"
+      );
+
+      const result = {
+        id: userRecord.id, // Use database user ID
+        email: userRecord.email,
+        name: userRecord.name || "", // Ensure name is never null
+        userId: userRecord.userId,
+        organizationId: orgRecord.mantleId,
+        organizationName: orgRecord.name,
       };
 
-      return user;
+      console.log(
+        "[MantleOAuth Profile] Returning profile result:",
+        JSON.stringify(result, null, 2)
+      );
+      return result;
     } catch (error) {
-      console.error("Session token authentication failed:", error);
-      return null;
+      console.error("[MantleOAuth Profile] Error in profile function:", error);
+      console.error(
+        "[MantleOAuth Profile] Error stack:",
+        error instanceof Error ? error.stack : "No stack trace"
+      );
+      throw error; // Re-throw to let NextAuth handle it
     }
   },
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  providers: [MantleOAuth, SessionTokenProvider],
+  providers: [MantleOAuth],
   session: {
     strategy: "jwt", // Use JWT for credentials-based authentication
   },
@@ -183,41 +221,92 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         secure: process.env.NODE_ENV === "production",
       },
     },
+    state: {
+      name: `mantle-element-state`,
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    pkceCodeVerifier: {
+      name: `mantle-element-pkce-code-verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   // Ensure HTTPS is used in production and development
   trustHost: true,
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log("[NextAuth SignIn] SignIn callback triggered");
+      console.log("[NextAuth SignIn] User:", JSON.stringify(user, null, 2));
+      console.log(
+        "[NextAuth SignIn] Account:",
+        JSON.stringify(account, null, 2)
+      );
+      console.log(
+        "[NextAuth SignIn] Profile:",
+        JSON.stringify(profile, null, 2)
+      );
+
+      // Always allow sign-in for MantleOAuth provider
+      // This prevents OAuthAccountNotLinked errors
+      if (account?.provider === "MantleOAuth") {
+        console.log("[NextAuth SignIn] Allowing MantleOAuth sign-in");
+        return true;
+      }
+
       // SignIn callback runs before user creation, so we can't update the user here
       // User-organization linking will be handled in the JWT callback after user creation
 
       return true;
     },
     async jwt({ token, user, account }) {
-      // If this is a credentials provider (session-token), pass the user data to the token
-      if (account?.provider === "session-token" && user) {
-        token.userId = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        token.organizationId = user.organizationId;
-      }
+      console.log("[NextAuth JWT] JWT callback triggered");
+      console.log("[NextAuth JWT] Token:", JSON.stringify(token, null, 2));
+      console.log("[NextAuth JWT] User:", JSON.stringify(user, null, 2));
+      console.log("[NextAuth JWT] Account:", JSON.stringify(account, null, 2));
 
       // If this is MantleOAuth provider, handle user-organization linking for new users
       if (account?.provider === "MantleOAuth" && user) {
+        console.log("[NextAuth JWT] Processing MantleOAuth user");
         // Get the user's organization info for the token
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
-            include: { organization: true },
+            include: {
+              userOrganizations: {
+                include: { organization: true },
+              },
+            },
           });
 
-          if (dbUser?.organization) {
-            token.organizationId = dbUser.organization.mantleId;
-            token.organizationName = dbUser.organization.name;
+          console.log(
+            "[NextAuth JWT] Database user:",
+            JSON.stringify(dbUser, null, 2)
+          );
+
+          // For OAuth flow, get the first organization (there should only be one at this point)
+          const userOrg = dbUser?.userOrganizations?.[0];
+          if (userOrg?.organization) {
+            token.organizationId = userOrg.organization.mantleId;
+            token.organizationName = userOrg.organization.name;
+            console.log("[NextAuth JWT] Added organization to token:", {
+              organizationId: token.organizationId,
+              organizationName: token.organizationName,
+            });
+          } else {
+            console.log("[NextAuth JWT] No organization found for user");
           }
         } catch (error) {
           console.error(
-            "JWT callback - error fetching user organization:",
+            "[NextAuth JWT] Error fetching user organization:",
             error
           );
         }
@@ -225,11 +314,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.userId = user.id;
         token.email = user.email;
         token.name = user.name;
+        console.log("[NextAuth JWT] Updated token with user data");
       }
 
+      console.log(
+        "[NextAuth JWT] Final token:",
+        JSON.stringify(token, null, 2)
+      );
       return token;
     },
     async session({ session, token }) {
+      console.log("[NextAuth Session] Session callback triggered");
+      console.log(
+        "[NextAuth Session] Session:",
+        JSON.stringify(session, null, 2)
+      );
+      console.log("[NextAuth Session] Token:", JSON.stringify(token, null, 2));
+
       // For JWT strategy, get user data from token
       if (token) {
         const sessionResult = {
@@ -244,22 +345,47 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         } as any; // Type assertion to handle complex type intersection
 
+        console.log(
+          "[NextAuth Session] Final session result:",
+          JSON.stringify(sessionResult, null, 2)
+        );
         return sessionResult;
       }
 
+      console.log("[NextAuth Session] No token, returning original session");
       return session;
     },
     async redirect({ url, baseUrl }) {
+      console.log({ url, baseUrl }, "REDIRECTING TO MANTLE URL KPD");
       // For relative URLs, make them absolute
       if (url.startsWith("/")) return `${baseUrl}${url}`;
 
-      // For same-origin URLs, return as-is
-      if (new URL(url).origin === baseUrl) return url;
+      // For same-origin URLs, check if this is an OAuth callback with organizationId
+      if (new URL(url).origin === baseUrl) {
+        const urlObj = new URL(url);
+        const organizationId = urlObj.searchParams.get("organizationId");
+
+        // If this is an OAuth callback with organizationId, redirect to Mantle extension
+        if (organizationId) {
+          console.log(
+            { organizationId },
+            "OAuth callback detected, redirecting to Mantle extension"
+          );
+          const mantleUrl =
+            process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com";
+          return `${mantleUrl}/extensions/${process.env.NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE}`;
+        }
+
+        // Otherwise return as-is for other same-origin URLs
+        return url;
+      }
 
       // For OAuth flows, redirect to Mantle extension
       // For session token auth, this shouldn't be reached, but return baseUrl as fallback
       const mantleUrl =
         process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com";
+
+      console.log({ mantleUrl }, "REDIRECTING TO MANTLE URL KPD");
       return `${mantleUrl}/extensions/${process.env.NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE}`;
     },
   },

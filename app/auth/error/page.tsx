@@ -16,6 +16,8 @@ function AuthErrorContent() {
         return "Access denied. You do not have permission to sign in.";
       case "Verification":
         return "The verification token has expired or has already been used.";
+      case "OAuthAccountNotLinked":
+        return "This email is already associated with another account. Please contact support if you need to link accounts.";
       case "Default":
         return "An error occurred during authentication.";
       default:

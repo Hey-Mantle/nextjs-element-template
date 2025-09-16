@@ -133,8 +133,15 @@ export default async function Home({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  console.log("=== PAGE.TSX EXECUTING ===");
+
   // Await searchParams as required by Next.js
   const resolvedSearchParams = await searchParams;
+
+  console.log(
+    "Search params:",
+    Object.fromEntries(Object.entries(resolvedSearchParams))
+  );
 
   // Convert searchParams to URLSearchParams for easier manipulation
   const urlSearchParams = new URLSearchParams();
@@ -148,7 +155,11 @@ export default async function Home({
 
   // Check for HMAC parameter - indicates an initial install request from Mantle
   const hmac = urlSearchParams.get("hmac");
+  // Note: We'll let the client-side determine if we're actually in an iframe using appBridge.isInIframe()
   const isEmbedded = urlSearchParams.get("embedded") === "1";
+
+  console.log("HMAC found:", !!hmac);
+  console.log("Is embedded:", isEmbedded);
 
   // Server-side environment variable validation
   const requiredEnvVars = [
@@ -179,7 +190,13 @@ export default async function Home({
     timestampAge: undefined as number | undefined,
     errorMessage: undefined as string | undefined,
     requestParams: Object.fromEntries(urlSearchParams.entries()),
+    needsOAuthRedirect: false,
+    organizationId: undefined as string | undefined,
   };
+
+  // Handle HMAC verification and redirects
+  let shouldRedirect = false;
+  let redirectUrl = "";
 
   if (hmac) {
     try {
@@ -219,25 +236,39 @@ export default async function Home({
           requestOrganizationId
         );
 
-        // For embedded requests, let the client-side handle authentication
-        if (isEmbedded) {
-          console.log("Embedded request - will authenticate via app bridge");
+        // Check if organization exists in database
+        const { prisma } = await import("@/lib/prisma");
+        const organization = await prisma.organization.findUnique({
+          where: { mantleId: requestOrganizationId || "" },
+        });
+
+        console.log("Organization lookup result:", {
+          requestOrganizationId,
+          organizationFound: !!organization,
+          organizationId: organization?.id,
+          organizationName: organization?.name,
+        });
+
+        // Determine redirect URL based on organization existence
+        if (organization) {
+          // Organization exists - render client components and let normal auth flow happen
+          console.log(
+            "Valid HMAC request with existing organization - rendering client components"
+          );
+          // Don't redirect - let the client components handle authentication
+          // Don't set shouldRedirect = true here
         } else {
-          // For non-embedded requests (initial install), redirect to OAuth
-          console.log("Initial install request - redirecting to OAuth");
-          const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
-            requestOrganizationId || ""
-          )}`;
-          redirect(initiateUrl);
+          // Organization doesn't exist - let client-side handle redirect
+          // Client will use appBridge.isInIframe() to determine if it's actually in an iframe
+          console.log(
+            "Valid HMAC request with non-existent organization - letting client handle redirect"
+          );
+          hmacVerificationStatus.needsOAuthRedirect = true;
+          hmacVerificationStatus.organizationId = requestOrganizationId || "";
+          // Don't set shouldRedirect = true here
         }
       }
     } catch (error) {
-      // Check if this is a NEXT_REDIRECT error (expected behavior)
-      if (error instanceof Error && error.message === "NEXT_REDIRECT") {
-        // Re-throw to let Next.js handle the redirect properly
-        throw error;
-      }
-
       console.error("Error during HMAC verification:", error);
       hmacVerificationStatus.errorMessage = `Verification error: ${
         error instanceof Error ? error.message : "Unknown error"
@@ -246,7 +277,55 @@ export default async function Home({
     }
   }
 
+  // Perform redirect outside of try-catch to avoid catching NEXT_REDIRECT
+  if (shouldRedirect) {
+    console.log("=== PERFORMING REDIRECT ===");
+    console.log("Redirect URL:", redirectUrl);
+    redirect(redirectUrl);
+  }
+
+  // If we have a valid HMAC request and should have redirected at server level, we should have redirected by now
+  // Only render the client components if we don't have a server-level redirect-worthy HMAC request
+  if (hmac && hmacVerificationStatus.isVerified && shouldRedirect) {
+    // This should not happen - we should have redirected
+    // But if it does, show a loading state
+    console.log("=== SHOULD HAVE REDIRECTED BUT DIDN'T ===");
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If we have an HMAC request but verification failed, also don't render client components
+  if (hmac && !hmacVerificationStatus.isVerified) {
+    console.log("=== HMAC VERIFICATION FAILED ===");
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Invalid Request
+          </h2>
+          <p className="text-gray-600">
+            The request could not be verified. Please try again.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Render the embedded app (handles authentication internally)
+  console.log("=== RENDERING CLIENT COMPONENTS ===");
+  console.log("HMAC verification status:", hmacVerificationStatus);
+  console.log(
+    "This should only happen if no HMAC request was made or HMAC verification failed"
+  );
+  console.log("needsOAuthRedirect:", hmacVerificationStatus.needsOAuthRedirect);
+  console.log("organizationId:", hmacVerificationStatus.organizationId);
+
   return (
     <ClientPageWrapper hmacVerificationStatus={hmacVerificationStatus}>
       <Page title="Your Mantle Element" subtitle="Build it out!">
