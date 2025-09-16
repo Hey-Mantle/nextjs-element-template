@@ -62,80 +62,79 @@ export default function HmacVerificationStatus({
   };
 
   return (
-    <Card>
-      <VerticalStack gap="3">
-        <HorizontalStack gap="3" align="center">
-          <Text variant="headingMd">HMAC Verification Status</Text>
-          <Text variant="bodyLg">{getStatusIcon()}</Text>
-        </HorizontalStack>
-
+    <VerticalStack gap="3">
+      <HorizontalStack gap="3" align="center">
+        <Text variant="bodyMd" fontWeight="medium">
+          Status:
+        </Text>
+        <Text variant="bodyLg">{getStatusIcon()}</Text>
         <Text variant="bodyMd" color={getStatusColor()}>
           {getStatusText()}
         </Text>
+      </HorizontalStack>
 
-        {/* Detailed verification breakdown - only show if we have HMAC */}
-        {hasHmac &&
-          (isHmacValid !== undefined || isTimestampValid !== undefined) && (
-            <VerticalStack gap="2">
-              <Text variant="bodySm" fontWeight="medium">
-                Verification Details:
-              </Text>
-              <HorizontalStack gap="3" align="center">
-                <Text variant="bodySm" fontWeight="medium">
-                  HMAC:
-                </Text>
-                <Badge status={isHmacValid ? "success" : "critical"}>
-                  <Text variant="bodySm">
-                    {isHmacValid ? "Valid" : "Invalid"}
-                  </Text>
-                </Badge>
-              </HorizontalStack>
-              <HorizontalStack gap="3" align="center">
-                <Text variant="bodySm" fontWeight="medium">
-                  Timestamp:
-                </Text>
-                <Badge status={isTimestampValid ? "success" : "warning"}>
-                  <Text variant="bodySm">
-                    {isTimestampValid ? "Valid" : "Expired"}
-                  </Text>
-                </Badge>
-                {timestampAge !== undefined && (
-                  <Text variant="bodySm" color="subdued">
-                    ({formatTimestampAge(timestampAge)} old)
-                  </Text>
-                )}
-              </HorizontalStack>
-            </VerticalStack>
-          )}
-
-        {errorMessage && (
-          <Text variant="bodySm" color="critical">
-            Error: {errorMessage}
-          </Text>
-        )}
-
-        {requestParams && Object.keys(requestParams).length > 0 && (
+      {/* Detailed verification breakdown - only show if we have HMAC */}
+      {hasHmac &&
+        (isHmacValid !== undefined || isTimestampValid !== undefined) && (
           <VerticalStack gap="2">
             <Text variant="bodySm" fontWeight="medium">
-              Request Parameters:
+              Verification Details:
             </Text>
-            <Card>
-              <VerticalStack gap="1">
-                {Object.entries(requestParams).map(([key, value]) => (
-                  <HorizontalStack key={key} gap="2">
-                    <Text variant="bodySm" color="link" className="font-mono">
-                      {key}:
-                    </Text>
-                    <Text variant="bodySm" className="font-mono">
-                      {value}
-                    </Text>
-                  </HorizontalStack>
-                ))}
-              </VerticalStack>
-            </Card>
+            <HorizontalStack gap="3" align="center">
+              <Text variant="bodySm" fontWeight="medium">
+                HMAC:
+              </Text>
+              <Badge status={isHmacValid ? "success" : "critical"}>
+                <Text variant="bodySm">
+                  {isHmacValid ? "Valid" : "Invalid"}
+                </Text>
+              </Badge>
+            </HorizontalStack>
+            <HorizontalStack gap="3" align="center">
+              <Text variant="bodySm" fontWeight="medium">
+                Timestamp:
+              </Text>
+              <Badge status={isTimestampValid ? "success" : "warning"}>
+                <Text variant="bodySm">
+                  {isTimestampValid ? "Valid" : "Expired"}
+                </Text>
+              </Badge>
+              {timestampAge !== undefined && (
+                <Text variant="bodySm" color="subdued">
+                  ({formatTimestampAge(timestampAge)} old)
+                </Text>
+              )}
+            </HorizontalStack>
           </VerticalStack>
         )}
-      </VerticalStack>
-    </Card>
+
+      {errorMessage && (
+        <Text variant="bodySm" color="critical">
+          Error: {errorMessage}
+        </Text>
+      )}
+
+      {requestParams && Object.keys(requestParams).length > 0 && (
+        <VerticalStack gap="2">
+          <Text variant="bodySm" fontWeight="medium">
+            Request Parameters:
+          </Text>
+          <Card>
+            <VerticalStack gap="1">
+              {Object.entries(requestParams).map(([key, value]) => (
+                <HorizontalStack key={key} gap="2">
+                  <Text variant="bodySm" color="link" className="font-mono">
+                    {key}:
+                  </Text>
+                  <Text variant="bodySm" className="font-mono">
+                    {value}
+                  </Text>
+                </HorizontalStack>
+              ))}
+            </VerticalStack>
+          </Card>
+        </VerticalStack>
+      )}
+    </VerticalStack>
   );
 }

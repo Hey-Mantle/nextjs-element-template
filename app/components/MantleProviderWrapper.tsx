@@ -13,7 +13,8 @@ export default function MantleProviderWrapper({
     <MantleProvider
       appId={process.env.NEXT_PUBLIC_MANTLE_APP_ID!}
       apiUrl={
-        process.env.NEXT_PUBLIC_MANTLE_API_URL ?? "https://api.heymantle.com/v1"
+        process.env.NEXT_PUBLIC_MANTLE_APP_API_URL ??
+        "https://appapi.heymantle.com/v1"
       }
       customerApiToken="" // Will be set after OAuth completion
     >

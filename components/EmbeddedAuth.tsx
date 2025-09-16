@@ -1,8 +1,10 @@
 "use client";
 
+import { EmbeddedAuthProvider } from "@/lib/embedded-auth-context";
 import { isRunningInIframe } from "@/lib/mantle-app-bridge";
 import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
 import { Button, Page, Spinner, VerticalStack } from "@heymantle/litho";
+import { Organization, User } from "@prisma/client";
 import { useCallback, useEffect, useState } from "react";
 
 interface EmbeddedAuthProps {
@@ -33,6 +35,8 @@ export default function EmbeddedAuth({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
 
   const {
     isConnected,
@@ -114,28 +118,25 @@ export default function EmbeddedAuth({
       setIsAuthenticating(true);
       setAuthError(null);
 
-      // Use the new authentication approach via API endpoint
+      // TODO: replace with app-bridge authenticatedFetch
       fetch("/api/auth/verify-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionToken}`,
         },
-        body: JSON.stringify({
-          sessionToken,
-        }),
       })
         .then(async (response) => {
           const result = await response.json();
 
-          if (response.ok && result.user) {
+          if (response.ok && result.user && result.organization) {
+            setUser(result.user);
+            setOrganization(result.organization);
             setIsAuthenticated(true);
           } else {
-            // Handle 401 Unauthorized - redirect parent window to OAuth
             if (response.status === 401) {
               setShouldRedirect(true);
-              if (typeof window !== "undefined" && appBridge?.redirect) {
-                appBridge.redirect(window.location.href);
-              }
+              appBridge?.redirect(window.location.href);
               return;
             }
 
@@ -241,9 +242,19 @@ export default function EmbeddedAuth({
     );
   }
 
-  // Render children when authenticated
+  // Render children when authenticated, wrapped in context provider
   if (isAuthenticated) {
-    return <>{children}</>;
+    return (
+      <EmbeddedAuthProvider
+        user={user}
+        organization={organization}
+        isAuthenticated={isAuthenticated}
+        isLoading={isAuthenticating}
+        error={authError}
+      >
+        {children}
+      </EmbeddedAuthProvider>
+    );
   }
 
   // Default loading state

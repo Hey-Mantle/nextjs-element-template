@@ -1,23 +1,14 @@
+import { Organization, User } from "@prisma/client";
 import crypto from "crypto";
-import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 import { prisma } from "./prisma";
-
-export interface AuthenticatedUser {
-  id: string;
-  email: string;
-  name: string;
-  userId: string; // Mantle user ID
-  organizationId: string; // Mantle organization ID
-  organizationName: string;
-}
 
 /**
  * Verify JWT token with database lookup (for use in API routes)
  */
-export async function verifyJWTToken(
+async function verifyJWTToken(
   token: string
-): Promise<AuthenticatedUser | null> {
+): Promise<{ user: User; organization: Organization } | null> {
   try {
     // Decode the JWT payload
     const jwtParts = token.split(".");
@@ -56,20 +47,20 @@ export async function verifyJWTToken(
     }
 
     // Look up user by userId first (Mantle's internal user ID) for more accurate matching
-    let dbUser = await prisma.user.findFirst({
+    let user = await prisma.user.findFirst({
       where: { userId: payload.user.id },
     });
 
     // If not found by userId, try by email as fallback
-    if (!dbUser) {
-      dbUser = await prisma.user.findUnique({
+    if (!user) {
+      user = await prisma.user.findUnique({
         where: { email: payload.user.email },
       });
     }
 
-    if (!dbUser) {
+    if (!user) {
       // Create new user if not found
-      dbUser = await prisma.user.create({
+      user = await prisma.user.create({
         data: {
           userId: payload.user.id,
           email: payload.user.email,
@@ -79,12 +70,12 @@ export async function verifyJWTToken(
     } else {
       // Update user if name has changed
       const needsUpdate =
-        dbUser.name !== (payload.user.name || "") ||
-        dbUser.userId !== payload.user.id;
+        user.name !== (payload.user.name || "") ||
+        user.userId !== payload.user.id;
 
       if (needsUpdate) {
-        dbUser = await prisma.user.update({
-          where: { id: dbUser.id },
+        user = await prisma.user.update({
+          where: { id: user.id },
           data: {
             userId: payload.user.id,
             name: payload.user.name || "",
@@ -97,7 +88,7 @@ export async function verifyJWTToken(
     const existingUserOrg = await prisma.userOrganization.findUnique({
       where: {
         userId_organizationId: {
-          userId: dbUser.id,
+          userId: user.id,
           organizationId: organization.id,
         },
       },
@@ -107,23 +98,13 @@ export async function verifyJWTToken(
     if (!existingUserOrg) {
       await prisma.userOrganization.create({
         data: {
-          userId: dbUser.id,
+          userId: user.id,
           organizationId: organization.id,
         },
       });
     }
 
-    // Extract user info from JWT payload and database
-    const user: AuthenticatedUser = {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name || "",
-      userId: dbUser.userId || payload.user.id,
-      organizationId: organization.mantleId,
-      organizationName: organization.name,
-    };
-
-    return user;
+    return { user, organization };
   } catch (error) {
     console.error("JWT Auth - verification failed:", error);
     return null;
@@ -134,38 +115,24 @@ export async function verifyJWTToken(
  * Get authenticated user from JWT token in request headers
  */
 export async function getAuthenticatedUser(
-  request?: NextRequest
-): Promise<AuthenticatedUser | null> {
-  try {
-    let sessionToken: string | null = null;
+  request: NextRequest
+): Promise<{ user: User | null; organization: Organization | null }> {
+  let sessionToken: string | null = null;
 
-    if (request) {
-      // Check Authorization header (Bearer token)
-      const authHeader = request.headers.get("authorization");
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        sessionToken = authHeader.substring(7);
-      }
-
-      // Fallback to cookie
-      if (!sessionToken) {
-        sessionToken = request.cookies.get("session-token")?.value || null;
-      }
-    } else {
-      // Access from Next.js headers() function (for App Router)
-      const headersList = await headers();
-      const authHeader = headersList.get("authorization");
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        sessionToken = authHeader.substring(7);
-      }
-    }
-
-    if (!sessionToken) {
-      return null;
-    }
-
-    return await verifyJWTToken(sessionToken);
-  } catch (error) {
-    console.error("JWT Auth - error getting authenticated user:", error);
-    return null;
+  // Check Authorization header (Bearer token)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    sessionToken = authHeader.substring(7);
   }
+
+  if (!sessionToken) {
+    return { user: null, organization: null };
+  }
+
+  const verifiedToken = await verifyJWTToken(sessionToken);
+  if (!verifiedToken) {
+    return { user: null, organization: null };
+  }
+
+  return verifiedToken;
 }

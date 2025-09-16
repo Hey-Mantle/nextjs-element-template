@@ -1,7 +1,8 @@
 import AppBridgeSessionUser from "@/components/AppBridgeSessionUser";
 import ClientPageWrapper from "@/components/ClientPageWrapper";
-import CustomAuthTestComponent from "@/components/CustomAuthTestComponent";
+import CollapsibleDebugSection from "@/components/CollapsibleDebugSection";
 import HmacVerificationStatus from "@/components/HmacVerificationStatus";
+import UserInfoDisplay from "@/components/UserInfoDisplay";
 import { prisma } from "@/lib/prisma";
 import { Page, Spinner, Text, VerticalStack } from "@heymantle/litho";
 import crypto from "crypto";
@@ -15,10 +16,6 @@ interface HmacVerificationResult {
   errorMessage?: string;
 }
 
-/**
- * Verify HMAC signature for Mantle installation requests
- * Based on Shopify's HMAC verification process
- */
 async function verifyMantleRequest(
   searchParams: URLSearchParams
 ): Promise<HmacVerificationResult> {
@@ -243,9 +240,17 @@ export default async function Home({
     >
       <Page title="Your Mantle Element" subtitle="Build it out!">
         <VerticalStack gap="4">
-          <HmacVerificationStatus {...hmacVerificationStatus} />
-          <CustomAuthTestComponent />
-          <AppBridgeSessionUser />
+          {/* Primary content - User and Organization info */}
+          <UserInfoDisplay />
+
+          {/* Debug information - collapsible */}
+          <CollapsibleDebugSection title="HMAC Verification Details">
+            <HmacVerificationStatus {...hmacVerificationStatus} />
+          </CollapsibleDebugSection>
+
+          <CollapsibleDebugSection title="Session Token Details">
+            <AppBridgeSessionUser />
+          </CollapsibleDebugSection>
         </VerticalStack>
       </Page>
     </ClientPageWrapper>

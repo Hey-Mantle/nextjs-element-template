@@ -4,6 +4,7 @@ import { prisma } from "./prisma";
 
 // this needs to be left in for the declare module below
 import { JWT } from "next-auth/jwt";
+import { identifyCustomer } from "./mantle-client";
 
 // Mantle OAuth provider configuration
 const MantleOAuth = {
@@ -99,6 +100,18 @@ const MantleOAuth = {
         userId: userRecord.id,
         organizationId: orgRecord.id,
       },
+    });
+
+    const { customerApiToken } = await identifyCustomer({
+      platform: "mantle",
+      platformId: orgRecord.mantleId,
+      name: orgRecord.name,
+      email: userRecord.email,
+    });
+
+    await prisma.organization.update({
+      where: { id: orgRecord.id },
+      data: { apiToken: customerApiToken },
     });
 
     return {
