@@ -66,7 +66,7 @@ export default function HmacVerificationStatus({
       <VerticalStack gap="3">
         <HorizontalStack gap="3" align="center">
           <Text variant="headingMd">HMAC Verification Status</Text>
-          <span className="text-lg">{getStatusIcon()}</span>
+          <Text variant="bodyLg">{getStatusIcon()}</Text>
         </HorizontalStack>
 
         <Text variant="bodyMd" color={getStatusColor()}>
@@ -119,14 +119,20 @@ export default function HmacVerificationStatus({
             <Text variant="bodySm" fontWeight="medium">
               Request Parameters:
             </Text>
-            <div className="bg-gray-50 p-3 rounded text-xs font-mono">
-              {Object.entries(requestParams).map(([key, value]) => (
-                <div key={key} className="mb-1">
-                  <span className="text-blue-600">{key}:</span>{" "}
-                  <span className="text-gray-700">{value}</span>
-                </div>
-              ))}
-            </div>
+            <Card>
+              <VerticalStack gap="1">
+                {Object.entries(requestParams).map(([key, value]) => (
+                  <HorizontalStack key={key} gap="2">
+                    <Text variant="bodySm" color="link" className="font-mono">
+                      {key}:
+                    </Text>
+                    <Text variant="bodySm" className="font-mono">
+                      {value}
+                    </Text>
+                  </HorizontalStack>
+                ))}
+              </VerticalStack>
+            </Card>
           </VerticalStack>
         )}
       </VerticalStack>

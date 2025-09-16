@@ -17,17 +17,9 @@ interface ClientPageWrapperProps {
  */
 export default function ClientPageWrapper({
   children,
-  hmacVerificationStatus,
   needsOAuthRedirect = false,
   organizationId,
 }: ClientPageWrapperProps) {
-  console.log(
-    "ClientPageWrapper - hmacVerificationStatus:",
-    hmacVerificationStatus
-  );
-  console.log("ClientPageWrapper - needsOAuthRedirect:", needsOAuthRedirect);
-  console.log("ClientPageWrapper - organizationId:", organizationId);
-
   return (
     <SessionProvider>
       <MantleAppBridgeProvider>

@@ -2,6 +2,7 @@
 
 import { isRunningInIframe } from "@/lib/mantle-app-bridge";
 import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
+import { Button, Page, Spinner, VerticalStack } from "@heymantle/litho";
 import { useCallback, useEffect, useState } from "react";
 
 interface EmbeddedAuthProps {
@@ -31,6 +32,7 @@ export default function EmbeddedAuth({
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   const {
     isConnected,
@@ -51,26 +53,18 @@ export default function EmbeddedAuth({
 
   const sessionToken = getSessionToken(appBridgeSession);
 
+  // Set client flag after hydration to prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Handle OAuth redirect for unrecognized organizations or non-iframe access
   useEffect(() => {
     const actuallyInIframe = appBridge?.isInIframe?.() ?? isInIframe;
-
-    console.log("EmbeddedAuth - OAuth redirect effect triggered:", {
-      needsOAuthRedirect,
-      isInIframe,
-      actuallyInIframe,
-      isConnected,
-      hasAppBridge: !!appBridge,
-      hasRedirect: !!appBridge?.redirect,
-      hasIsInIframe: !!appBridge?.isInIframe,
-      organizationId,
-    });
-
     // Always treat non-iframe access as needing OAuth redirect
     const shouldRedirectToOAuth = needsOAuthRedirect || !actuallyInIframe;
 
     if (!shouldRedirectToOAuth) {
-      console.log("EmbeddedAuth - OAuth redirect not needed, skipping");
       return;
     }
 
@@ -80,10 +74,6 @@ export default function EmbeddedAuth({
       isConnected &&
       appBridge?.redirect
     ) {
-      console.log(
-        "EmbeddedAuth - redirecting to OAuth for organization:",
-        organizationId
-      );
       setShouldRedirect(true);
 
       // For iframe context, redirect the parent window to ensure cookies are set at root level
@@ -92,18 +82,10 @@ export default function EmbeddedAuth({
       const initiateUrl = organizationId
         ? `${baseUrl}?organizationId=${encodeURIComponent(organizationId)}`
         : baseUrl;
-      console.log(
-        "EmbeddedAuth - redirecting parent window to NextAuth initiate URL:",
-        initiateUrl
-      );
       appBridge.redirect(initiateUrl);
     } else if (shouldRedirectToOAuth && !actuallyInIframe) {
       // If we need OAuth redirect but we're not in an iframe, do a regular redirect
       // This should happen immediately, regardless of app bridge connection status
-      console.log(
-        "EmbeddedAuth - not in iframe, doing regular redirect to OAuth for organization:",
-        organizationId
-      );
       setShouldRedirect(true);
 
       // Use NextAuth's OAuth initiation endpoint to ensure proper state cookie handling
@@ -111,7 +93,6 @@ export default function EmbeddedAuth({
       const initiateUrl = organizationId
         ? `${baseUrl}?organizationId=${encodeURIComponent(organizationId)}`
         : baseUrl;
-      console.log("EmbeddedAuth - doing regular redirect to:", initiateUrl);
       window.location.href = initiateUrl;
     }
   }, [needsOAuthRedirect, isInIframe, isConnected, appBridge, organizationId]);
@@ -182,6 +163,12 @@ export default function EmbeddedAuth({
     shouldRedirect,
     appBridge,
   ]);
+
+  // Always start with a loading state to prevent hydration mismatch
+  // The client will update this state after hydration
+  if (!isClient) {
+    return <LoadingState message="Initializing..." />;
+  }
 
   // Show loading while connecting to app bridge
   if (isConnecting) {
@@ -266,12 +253,11 @@ export default function EmbeddedAuth({
 // Helper components
 function LoadingState({ message }: { message: string }) {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-2 text-gray-600">{message}</p>
-      </div>
-    </div>
+    <Page title="Loading" subtitle={message}>
+      <VerticalStack gap="4" align="center">
+        <Spinner size="large" />
+      </VerticalStack>
+    </Page>
   );
 }
 
@@ -285,34 +271,14 @@ function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center max-w-md">
-        <div className="text-red-600 mb-4">
-          <svg
-            className="h-12 w-12 mx-auto"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
-          </svg>
-        </div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">{title}</h2>
-        <p className="text-gray-600 mb-4">{message}</p>
+    <Page title={title} subtitle={message}>
+      <VerticalStack gap="4" align="center">
         {onRetry && (
-          <button
-            onClick={onRetry}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
+          <Button onClick={onRetry} primary>
             Try Again
-          </button>
+          </Button>
         )}
-      </div>
-    </div>
+      </VerticalStack>
+    </Page>
   );
 }

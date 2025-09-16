@@ -73,7 +73,6 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
         session?: MantleSession | string;
         organizationId?: string;
       }) => {
-        console.log("App Bridge ready:", data);
         readyEventReceived = true;
         setIsConnected(true);
         setIsConnecting(false);
@@ -90,28 +89,24 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
         session: MantleSession | string;
         organizationId?: string;
       }) => {
-        console.log("Session received:", data);
         setSession(data.session);
         setSessionError(null);
         setIsSessionLoading(false);
       };
 
       const handleSessionError = (error: string) => {
-        console.log("Session error:", error);
         setSessionError(error);
         setSession(null);
         setIsSessionLoading(false);
       };
 
       const handleUser = (userData: MantleUser) => {
-        console.log("User received:", userData);
         setUser(userData);
         setUserError(null);
         setIsUserLoading(false);
       };
 
       const handleConnectionError = (error: any) => {
-        console.log("Connection error:", error);
         setConnectionError("App Bridge connection failed");
         setIsConnected(false);
         setIsConnecting(false);
@@ -208,9 +203,6 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
   // Auto-fetch session and user when connected (only if we don't have them yet)
   useEffect(() => {
     if (isConnected && appBridge && !session && !isSessionLoading) {
-      console.log(
-        "useMantleAppBridge - auto-fetching session and user on connection"
-      );
       refreshSession();
       refreshUser();
     }

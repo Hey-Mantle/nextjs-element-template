@@ -132,7 +132,7 @@ export default function AppBridgeSessionUser() {
                           <Text variant="bodyMd" fontWeight="medium">
                             Decoded JWT Payload:
                           </Text>
-                          <VerticalStack gap="1" className="pl-4">
+                          <VerticalStack gap="1">
                             {Object.entries(decodedPayload).map(
                               ([key, value]) => (
                                 <HorizontalStack

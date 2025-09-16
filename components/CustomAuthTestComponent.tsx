@@ -1,6 +1,13 @@
 "use client";
 
-import { Badge, Button, Card, Text, VerticalStack } from "@heymantle/litho";
+import {
+  Badge,
+  Button,
+  Card,
+  HorizontalStack,
+  Text,
+  VerticalStack,
+} from "@heymantle/litho";
 import { useEffect, useState } from "react";
 
 interface AuthTestResponse {
@@ -44,25 +51,21 @@ export default function CustomAuthTestComponent() {
   useEffect(() => {
     const initializeAppBridge = () => {
       if (typeof window !== "undefined" && window.mantle) {
-        console.log("Mantle App Bridge detected");
         setAppBridgeReady(window.mantle.ready || false);
 
         if (window.mantle.currentSession) {
-          console.log("Session token available from App Bridge");
           setAppBridgeSession(window.mantle.currentSession);
         }
 
         // Listen for session updates
         if (window.mantle.on) {
           window.mantle.on("session", (data: any) => {
-            console.log("App Bridge session updated:", data);
             if (data.session) {
               setAppBridgeSession(data.session);
             }
           });
 
           window.mantle.on("ready", (data: any) => {
-            console.log("App Bridge ready:", data);
             setAppBridgeReady(true);
             if (data.session) {
               setAppBridgeSession(data.session);
@@ -72,7 +75,6 @@ export default function CustomAuthTestComponent() {
 
         // Request session if not available
         if (!window.mantle.currentSession && window.mantle.requestSession) {
-          console.log("Requesting session from App Bridge");
           window.mantle.requestSession();
         }
       } else {
@@ -95,9 +97,6 @@ export default function CustomAuthTestComponent() {
     setTestResponse(null);
 
     try {
-      console.log(
-        "Testing with App Bridge session token via Authorization header..."
-      );
       const testRes = await fetch("/api/auth/test-session", {
         method: "GET",
         headers: {
@@ -107,7 +106,6 @@ export default function CustomAuthTestComponent() {
 
       const testData = await testRes.json();
       setTestResponse(testData);
-      console.log("App Bridge auth test response:", testData);
     } catch (error) {
       console.error("Error testing App Bridge auth:", error);
       setTestResponse({
@@ -188,7 +186,7 @@ export default function CustomAuthTestComponent() {
             <Card>
               <Text
                 variant="bodySm"
-                className="font-mono whitespace-pre-wrap break-words text-xs"
+                className="font-mono whitespace-pre-wrap break-words"
               >
                 {JSON.stringify(response, null, 2)}
               </Text>
@@ -225,22 +223,22 @@ export default function CustomAuthTestComponent() {
           <VerticalStack gap="2">
             <Text variant="headingSm">Mantle App Bridge Status</Text>
             <VerticalStack gap="1">
-              <Text variant="bodyMd">
-                Ready:{" "}
+              <HorizontalStack gap="2" align="center">
+                <Text variant="bodyMd">Ready:</Text>
                 {appBridgeReady ? (
                   <Badge status="success">Connected</Badge>
                 ) : (
                   <Badge status="warning">Not Ready</Badge>
                 )}
-              </Text>
-              <Text variant="bodyMd">
-                Session Available:{" "}
+              </HorizontalStack>
+              <HorizontalStack gap="2" align="center">
+                <Text variant="bodyMd">Session Available:</Text>
                 {appBridgeSession ? (
                   <Badge status="success">Yes</Badge>
                 ) : (
                   <Badge status="critical">No</Badge>
                 )}
-              </Text>
+              </HorizontalStack>
               {appBridgeSession && (
                 <Text variant="bodyMd" color="subdued">
                   Token Preview: {appBridgeSession.substring(0, 50)}...
