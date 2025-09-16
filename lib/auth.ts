@@ -243,151 +243,107 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // Ensure HTTPS is used in production and development
   trustHost: true,
   callbacks: {
-    async signIn({ user, account, profile }) {
-      console.log("[NextAuth SignIn] SignIn callback triggered");
-      console.log("[NextAuth SignIn] User:", JSON.stringify(user, null, 2));
-      console.log(
-        "[NextAuth SignIn] Account:",
-        JSON.stringify(account, null, 2)
-      );
-      console.log(
-        "[NextAuth SignIn] Profile:",
-        JSON.stringify(profile, null, 2)
-      );
-
-      // Always allow sign-in for MantleOAuth provider
-      // This prevents OAuthAccountNotLinked errors
-      if (account?.provider === "MantleOAuth") {
-        console.log("[NextAuth SignIn] Allowing MantleOAuth sign-in");
-        return true;
-      }
-
-      // SignIn callback runs before user creation, so we can't update the user here
-      // User-organization linking will be handled in the JWT callback after user creation
-
-      return true;
-    },
-    async jwt({ token, user, account }) {
-      console.log("[NextAuth JWT] JWT callback triggered");
-      console.log("[NextAuth JWT] Token:", JSON.stringify(token, null, 2));
-      console.log("[NextAuth JWT] User:", JSON.stringify(user, null, 2));
-      console.log("[NextAuth JWT] Account:", JSON.stringify(account, null, 2));
-
-      // If this is MantleOAuth provider, handle user-organization linking for new users
-      if (account?.provider === "MantleOAuth" && user) {
-        console.log("[NextAuth JWT] Processing MantleOAuth user");
-        // Get the user's organization info for the token
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            include: {
-              userOrganizations: {
-                include: { organization: true },
-              },
-            },
-          });
-
-          console.log(
-            "[NextAuth JWT] Database user:",
-            JSON.stringify(dbUser, null, 2)
-          );
-
-          // For OAuth flow, get the first organization (there should only be one at this point)
-          const userOrg = dbUser?.userOrganizations?.[0];
-          if (userOrg?.organization) {
-            token.organizationId = userOrg.organization.mantleId;
-            token.organizationName = userOrg.organization.name;
-            console.log("[NextAuth JWT] Added organization to token:", {
-              organizationId: token.organizationId,
-              organizationName: token.organizationName,
-            });
-          } else {
-            console.log("[NextAuth JWT] No organization found for user");
-          }
-        } catch (error) {
-          console.error(
-            "[NextAuth JWT] Error fetching user organization:",
-            error
-          );
-        }
-
-        token.userId = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        console.log("[NextAuth JWT] Updated token with user data");
-      }
-
-      console.log(
-        "[NextAuth JWT] Final token:",
-        JSON.stringify(token, null, 2)
-      );
-      return token;
-    },
-    async session({ session, token }) {
-      console.log("[NextAuth Session] Session callback triggered");
-      console.log(
-        "[NextAuth Session] Session:",
-        JSON.stringify(session, null, 2)
-      );
-      console.log("[NextAuth Session] Token:", JSON.stringify(token, null, 2));
-
-      // For JWT strategy, get user data from token
-      if (token) {
-        const sessionResult = {
-          ...session,
-          user: {
-            ...session.user,
-            id: token.userId as string,
-            email: token.email as string,
-            name: token.name as string,
-            organizationId: token.organizationId as string,
-            organizationName: token.organizationName as string,
-          },
-        } as any; // Type assertion to handle complex type intersection
-
-        console.log(
-          "[NextAuth Session] Final session result:",
-          JSON.stringify(sessionResult, null, 2)
-        );
-        return sessionResult;
-      }
-
-      console.log("[NextAuth Session] No token, returning original session");
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      console.log({ url, baseUrl }, "REDIRECTING TO MANTLE URL KPD");
-      // For relative URLs, make them absolute
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-
-      // For same-origin URLs, check if this is an OAuth callback with organizationId
-      if (new URL(url).origin === baseUrl) {
-        const urlObj = new URL(url);
-        const organizationId = urlObj.searchParams.get("organizationId");
-
-        // If this is an OAuth callback with organizationId, redirect to Mantle extension
-        if (organizationId) {
-          console.log(
-            { organizationId },
-            "OAuth callback detected, redirecting to Mantle extension"
-          );
-          const mantleUrl =
-            process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com";
-          return `${mantleUrl}/extensions/${process.env.NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE}`;
-        }
-
-        // Otherwise return as-is for other same-origin URLs
-        return url;
-      }
-
-      // For OAuth flows, redirect to Mantle extension
-      // For session token auth, this shouldn't be reached, but return baseUrl as fallback
-      const mantleUrl =
-        process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com";
-
-      console.log({ mantleUrl }, "REDIRECTING TO MANTLE URL KPD");
-      return `${mantleUrl}/extensions/${process.env.NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE}`;
-    },
+    // async signIn({ user, account, profile }) {
+    //   console.log("[NextAuth SignIn] SignIn callback triggered");
+    //   console.log("[NextAuth SignIn] User:", JSON.stringify(user, null, 2));
+    //   console.log(
+    //     "[NextAuth SignIn] Account:",
+    //     JSON.stringify(account, null, 2)
+    //   );
+    //   console.log(
+    //     "[NextAuth SignIn] Profile:",
+    //     JSON.stringify(profile, null, 2)
+    //   );
+    //   // Always allow sign-in for MantleOAuth provider
+    //   // This prevents OAuthAccountNotLinked errors
+    //   if (account?.provider === "MantleOAuth") {
+    //     console.log("[NextAuth SignIn] Allowing MantleOAuth sign-in");
+    //     return true;
+    //   }
+    //   // SignIn callback runs before user creation, so we can't update the user here
+    //   // User-organization linking will be handled in the JWT callback after user creation
+    //   return true;
+    // },
+    // async jwt({ token, user, account }) {
+    //   console.log("[NextAuth JWT] JWT callback triggered");
+    //   console.log("[NextAuth JWT] Token:", JSON.stringify(token, null, 2));
+    //   console.log("[NextAuth JWT] User:", JSON.stringify(user, null, 2));
+    //   console.log("[NextAuth JWT] Account:", JSON.stringify(account, null, 2));
+    //   // If this is MantleOAuth provider, handle user-organization linking for new users
+    //   if (account?.provider === "MantleOAuth" && user) {
+    //     console.log("[NextAuth JWT] Processing MantleOAuth user");
+    //     // Get the user's organization info for the token
+    //     try {
+    //       const dbUser = await prisma.user.findUnique({
+    //         where: { id: user.id },
+    //         include: {
+    //           userOrganizations: {
+    //             include: { organization: true },
+    //           },
+    //         },
+    //       });
+    //       console.log(
+    //         "[NextAuth JWT] Database user:",
+    //         JSON.stringify(dbUser, null, 2)
+    //       );
+    //       // For OAuth flow, get the first organization (there should only be one at this point)
+    //       const userOrg = dbUser?.userOrganizations?.[0];
+    //       if (userOrg?.organization) {
+    //         token.organizationId = userOrg.organization.mantleId;
+    //         token.organizationName = userOrg.organization.name;
+    //         console.log("[NextAuth JWT] Added organization to token:", {
+    //           organizationId: token.organizationId,
+    //           organizationName: token.organizationName,
+    //         });
+    //       } else {
+    //         console.log("[NextAuth JWT] No organization found for user");
+    //       }
+    //     } catch (error) {
+    //       console.error(
+    //         "[NextAuth JWT] Error fetching user organization:",
+    //         error
+    //       );
+    //     }
+    //     token.userId = user.id;
+    //     token.email = user.email;
+    //     token.name = user.name;
+    //     console.log("[NextAuth JWT] Updated token with user data");
+    //   }
+    //   console.log(
+    //     "[NextAuth JWT] Final token:",
+    //     JSON.stringify(token, null, 2)
+    //   );
+    //   return token;
+    // },
+    // async session({ session, token }) {
+    //   console.log("[NextAuth Session] Session callback triggered");
+    //   console.log(
+    //     "[NextAuth Session] Session:",
+    //     JSON.stringify(session, null, 2)
+    //   );
+    //   console.log("[NextAuth Session] Token:", JSON.stringify(token, null, 2));
+    //   // For JWT strategy, get user data from token
+    //   if (token) {
+    //     const sessionResult = {
+    //       ...session,
+    //       user: {
+    //         ...session.user,
+    //         id: token.userId as string,
+    //         email: token.email as string,
+    //         name: token.name as string,
+    //         organizationId: token.organizationId as string,
+    //         organizationName: token.organizationName as string,
+    //       },
+    //     } as any; // Type assertion to handle complex type intersection
+    //     console.log(
+    //       "[NextAuth Session] Final session result:",
+    //       JSON.stringify(sessionResult, null, 2)
+    //     );
+    //     return sessionResult;
+    //   }
+    //   console.log("[NextAuth Session] No token, returning original session");
+    //   return session;
+    // },
   },
   pages: {
     signIn: "/auth/signin",

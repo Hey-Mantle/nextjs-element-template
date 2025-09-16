@@ -190,9 +190,11 @@ export default async function Home({
     timestampAge: undefined as number | undefined,
     errorMessage: undefined as string | undefined,
     requestParams: Object.fromEntries(urlSearchParams.entries()),
-    needsOAuthRedirect: false,
-    organizationId: undefined as string | undefined,
   };
+
+  // Separate OAuth redirect logic
+  let needsOAuthRedirect = false;
+  let organizationId: string | undefined = undefined;
 
   // Handle HMAC verification and redirects
   let shouldRedirect = false;
@@ -249,23 +251,30 @@ export default async function Home({
           organizationName: organization?.name,
         });
 
-        // Determine redirect URL based on organization existence
+        // Determine OAuth redirect based on organization existence and iframe status
         if (organization) {
-          // Organization exists - render client components and let normal auth flow happen
-          console.log(
-            "Valid HMAC request with existing organization - rendering client components"
-          );
-          // Don't redirect - let the client components handle authentication
-          // Don't set shouldRedirect = true here
+          // Organization exists - check if we need OAuth redirect
+          // If not in iframe (direct access to install URL), always kick off OAuth
+          // to ensure the session is still valid in Mantle
+          if (!isEmbedded) {
+            console.log(
+              "Valid HMAC request with existing organization but not in iframe - triggering OAuth redirect"
+            );
+            needsOAuthRedirect = true;
+            organizationId = requestOrganizationId || "";
+          } else {
+            console.log(
+              "Valid HMAC request with existing organization in iframe - letting client handle auth"
+            );
+            // Let client components handle authentication normally
+          }
         } else {
-          // Organization doesn't exist - let client-side handle redirect
-          // Client will use appBridge.isInIframe() to determine if it's actually in an iframe
+          // Organization doesn't exist - always need OAuth redirect
           console.log(
-            "Valid HMAC request with non-existent organization - letting client handle redirect"
+            "Valid HMAC request with non-existent organization - triggering OAuth redirect"
           );
-          hmacVerificationStatus.needsOAuthRedirect = true;
-          hmacVerificationStatus.organizationId = requestOrganizationId || "";
-          // Don't set shouldRedirect = true here
+          needsOAuthRedirect = true;
+          organizationId = requestOrganizationId || "";
         }
       }
     } catch (error) {
@@ -320,14 +329,15 @@ export default async function Home({
   // Render the embedded app (handles authentication internally)
   console.log("=== RENDERING CLIENT COMPONENTS ===");
   console.log("HMAC verification status:", hmacVerificationStatus);
-  console.log(
-    "This should only happen if no HMAC request was made or HMAC verification failed"
-  );
-  console.log("needsOAuthRedirect:", hmacVerificationStatus.needsOAuthRedirect);
-  console.log("organizationId:", hmacVerificationStatus.organizationId);
+  console.log("needsOAuthRedirect:", needsOAuthRedirect);
+  console.log("organizationId:", organizationId);
 
   return (
-    <ClientPageWrapper hmacVerificationStatus={hmacVerificationStatus}>
+    <ClientPageWrapper
+      hmacVerificationStatus={hmacVerificationStatus}
+      needsOAuthRedirect={needsOAuthRedirect}
+      organizationId={organizationId}
+    >
       <Page title="Your Mantle Element" subtitle="Build it out!">
         <VerticalStack gap="4">
           <HmacVerificationStatus {...hmacVerificationStatus} />

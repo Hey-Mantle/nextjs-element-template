@@ -51,7 +51,7 @@ export default function EmbeddedAuth({
 
   const sessionToken = getSessionToken(appBridgeSession);
 
-  // Handle OAuth redirect for unrecognized organizations
+  // Handle OAuth redirect for unrecognized organizations or non-iframe access
   useEffect(() => {
     const actuallyInIframe = appBridge?.isInIframe?.() ?? isInIframe;
 
@@ -66,14 +66,16 @@ export default function EmbeddedAuth({
       organizationId,
     });
 
-    // Only proceed with OAuth redirect if explicitly needed
-    if (!needsOAuthRedirect) {
+    // Always treat non-iframe access as needing OAuth redirect
+    const shouldRedirectToOAuth = needsOAuthRedirect || !actuallyInIframe;
+
+    if (!shouldRedirectToOAuth) {
       console.log("EmbeddedAuth - OAuth redirect not needed, skipping");
       return;
     }
 
     if (
-      needsOAuthRedirect &&
+      shouldRedirectToOAuth &&
       actuallyInIframe &&
       isConnected &&
       appBridge?.redirect
@@ -86,18 +88,18 @@ export default function EmbeddedAuth({
 
       // For iframe context, redirect the parent window to ensure cookies are set at root level
       // This ensures the state cookie is accessible when the OAuth callback happens
-      const initiateUrl = `${
-        window.location.origin
-      }/api/auth/initiate?organizationId=${encodeURIComponent(
-        organizationId || ""
-      )}`;
+      const baseUrl = `${window.location.origin}/api/auth/initiate`;
+      const initiateUrl = organizationId
+        ? `${baseUrl}?organizationId=${encodeURIComponent(organizationId)}`
+        : baseUrl;
       console.log(
         "EmbeddedAuth - redirecting parent window to NextAuth initiate URL:",
         initiateUrl
       );
       appBridge.redirect(initiateUrl);
-    } else if (needsOAuthRedirect && !actuallyInIframe) {
+    } else if (shouldRedirectToOAuth && !actuallyInIframe) {
       // If we need OAuth redirect but we're not in an iframe, do a regular redirect
+      // This should happen immediately, regardless of app bridge connection status
       console.log(
         "EmbeddedAuth - not in iframe, doing regular redirect to OAuth for organization:",
         organizationId
@@ -105,9 +107,10 @@ export default function EmbeddedAuth({
       setShouldRedirect(true);
 
       // Use NextAuth's OAuth initiation endpoint to ensure proper state cookie handling
-      const initiateUrl = `/api/auth/initiate?organizationId=${encodeURIComponent(
-        organizationId || ""
-      )}`;
+      const baseUrl = `/api/auth/initiate`;
+      const initiateUrl = organizationId
+        ? `${baseUrl}?organizationId=${encodeURIComponent(organizationId)}`
+        : baseUrl;
       console.log("EmbeddedAuth - doing regular redirect to:", initiateUrl);
       window.location.href = initiateUrl;
     }
@@ -222,26 +225,12 @@ export default function EmbeddedAuth({
     );
   }
 
-  // Handle non-iframe access
+  // Handle non-iframe access - this should now be handled by OAuth redirect above
   const actuallyInIframe = appBridge?.isInIframe?.() ?? isInIframe;
   if (!actuallyInIframe) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center max-w-md">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Redirecting...
-          </h2>
-          <p className="text-gray-600 mb-4">
-            This application is designed to run as an embedded element within
-            the Mantle platform.
-          </p>
-          <p className="text-sm text-gray-500">
-            You should be redirected automatically. If not, please access this
-            app through your Mantle dashboard.
-          </p>
-        </div>
-      </div>
-    );
+    // If we reach here, it means the OAuth redirect didn't happen for some reason
+    // Show a loading state while the redirect should be processing
+    return <LoadingState message="Redirecting to authentication..." />;
   }
 
   // Handle app bridge connection issues
