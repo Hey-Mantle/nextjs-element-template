@@ -10,6 +10,7 @@ declare module "react" {
         title?: string;
         size?: "small" | "medium" | "large" | "fullscreen";
         open?: boolean;
+        onClose?: () => void;
       };
       "ui-title-bar": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,

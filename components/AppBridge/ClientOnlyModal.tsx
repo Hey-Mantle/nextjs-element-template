@@ -2,13 +2,6 @@
 
 import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-
-// Define the type for our custom element with imperative methods
-type UIModalElement = HTMLElement & {
-  show: () => void;
-  hide: () => void;
-};
 
 interface ClientOnlyModalProps {
   open: boolean;
@@ -22,6 +15,9 @@ interface ClientOnlyModalProps {
 /**
  * A client-side modal that uses App Bridge ui-modal elements to send
  * postMessage events to the parent Mantle window for rendering.
+ *
+ * This component waits for the `ui-modal` custom element to be defined
+ * before rendering to avoid a race condition with the App Bridge script.
  */
 export function ClientOnlyModal({
   open,
@@ -31,128 +27,63 @@ export function ClientOnlyModal({
   onAction,
   children,
 }: ClientOnlyModalProps) {
-  const [isClient, setIsClient] = useState(false);
   const { isConnected, appBridge } = useSharedMantleAppBridge();
-
-  // This ref will hold the actual modal DOM element once we create it
-  const modalRef = useRef<UIModalElement | null>(null);
-  // This state will hold the container element for our React children
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
-    null
-  );
-
-  console.log(
-    `[ClientOnlyModal] Render. open=${open}, isClient=${isClient}, isConnected=${isConnected}`
-  );
+  const modalRef = useRef<HTMLElement>(null);
+  const [isElementDefined, setIsElementDefined] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    // Wait for the custom element to be defined before attempting to render it.
+    // This avoids a race condition where React creates the element before
+    // the App Bridge script has defined it.
+    window.customElements.whenDefined("ui-modal").then(() => {
+      setIsElementDefined(true);
+    });
   }, []);
 
   useEffect(() => {
-    // If we're not on the client, not connected to the bridge, or the modal shouldn't be open, do nothing.
-    if (!isClient || !isConnected || !open) {
-      return;
-    }
+    // This effect attaches event listeners to the modal element when it's open.
+    if (!open || !isElementDefined) return;
 
-    // --- Create the modal imperatively ---
-    console.log("[ClientOnlyModal] Creating modal element imperatively.");
+    const modalElement = modalRef.current;
+    if (!modalElement) return;
 
-    const UIModalClass = window.customElements.get("ui-modal") as any;
-    if (!UIModalClass) {
-      console.error(
-        "[ClientOnlyModal] Cannot create modal: ui-modal custom element is not defined."
-      );
-      return;
-    }
-
-    const modal = new UIModalClass() as UIModalElement;
-    if (title) modal.setAttribute("title", title);
-    if (size) modal.setAttribute("size", size);
-    modal.style.display = "none";
-
-    const contentDiv = document.createElement("div");
-
-    if (title) {
-      const UITitleBarClass = window.customElements.get("ui-title-bar") as any;
-      if (UITitleBarClass) {
-        const titleBar = new UITitleBarClass();
-        titleBar.setAttribute("title", title);
-        modal.appendChild(titleBar);
-      }
-    }
-
-    modal.appendChild(contentDiv);
-    document.body.appendChild(modal);
-
-    // --- Create stable handlers for events ---
     const handleHide = () => {
-      console.log(
-        "[ClientOnlyModal] 'hide' event received from modal element."
-      );
-      if (onHide) {
-        onHide();
-      }
+      if (onHide) onHide();
     };
-    const handleAction = onAction as EventListener;
+    const handleAction = (e: Event) => onAction?.(e as CustomEvent);
 
-    // --- Attach listeners and show() ---
-    modal.addEventListener("modal:hide", handleHide);
-    if (onAction) modal.addEventListener("action", handleAction);
-
-    // Listen for the global closeModal event from the app bridge
+    modalElement.addEventListener("modal:hide", handleHide);
+    if (onAction) {
+      modalElement.addEventListener("action", handleAction);
+    }
     if (appBridge && onHide) {
-      // The app-bridge.js code fires a global 'closeModal' event
-      // when the parent window closes the modal. We hook into that here
-      // to ensure our React state is updated correctly.
       appBridge.on("closeModal", onHide);
     }
 
-    modalRef.current = modal;
-    setPortalContainer(contentDiv);
-
-    if (typeof modal.show === "function") {
-      setTimeout(() => {
-        modal.show();
-        console.log("[ClientOnlyModal] modal.show() called via timeout.");
-      }, 0);
-    } else {
-      console.error("[ClientOnlyModal] modal.show() is not a function.");
-    }
-
-    // --- Return cleanup function ---
-    // This will run when `open` becomes false or the component unmounts.
     return () => {
-      console.log("[ClientOnlyModal] Cleaning up modal element.");
-
-      // Remove the app bridge listener
+      // Cleanup event listeners when the modal closes or the component unmounts.
+      modalElement.removeEventListener("modal:hide", handleHide);
+      if (onAction) {
+        modalElement.removeEventListener("action", handleAction);
+      }
       if (appBridge && onHide) {
         appBridge.off("closeModal", onHide);
       }
-
-      if (typeof modal.hide === "function") {
-        modal.hide();
-        console.log("[ClientOnlyModal] modal.hide() called during cleanup.");
-      }
-
-      // Clean up event listeners
-      modal.removeEventListener("modal:hide", handleHide);
-      if (onAction) modal.removeEventListener("action", handleAction);
-
-      // Remove from DOM
-      if (document.body.contains(modal)) {
-        document.body.removeChild(modal);
-      }
-      modalRef.current = null;
-      setPortalContainer(null);
     };
-  }, [open, isClient, isConnected, title, size, onHide, onAction]);
+    // Re-run this effect if the modal is re-opened or handlers change.
+  }, [open, isConnected, isElementDefined, appBridge, onHide, onAction]);
 
-  // Use a portal to render children into the imperatively created container
-  if (isClient && portalContainer) {
-    return createPortal(children, portalContainer);
+  // Render nothing until we're connected and the custom element is defined.
+  if (!isConnected || !isElementDefined) {
+    return null;
   }
 
-  // Render nothing otherwise
-  return null;
+  // Conditionally render the modal based on the `open` prop.
+  // This ensures the element is added to/removed from the DOM,
+  // triggering its connected/disconnected callbacks.
+  return (
+    <ui-modal title={title} size={size} open={open} onClose={onHide}>
+      {children}
+    </ui-modal>
+  );
 }

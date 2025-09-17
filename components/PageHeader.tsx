@@ -2,7 +2,6 @@
 import { useEmbeddedAuth } from "@/lib/embedded-auth-context";
 import { Button, HorizontalStack, Text, VerticalStack } from "@heymantle/litho";
 import { useState } from "react";
-import { ClientOnlyModal } from "./AppBridge/ClientOnlyModal";
 import UserInfoDisplay from "./UserInfoDisplay";
 
 export default function PageHeader() {
@@ -11,16 +10,7 @@ export default function PageHeader() {
 
   return (
     <>
-      <HorizontalStack
-        gap="4"
-        align="space-between"
-        blockAlign="center"
-        padding="4"
-        background="surface"
-        cornerRadius="3"
-        border="divider"
-        shadow="card"
-      >
+      <HorizontalStack gap="4" align="space-between" blockAlign="center">
         <VerticalStack gap="1">
           <Text variant="headingLg">Mantle Element Starter</Text>
           <Text variant="bodyMd" color="subdued">
@@ -33,16 +23,14 @@ export default function PageHeader() {
         </HorizontalStack>
       </HorizontalStack>
 
-      <ClientOnlyModal
-        open={isDebugModalOpen}
-        onHide={() => {
-          setIsDebugModalOpen(false);
-        }}
+      <ui-modal
         title="Debug Information"
         size="large"
+        open={isDebugModalOpen}
+        onClose={() => setIsDebugModalOpen(false)}
       >
         <UserInfoDisplay />
-      </ClientOnlyModal>
+      </ui-modal>
     </>
   );
 }
