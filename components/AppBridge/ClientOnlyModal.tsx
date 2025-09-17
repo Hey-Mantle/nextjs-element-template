@@ -32,7 +32,7 @@ export function ClientOnlyModal({
   children,
 }: ClientOnlyModalProps) {
   const [isClient, setIsClient] = useState(false);
-  const { isConnected } = useSharedMantleAppBridge();
+  const { isConnected, appBridge } = useSharedMantleAppBridge();
 
   // This ref will hold the actual modal DOM element once we create it
   const modalRef = useRef<UIModalElement | null>(null);
@@ -50,99 +50,101 @@ export function ClientOnlyModal({
   }, []);
 
   useEffect(() => {
-    if (!isClient || !isConnected) return;
+    // If we're not on the client, not connected to the bridge, or the modal shouldn't be open, do nothing.
+    if (!isClient || !isConnected || !open) {
+      return;
+    }
 
-    if (open && !modalRef.current) {
-      // --- Create the modal imperatively ---
-      console.log("[ClientOnlyModal] Creating modal element imperatively.");
+    // --- Create the modal imperatively ---
+    console.log("[ClientOnlyModal] Creating modal element imperatively.");
 
-      // Check if custom elements are defined
-      const UIModalClass = window.customElements.get("ui-modal") as any;
-      if (!UIModalClass) {
-        console.error(
-          "[ClientOnlyModal] Cannot create modal: ui-modal custom element is not defined."
-        );
-        return;
+    const UIModalClass = window.customElements.get("ui-modal") as any;
+    if (!UIModalClass) {
+      console.error(
+        "[ClientOnlyModal] Cannot create modal: ui-modal custom element is not defined."
+      );
+      return;
+    }
+
+    const modal = new UIModalClass() as UIModalElement;
+    if (title) modal.setAttribute("title", title);
+    if (size) modal.setAttribute("size", size);
+    modal.style.display = "none";
+
+    const contentDiv = document.createElement("div");
+
+    if (title) {
+      const UITitleBarClass = window.customElements.get("ui-title-bar") as any;
+      if (UITitleBarClass) {
+        const titleBar = new UITitleBarClass();
+        titleBar.setAttribute("title", title);
+        modal.appendChild(titleBar);
       }
+    }
 
-      const modal = new UIModalClass() as UIModalElement;
-      if (title) modal.setAttribute("title", title);
-      if (size) modal.setAttribute("size", size);
-      // Ensure the proxy element is not visible in the iframe
-      modal.style.display = "none";
+    modal.appendChild(contentDiv);
+    document.body.appendChild(modal);
 
-      // Create a container for the React children
-      const contentDiv = document.createElement("div");
-
-      // Add a title bar if needed
-      if (title) {
-        const UITitleBarClass = window.customElements.get(
-          "ui-title-bar"
-        ) as any;
-        if (UITitleBarClass) {
-          const titleBar = new UITitleBarClass();
-          titleBar.setAttribute("title", title);
-          modal.appendChild(titleBar);
-        }
-      }
-
-      modal.appendChild(contentDiv);
-      document.body.appendChild(modal);
-
-      // --- Attach listeners and call show() ---
+    // --- Create stable handlers for events ---
+    const handleHide = () => {
+      console.log(
+        "[ClientOnlyModal] 'hide' event received from modal element."
+      );
       if (onHide) {
-        modal.addEventListener("hide", onHide);
+        onHide();
       }
-      if (onAction) {
-        modal.addEventListener("action", onAction as EventListener);
-      }
+    };
+    const handleAction = onAction as EventListener;
 
-      modalRef.current = modal;
-      setPortalContainer(contentDiv); // Set the portal target
+    // --- Attach listeners and show() ---
+    modal.addEventListener("modal:hide", handleHide);
+    if (onAction) modal.addEventListener("action", handleAction);
 
-      // Call show() to message the parent window
-      if (typeof modal.show === "function") {
-        // Use a timeout to ensure the event loop has a chance to clear
-        // This can help with timing issues where the parent window listener for postMessage
-        // may not be ready immediately after the element is created.
-        setTimeout(() => {
-          modal.show();
-          console.log("[ClientOnlyModal] modal.show() called via timeout.");
-        }, 0);
-      } else {
-        console.error("[ClientOnlyModal] modal.show() is not a function.");
-      }
-    } else if (!open && modalRef.current) {
-      // --- Clean up the modal ---
-      const modal = modalRef.current;
+    // Listen for the global closeModal event from the app bridge
+    if (appBridge && onHide) {
+      // The app-bridge.js code fires a global 'closeModal' event
+      // when the parent window closes the modal. We hook into that here
+      // to ensure our React state is updated correctly.
+      appBridge.on("closeModal", onHide);
+    }
+
+    modalRef.current = modal;
+    setPortalContainer(contentDiv);
+
+    if (typeof modal.show === "function") {
+      setTimeout(() => {
+        modal.show();
+        console.log("[ClientOnlyModal] modal.show() called via timeout.");
+      }, 0);
+    } else {
+      console.error("[ClientOnlyModal] modal.show() is not a function.");
+    }
+
+    // --- Return cleanup function ---
+    // This will run when `open` becomes false or the component unmounts.
+    return () => {
       console.log("[ClientOnlyModal] Cleaning up modal element.");
 
-      // Call hide() to message the parent
+      // Remove the app bridge listener
+      if (appBridge && onHide) {
+        appBridge.off("closeModal", onHide);
+      }
+
       if (typeof modal.hide === "function") {
         modal.hide();
-        console.log("[ClientOnlyModal] modal.hide() called.");
+        console.log("[ClientOnlyModal] modal.hide() called during cleanup.");
       }
 
       // Clean up event listeners
-      if (onHide) {
-        modal.removeEventListener("hide", onHide);
-      }
-      if (onAction) {
-        modal.removeEventListener("action", onAction as EventListener);
-      }
+      modal.removeEventListener("modal:hide", handleHide);
+      if (onAction) modal.removeEventListener("action", handleAction);
 
       // Remove from DOM
-      document.body.removeChild(modal);
+      if (document.body.contains(modal)) {
+        document.body.removeChild(modal);
+      }
       modalRef.current = null;
       setPortalContainer(null);
-    }
-
-    // Final cleanup on component unmount
-    return () => {
-      if (modalRef.current) {
-        document.body.removeChild(modalRef.current);
-        modalRef.current = null;
-      }
     };
   }, [open, isClient, isConnected, title, size, onHide, onAction]);
 

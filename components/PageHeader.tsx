@@ -35,7 +35,9 @@ export default function PageHeader() {
 
       <ClientOnlyModal
         open={isDebugModalOpen}
-        onHide={() => setIsDebugModalOpen(false)}
+        onHide={() => {
+          setIsDebugModalOpen(false);
+        }}
         title="Debug Information"
         size="large"
       >
