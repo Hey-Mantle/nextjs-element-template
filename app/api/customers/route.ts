@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search");
+  const limit = searchParams.get("limit") || "10"; // Default to 10, max 10
 
   console.log("API Route - Full URL:", request.url);
   console.log(
@@ -18,11 +19,13 @@ export async function GET(request: NextRequest) {
     Object.fromEntries(searchParams.entries())
   );
   console.log("API Route - Search value:", search);
+  console.log("API Route - Limit:", limit);
 
   // Fetch customers from Mantle Core API
   const queryParams = {
     query: {
       search,
+      limit: Math.min(parseInt(limit, 10), 10), // Cap at 10
     },
   };
 

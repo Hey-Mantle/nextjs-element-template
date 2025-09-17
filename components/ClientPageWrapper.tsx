@@ -1,6 +1,7 @@
 "use client";
 
 import EmbeddedAuth from "@/components/EmbeddedAuth";
+import { HmacProvider } from "@/lib/hmac-context";
 import { MantleAppBridgeProvider } from "@/lib/mantle-app-bridge-context";
 
 interface ClientPageWrapperProps {
@@ -16,17 +17,20 @@ interface ClientPageWrapperProps {
  */
 export default function ClientPageWrapper({
   children,
+  hmacVerificationStatus,
   needsOAuthRedirect = false,
   organizationId,
 }: ClientPageWrapperProps) {
   return (
     <MantleAppBridgeProvider>
-      <EmbeddedAuth
-        needsOAuthRedirect={needsOAuthRedirect}
-        organizationId={organizationId}
-      >
-        {children}
-      </EmbeddedAuth>
+      <HmacProvider hmacVerificationStatus={hmacVerificationStatus}>
+        <EmbeddedAuth
+          needsOAuthRedirect={needsOAuthRedirect}
+          organizationId={organizationId}
+        >
+          {children}
+        </EmbeddedAuth>
+      </HmacProvider>
     </MantleAppBridgeProvider>
   );
 }

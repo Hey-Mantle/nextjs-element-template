@@ -1,11 +1,8 @@
-import AppBridgeSessionUser from "@/components/AppBridgeSessionUser";
 import ClientPageWrapper from "@/components/ClientPageWrapper";
-import CollapsibleDebugSection from "@/components/CollapsibleDebugSection";
-import CustomersTestDisplay from "@/components/CustomersTestDisplay";
-import HmacVerificationStatus from "@/components/HmacVerificationStatus";
-import UserInfoDisplay from "@/components/UserInfoDisplay";
+import CustomerList from "@/components/CustomerList";
+import PageHeader from "@/components/PageHeader";
 import { prisma } from "@/lib/prisma";
-import { Page, Spinner, Text, VerticalStack } from "@heymantle/litho";
+import { Layout, Page, Spinner, Text, VerticalStack } from "@heymantle/litho";
 import crypto from "crypto";
 import { redirect } from "next/navigation";
 
@@ -239,25 +236,13 @@ export default async function Home({
       needsOAuthRedirect={needsOAuthRedirect}
       organizationId={organizationId}
     >
-      <Page title="Your Mantle Element" subtitle="Build it out!">
-        <VerticalStack gap="4">
-          {/* Primary content - User and Organization info */}
-          <UserInfoDisplay />
-
-          {/* Customers API Test Results */}
-          <CollapsibleDebugSection title="Customers Search">
-            <CustomersTestDisplay />
-          </CollapsibleDebugSection>
-
-          {/* Debug information - collapsible */}
-          <CollapsibleDebugSection title="HMAC Verification Details">
-            <HmacVerificationStatus {...hmacVerificationStatus} />
-          </CollapsibleDebugSection>
-
-          <CollapsibleDebugSection title="Session Token Details">
-            <AppBridgeSessionUser />
-          </CollapsibleDebugSection>
-        </VerticalStack>
+      <Page title="" subtitle="" fullWidth>
+        <Layout>
+          <VerticalStack gap="6">
+            <PageHeader />
+            <CustomerList />
+          </VerticalStack>
+        </Layout>
       </Page>
     </ClientPageWrapper>
   );

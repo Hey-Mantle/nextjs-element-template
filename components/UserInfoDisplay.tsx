@@ -58,101 +58,93 @@ export default function UserInfoDisplay() {
   }
 
   return (
-    <Card>
-      <VerticalStack gap="4">
-        <VerticalStack gap="2">
+    <VerticalStack gap="6">
+      {/* User Information Card */}
+      <Card title="User Information" padded>
+        <VerticalStack gap="3">
           <HorizontalStack gap="2" align="center">
-            <Text variant="headingMd">Current User</Text>
+            <Text variant="headingSm">Current User</Text>
             <Badge status="success">Authenticated</Badge>
           </HorizontalStack>
 
-          <VerticalStack gap="3">
-            {/* User Information */}
-            <VerticalStack gap="2">
-              <Text variant="headingSm">User Information</Text>
-              <VerticalStack gap="1">
-                <HorizontalStack gap="2">
-                  <Text variant="bodyMd" fontWeight="medium">
-                    Name:
-                  </Text>
-                  <Text variant="bodyMd">{user.name || "Not provided"}</Text>
-                </HorizontalStack>
-                <HorizontalStack gap="2">
-                  <Text variant="bodyMd" fontWeight="medium">
-                    Email:
-                  </Text>
-                  <Text variant="bodyMd">{user.email}</Text>
-                </HorizontalStack>
-                <HorizontalStack gap="2">
-                  <Text variant="bodyMd" fontWeight="medium">
-                    User ID:
-                  </Text>
-                  <Text variant="bodyMd" className="font-mono">
-                    {user.id}
-                  </Text>
-                </HorizontalStack>
-                <HorizontalStack gap="2">
-                  <Text variant="bodyMd" fontWeight="medium">
-                    Mantle User ID:
-                  </Text>
-                  <Text variant="bodyMd" className="font-mono">
-                    {user.userId}
-                  </Text>
-                </HorizontalStack>
-                {user.emailVerified && (
-                  <HorizontalStack gap="2">
-                    <Text variant="bodyMd" fontWeight="medium">
-                      Email Verified:
-                    </Text>
-                    <Badge status="success">Verified</Badge>
-                  </HorizontalStack>
-                )}
-              </VerticalStack>
-            </VerticalStack>
-
-            {/* Organization Information */}
-            <VerticalStack gap="2">
-              <Text variant="headingSm">Organization Information</Text>
-              <VerticalStack gap="1">
-                <HorizontalStack gap="2">
-                  <Text variant="bodyMd" fontWeight="medium">
-                    Name:
-                  </Text>
-                  <Text variant="bodyMd">
-                    {organization.name || "Not provided"}
-                  </Text>
-                </HorizontalStack>
-                <HorizontalStack gap="2">
-                  <Text variant="bodyMd" fontWeight="medium">
-                    Organization ID:
-                  </Text>
-                  <Text variant="bodyMd" className="font-mono">
-                    {organization.id}
-                  </Text>
-                </HorizontalStack>
-                <HorizontalStack gap="2">
-                  <Text variant="bodyMd" fontWeight="medium">
-                    Mantle ID:
-                  </Text>
-                  <Text variant="bodyMd" className="font-mono">
-                    {organization.mantleId}
-                  </Text>
-                </HorizontalStack>
-                {organization.apiToken && (
-                  <HorizontalStack gap="2">
-                    <Text variant="bodyMd" fontWeight="medium">
-                      API Token:
-                    </Text>
-                    <Text variant="bodyMd" className="font-mono">
-                      {organization.apiToken.substring(0, 20)}...
-                    </Text>
-                  </HorizontalStack>
-                )}
-              </VerticalStack>
-            </VerticalStack>
+          <VerticalStack gap="2">
+            <HorizontalStack gap="2">
+              <Text variant="bodyMd" fontWeight="medium">
+                Name:
+              </Text>
+              <Text variant="bodyMd">{user.name || "Not provided"}</Text>
+            </HorizontalStack>
+            <HorizontalStack gap="2">
+              <Text variant="bodyMd" fontWeight="medium">
+                Email:
+              </Text>
+              <Text variant="bodyMd">{user.email}</Text>
+            </HorizontalStack>
+            <HorizontalStack gap="2">
+              <Text variant="bodyMd" fontWeight="medium">
+                User ID:
+              </Text>
+              <Text variant="bodyMd" as="code">
+                {user.id}
+              </Text>
+            </HorizontalStack>
+            <HorizontalStack gap="2">
+              <Text variant="bodyMd" fontWeight="medium">
+                Mantle User ID:
+              </Text>
+              <Text variant="bodyMd" as="code">
+                {user.userId}
+              </Text>
+            </HorizontalStack>
+            {user.emailVerified && (
+              <HorizontalStack gap="2">
+                <Text variant="bodyMd" fontWeight="medium">
+                  Email Verified:
+                </Text>
+                <Badge status="success">Verified</Badge>
+              </HorizontalStack>
+            )}
           </VerticalStack>
         </VerticalStack>
-      </VerticalStack>
-    </Card>
+      </Card>
+
+      {/* Organization Information Card */}
+      <Card title="Organization Information" padded>
+        <VerticalStack gap="2">
+          <HorizontalStack gap="2">
+            <Text variant="bodyMd" fontWeight="medium">
+              Name:
+            </Text>
+            <Text variant="bodyMd">{organization.name || "Not provided"}</Text>
+          </HorizontalStack>
+          <HorizontalStack gap="2">
+            <Text variant="bodyMd" fontWeight="medium">
+              Organization ID:
+            </Text>
+            <Text variant="bodyMd" as="code">
+              {organization.id}
+            </Text>
+          </HorizontalStack>
+          <HorizontalStack gap="2">
+            <Text variant="bodyMd" fontWeight="medium">
+              Mantle ID:
+            </Text>
+            <Text variant="bodyMd" as="code">
+              {organization.mantleId}
+            </Text>
+          </HorizontalStack>
+          {organization.apiToken && (
+            <HorizontalStack gap="2">
+              <Text variant="bodyMd" fontWeight="medium">
+                API Token:
+              </Text>
+              <Text variant="bodyMd" as="code">
+                {organization.apiToken.substring(0, 20)}...
+              </Text>
+            </HorizontalStack>
+          )}
+        </VerticalStack>
+      </Card>
+    </VerticalStack>
   );
 }
