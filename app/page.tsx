@@ -1,6 +1,7 @@
 import AppBridgeSessionUser from "@/components/AppBridgeSessionUser";
 import ClientPageWrapper from "@/components/ClientPageWrapper";
 import CollapsibleDebugSection from "@/components/CollapsibleDebugSection";
+import CustomersTestDisplay from "@/components/CustomersTestDisplay";
 import HmacVerificationStatus from "@/components/HmacVerificationStatus";
 import UserInfoDisplay from "@/components/UserInfoDisplay";
 import { prisma } from "@/lib/prisma";
@@ -242,6 +243,11 @@ export default async function Home({
         <VerticalStack gap="4">
           {/* Primary content - User and Organization info */}
           <UserInfoDisplay />
+
+          {/* Customers API Test Results */}
+          <CollapsibleDebugSection title="Customers Search">
+            <CustomersTestDisplay />
+          </CollapsibleDebugSection>
 
           {/* Debug information - collapsible */}
           <CollapsibleDebugSection title="HMAC Verification Details">

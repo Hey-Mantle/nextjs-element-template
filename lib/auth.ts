@@ -21,7 +21,7 @@ const MantleOAuth = {
         process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com"
       }/oauth/authorize`,
     params: {
-      scope: "read:apps",
+      scope: "read:apps,read:customers,write:customers",
       mode: "offline",
     },
   },

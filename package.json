@@ -8,7 +8,8 @@
     "setup:https": "bash scripts/setup-https.sh",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate:mantle-api-types": "npx openapi-typescript ${SPEC_URL:-https://app.heymantle.com/openapi/core-api.json} -o ./lib/types/mantleApi.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -32,6 +33,8 @@
     "autoprefixer": "^10.4.16",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.0.0",
+    "openapi-fetch": "^0.10.2",
+    "openapi-typescript": "^7.4.2",
     "postcss": "^8.4.31",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.2.2"

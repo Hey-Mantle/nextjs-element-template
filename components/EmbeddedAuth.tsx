@@ -282,7 +282,7 @@ function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <Page title={title} subtitle={message}>
+    <Page title={title} subtitle={message} fullWidth={true}>
       <VerticalStack gap="4" align="center">
         {onRetry && (
           <Button onClick={onRetry} primary>

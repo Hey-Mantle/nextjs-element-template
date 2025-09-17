@@ -2,7 +2,6 @@
 
 import EmbeddedAuth from "@/components/EmbeddedAuth";
 import { MantleAppBridgeProvider } from "@/lib/mantle-app-bridge-context";
-import { SessionProvider } from "next-auth/react";
 
 interface ClientPageWrapperProps {
   children: React.ReactNode;
@@ -21,15 +20,13 @@ export default function ClientPageWrapper({
   organizationId,
 }: ClientPageWrapperProps) {
   return (
-    <SessionProvider>
-      <MantleAppBridgeProvider>
-        <EmbeddedAuth
-          needsOAuthRedirect={needsOAuthRedirect}
-          organizationId={organizationId}
-        >
-          {children}
-        </EmbeddedAuth>
-      </MantleAppBridgeProvider>
-    </SessionProvider>
+    <MantleAppBridgeProvider>
+      <EmbeddedAuth
+        needsOAuthRedirect={needsOAuthRedirect}
+        organizationId={organizationId}
+      >
+        {children}
+      </EmbeddedAuth>
+    </MantleAppBridgeProvider>
   );
 }
