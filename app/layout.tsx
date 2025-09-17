@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import ClientAppProvider from "./components/ClientAppProvider";
 import MantleProviderWrapper from "./components/MantleProviderWrapper";
 import "./globals.css";
@@ -18,15 +19,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <script
+      <head></head>
+      <body className={inter.className}>
+        <Script
           src={
             (process.env.NEXT_PUBLIC_MANTLE_URL ??
               "https://mantle-kristian.ngrok.io") + "/app-bridge.js"
           }
+          strategy="beforeInteractive"
         />
-      </head>
-      <body className={inter.className}>
         <MantleProviderWrapper>
           <ClientAppProvider>{children}</ClientAppProvider>
         </MantleProviderWrapper>
