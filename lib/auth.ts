@@ -40,10 +40,6 @@ const MantleOAuth = {
         process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com"
       }/api/v1/me`,
   },
-  // Ensure proper state handling
-  state: true,
-  // Allow account linking for this provider
-  allowDangerousEmailAccountLinking: true,
   async profile(profileData: any, tokens: any) {
     // Extract user and organization data with error handling
     const { user, organization } = profileData;
