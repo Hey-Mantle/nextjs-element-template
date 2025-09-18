@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import { prisma } from "./prisma";
 
@@ -122,10 +121,41 @@ const MantleOAuth = {
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [MantleOAuth],
   session: {
     strategy: "jwt", // Use JWT for credentials-based authentication
+  },
+  callbacks: {
+    async jwt({ token, user, account }) {
+      // If this is the initial sign in, user object will be available
+      if (user) {
+        token.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        };
+        token.userId = (user as any).userId;
+        token.organizationId = (user as any).organizationId;
+        token.organizationName = (user as any).organizationName;
+        token.accessToken = account?.access_token || "";
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Send properties to the client
+      if (token.user) {
+        session.user = {
+          ...session.user,
+          id: token.user.id,
+          name: token.user.name,
+          email: token.user.email,
+        };
+        (session as any).user.organizationId = token.organizationId;
+        (session as any).user.organizationName = token.organizationName;
+        (session as any).accessToken = token.accessToken;
+      }
+      return session;
+    },
   },
   // Custom session cookie names to avoid conflicts with other localhost apps
   // Updated for iframe compatibility
