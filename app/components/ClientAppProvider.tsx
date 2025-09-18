@@ -1,6 +1,7 @@
 "use client";
 
 import { AppProvider } from "@heymantle/litho";
+import { MantleAppTrackScript } from "./MantleAppTrackScript";
 
 export default function ClientAppProvider({
   children,
@@ -14,6 +15,7 @@ export default function ClientAppProvider({
       embedded={false}
       onDarkModeChange={() => {}}
     >
+      <MantleAppTrackScript />
       {children}
     </AppProvider>
   );

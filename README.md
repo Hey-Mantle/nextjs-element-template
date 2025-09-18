@@ -11,31 +11,31 @@ A Next.js starter template for building Mantle elements with authentication and 
 - A Mantle account and element configuration
 
 ### Installation
-
-1. **Clone the repository:**
+1. Before you start, make sure you [Create an Element](https://app.heymantle.com/extensions) in Mantle.
+  Make sure to set the URL to the root of this application. For example, https://localhost:3000 for local development.
+  Set the Redirect URIs to https://localhost:3009/api/auth/callback/MantleOAuth
+  Click "Embed this element in the Mantle Admin"
+2. **Create a next project based on this one:**
    ```bash
    npx create-next-app@latest my-mantle-element --example https://github.com/Hey-Mantle/nextjs-element-template
    cd my-mantle-element
    ```
 
-2. **Install dependencies:**
+3. **Install dependencies:**
    ```bash
    npm install
    ```
-3. **Create an AUTH_SECRET**
+4. **Create an AUTH_SECRET**
    ```bash
    npx auth secret
    ```
 
-3. **Set up environment variables:**
+5. **Set up environment variables:**
    Create a `.env.local` file with the following variables:
    ```env
    # Database
    DATABASE_URL="file:./dev.db"
-   
-   # NextAuth Configuration
-   AUTH_SECRET="your-auth-secret-here"
-   
+      
    # Mantle Configuration
    NEXT_PUBLIC_HOST=localhost:3000
    NEXT_PUBLIC_MANTLE_APP_ID="your-app-id"
@@ -49,18 +49,18 @@ A Next.js starter template for building Mantle elements with authentication and 
    MANTLE_CORE_API_URL="https://app.heymantle.com/api/v1"
    ```
 
-4. **Set up the database:**
+6. **Set up the database:**
    ```bash
    npx prisma migrate dev
    ```
 
-5. **Generate API types:**
+7. **Generate API types:**
    ```bash
    npm run generate:mantle-api-types
    ```
    You can run this at any time to update your API client with Mantle's latest API changes
 
-6. **Start the development server:**
+8. **Start the development server:**
    ```bash
    npm run dev
    ```
