@@ -31,7 +31,7 @@ export default function CustomerList() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { session, isSessionLoading, sessionError } =
+  const { session, isSessionLoading, sessionError, authenticatedFetch } =
     useSharedMantleAppBridge();
 
   // Extract session token from session
@@ -61,10 +61,9 @@ export default function CustomerList() {
 
       const url = `/api/customers?${params.toString()}`;
 
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${sessionToken}`,
           "Content-Type": "application/json",
         },
       });

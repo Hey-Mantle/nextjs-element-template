@@ -35,6 +35,9 @@ export interface MantleAppBridge {
   on(event: string, callback: (...args: any[]) => void): void;
   off(event: string, callback: (...args: any[]) => void): void;
 
+  // Authenticated fetch
+  authenticatedFetch(url: string, options: RequestInit): Promise<Response>;
+
   // Organization ID and session getters (from app-bridge.js)
   currentOrganizationId: string | null;
   currentSession: MantleSession | string | null;

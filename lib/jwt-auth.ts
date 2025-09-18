@@ -114,9 +114,11 @@ async function verifyJWTToken(
 /**
  * Get authenticated user from JWT token in request headers
  */
-export async function getAuthenticatedUser(
-  request: NextRequest
-): Promise<{ user: User | null; organization: Organization | null }> {
+export async function getAuthenticatedUser(request: NextRequest): Promise<{
+  user: User | null;
+  organization: Organization | null;
+  sessionToken: string | null;
+}> {
   let sessionToken: string | null = null;
 
   // Check Authorization header (Bearer token)
@@ -126,13 +128,13 @@ export async function getAuthenticatedUser(
   }
 
   if (!sessionToken) {
-    return { user: null, organization: null };
+    return { user: null, organization: null, sessionToken: null };
   }
 
   const verifiedToken = await verifyJWTToken(sessionToken);
   if (!verifiedToken) {
-    return { user: null, organization: null };
+    return { user: null, organization: null, sessionToken: null };
   }
 
-  return verifiedToken;
+  return { ...verifiedToken, sessionToken };
 }

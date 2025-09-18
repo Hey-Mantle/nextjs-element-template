@@ -46,6 +46,7 @@ export default function EmbeddedAuth({
     sessionError,
     connectionError,
     appBridge,
+    authenticatedFetch,
   } = useSharedMantleAppBridge();
 
   // Extract session token from app bridge session
@@ -119,12 +120,8 @@ export default function EmbeddedAuth({
       setAuthError(null);
 
       // TODO: replace with app-bridge authenticatedFetch
-      fetch("/api/auth/verify-session", {
+      authenticatedFetch("/api/auth/verify-session", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
-        },
       })
         .then(async (response) => {
           const result = await response.json();

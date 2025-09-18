@@ -16,6 +16,7 @@ export interface UseMantleAppBridgeReturn {
 
   // Session state
   session: MantleSession | string | null;
+  sessionToken: string | null;
   isSessionLoading: boolean;
   sessionError: string | null;
 
@@ -29,6 +30,8 @@ export interface UseMantleAppBridgeReturn {
   refreshUser: () => Promise<void>;
   connect: () => Promise<void>;
 
+  authenticatedFetch: (url: string, options: RequestInit) => Promise<Response>;
+
   // App Bridge instance
   appBridge: MantleAppBridge | null;
 }
@@ -41,6 +44,7 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
 
   // Session state
   const [session, setSession] = useState<MantleSession | string | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
@@ -51,6 +55,17 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
 
   // App Bridge instance
   const [appBridge, setAppBridge] = useState<MantleAppBridge | null>(null);
+
+  const authenticatedFetch = useCallback(
+    async (url: string, options: RequestInit) => {
+      const response = await appBridge?.authenticatedFetch(url, options);
+      if (!response) {
+        throw new Error("Failed to fetch");
+      }
+      return response;
+    },
+    [appBridge]
+  );
 
   // Connect to App Bridge
   const connect = useCallback(async () => {
@@ -82,6 +97,16 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
         if (data.session) {
           setSession(data.session);
           setSessionError(null);
+
+          // Extract session token if session is a string
+          if (typeof data.session === "string") {
+            setSessionToken(data.session);
+          } else if (
+            typeof data.session === "object" &&
+            data.session.accessToken
+          ) {
+            setSessionToken(data.session.accessToken);
+          }
         }
       };
 
@@ -92,11 +117,22 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
         setSession(data.session);
         setSessionError(null);
         setIsSessionLoading(false);
+
+        // Extract session token if session is a string
+        if (typeof data.session === "string") {
+          setSessionToken(data.session);
+        } else if (
+          typeof data.session === "object" &&
+          data.session.accessToken
+        ) {
+          setSessionToken(data.session.accessToken);
+        }
       };
 
       const handleSessionError = (error: string) => {
         setSessionError(error);
         setSession(null);
+        setSessionToken(null);
         setIsSessionLoading(false);
       };
 
@@ -232,6 +268,7 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
 
     // Session state
     session,
+    sessionToken,
     isSessionLoading,
     sessionError,
 
@@ -244,6 +281,8 @@ export function useMantleAppBridge(): UseMantleAppBridgeReturn {
     refreshSession,
     refreshUser,
     connect,
+
+    authenticatedFetch,
 
     // App Bridge instance
     appBridge,
