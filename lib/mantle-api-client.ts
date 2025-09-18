@@ -1,28 +1,52 @@
-import { Organization } from "@prisma/client";
-import console from "console";
 import createClient from "openapi-fetch";
+import {
+  PathsWithMethod,
+  ResponseObjectMap,
+  SuccessResponse,
+} from "openapi-typescript-helpers";
 import { paths } from "./types/mantleApi";
 
+const baseUrl =
+  process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL || "https://api.heymantle.com/v1";
+
+// Base client for traditional OAuth (server-side)
 const client = createClient<paths>({
-  baseUrl:
-    process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
-    "https://api.heymantle.com/v1",
+  baseUrl,
 });
 
-export const mantlePost = async (
-  organization: Organization,
-  path: keyof paths,
-  params?: any
-) => {
+export const mantlePost = async <Path extends PathsWithMethod<paths, "post">>(
+  accessTokenOrFetch:
+    | string
+    | ((input: Request | string, init?: RequestInit) => Promise<Response>),
+  path: Path,
+  ...params: any[]
+): Promise<
+  SuccessResponse<ResponseObjectMap<paths[Path]["post"]>, "application/json">
+> => {
   try {
-    const maybeParams = params ?? {};
+    const maybeParams = params[0] ?? {};
 
-    const { data, error } = await client.POST(path as any, {
-      headers: {
-        Authorization: `Bearer ${organization.accessToken}`,
-      },
-      ...maybeParams,
-    });
+    // Determine if we're using accessToken or custom fetch
+    const isAccessToken = typeof accessTokenOrFetch === "string";
+    const apiClient = isAccessToken
+      ? client
+      : createClient<paths>({ baseUrl, fetch: accessTokenOrFetch });
+
+    console.log(
+      `[mantlePost] Using ${isAccessToken ? "access token" : "custom fetch"}`
+    );
+
+    const requestConfig = isAccessToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${accessTokenOrFetch}`,
+          },
+          ...maybeParams,
+        }
+      : maybeParams;
+
+    const { data, error } = await apiClient.POST(path, requestConfig);
+
     if (error) {
       throw error;
     }
@@ -38,32 +62,42 @@ export const mantlePost = async (
   }
 };
 
-export const mantleGet = async (
-  organization: Organization,
-  path: keyof paths,
-  params?: any
-) => {
+export const mantleGet = async <Path extends PathsWithMethod<paths, "get">>(
+  accessTokenOrFetch:
+    | string
+    | ((input: Request | string, init?: RequestInit) => Promise<Response>),
+  path: Path,
+  ...params: any[]
+): Promise<
+  SuccessResponse<ResponseObjectMap<paths[Path]["get"]>, "application/json">
+> => {
   try {
-    const maybeParams = params ?? {};
+    const maybeParams = params[0] ?? {};
 
     console.log(`[mantleGet] Calling ${path} with params:`, maybeParams);
 
-    // Try multiple approaches for passing query params
-    const requestConfig = {
-      headers: {
-        Authorization: `Bearer ${organization.accessToken}`,
-      },
-      params: {
-        query: maybeParams.query || {},
-      },
-      // Also try passing query params directly as a fallback
-      // ...(maybeParams.query && { query: maybeParams.query }),
-    };
+    // Determine if we're using accessToken or custom fetch
+    const isAccessToken = typeof accessTokenOrFetch === "string";
+    const apiClient = isAccessToken
+      ? client
+      : createClient<paths>({ baseUrl, fetch: accessTokenOrFetch });
+
+    console.log(
+      `[mantleGet] Using ${isAccessToken ? "access token" : "custom fetch"}`
+    );
+
+    const requestConfig = isAccessToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${accessTokenOrFetch}`,
+          },
+          ...maybeParams,
+        }
+      : maybeParams;
 
     console.log(`[mantleGet] Full request config:`, requestConfig);
-    console.log(`[mantleGet] Query params specifically:`, maybeParams.query);
 
-    const { data, error } = await client.GET(path as any, requestConfig);
+    const { data, error } = await apiClient.GET(path, requestConfig);
 
     if (error) {
       console.error(`[mantleGet] API error for ${path}:`, error);
@@ -82,20 +116,38 @@ export const mantleGet = async (
   }
 };
 
-export const mantlePut = async (
-  organization: Organization,
-  path: keyof paths,
-  params?: any
-) => {
+export const mantlePut = async <Path extends PathsWithMethod<paths, "put">>(
+  accessTokenOrFetch:
+    | string
+    | ((input: Request | string, init?: RequestInit) => Promise<Response>),
+  path: Path,
+  ...params: any[]
+): Promise<
+  SuccessResponse<ResponseObjectMap<paths[Path]["put"]>, "application/json">
+> => {
   try {
-    const maybeParams = params ?? {};
+    const maybeParams = params[0] ?? {};
 
-    const { data, error } = await client.PUT(path as any, {
-      headers: {
-        Authorization: `Bearer ${organization.accessToken}`,
-      },
-      ...maybeParams,
-    });
+    // Determine if we're using accessToken or custom fetch
+    const isAccessToken = typeof accessTokenOrFetch === "string";
+    const apiClient = isAccessToken
+      ? client
+      : createClient<paths>({ baseUrl, fetch: accessTokenOrFetch });
+
+    console.log(
+      `[mantlePut] Using ${isAccessToken ? "access token" : "custom fetch"}`
+    );
+
+    const requestConfig = isAccessToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${accessTokenOrFetch}`,
+          },
+          ...maybeParams,
+        }
+      : maybeParams;
+
+    const { data, error } = await apiClient.PUT(path, requestConfig);
 
     if (error) {
       throw error;
@@ -112,20 +164,40 @@ export const mantlePut = async (
   }
 };
 
-export const mantleDelete = async (
-  organization: Organization,
-  path: keyof paths,
-  params?: any
-) => {
+export const mantleDelete = async <
+  Path extends PathsWithMethod<paths, "delete">
+>(
+  accessTokenOrFetch:
+    | string
+    | ((input: Request | string, init?: RequestInit) => Promise<Response>),
+  path: Path,
+  ...params: any[]
+): Promise<
+  SuccessResponse<ResponseObjectMap<paths[Path]["delete"]>, "application/json">
+> => {
   try {
-    const maybeParams = params ?? {};
+    const maybeParams = params[0] ?? {};
 
-    const { data, error } = await client.DELETE(path as any, {
-      headers: {
-        Authorization: `Bearer ${organization.accessToken}`,
-      },
-      ...maybeParams,
-    });
+    // Determine if we're using accessToken or custom fetch
+    const isAccessToken = typeof accessTokenOrFetch === "string";
+    const apiClient = isAccessToken
+      ? client
+      : createClient<paths>({ baseUrl, fetch: accessTokenOrFetch });
+
+    console.log(
+      `[mantleDelete] Using ${isAccessToken ? "access token" : "custom fetch"}`
+    );
+
+    const requestConfig = isAccessToken
+      ? {
+          headers: {
+            Authorization: `Bearer ${accessTokenOrFetch}`,
+          },
+          ...maybeParams,
+        }
+      : maybeParams;
+
+    const { data, error } = await apiClient.DELETE(path, requestConfig);
 
     if (error) {
       throw error;

@@ -1,46 +1,68 @@
 "use client";
-
 import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
+import { components } from "@/lib/types/mantleApi";
 import {
   Button,
   Card,
   HorizontalStack,
   Link,
+  Select,
   Text,
   TextField,
   VerticalStack,
 } from "@heymantle/litho";
 import { useState } from "react";
 
-interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-  tags?: string[];
-}
-
-interface CustomerListResult {
+// Types from OpenAPI schema
+type Customer = components["schemas"]["Customer"];
+type CustomerListResult = components["schemas"]["Pagination"] & {
   customers: Customer[];
-  page: number;
-  totalPages?: number;
-}
+};
+
+type RequestMode = "server" | "client";
+
+// Helper function to extract session token
+const extractSessionToken = (session: any): string | null => {
+  if (!session) return null;
+  if (typeof session === "string") return session;
+  return session.accessToken || session.token || session.sessionToken || null;
+};
+
+// Customer card component
+const CustomerCard = ({ customer }: { customer: Customer }) => (
+  <Card padded>
+    <VerticalStack gap="1">
+      <Link url={`mantle://customers/${customer.id}`}>
+        <Text variant="bodyMd" fontWeight="medium">
+          {customer.name || `Customer ${customer.id}`}
+        </Text>
+      </Link>
+      {customer.email && (
+        <Text variant="bodySm" color="subdued">
+          {customer.email}
+        </Text>
+      )}
+      {customer.tags && customer.tags.length > 0 && (
+        <Text variant="bodySm" color="subdued">
+          Tags: {customer.tags.join(", ")}
+        </Text>
+      )}
+    </VerticalStack>
+  </Card>
+);
 
 export default function CustomerList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [result, setResult] = useState<CustomerListResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [requestMode, setRequestMode] = useState<RequestMode>("server");
 
   const { session, isSessionLoading, sessionError, authenticatedFetch } =
     useSharedMantleAppBridge();
 
   // Extract session token from session
-  const sessionToken =
-    session && typeof session === "object" && "accessToken" in session
-      ? (session as any).accessToken
-      : typeof session === "string"
-      ? session
-      : null;
+  const sessionToken = extractSessionToken(session);
 
   const handleSearch = async () => {
     if (!sessionToken) {
@@ -52,33 +74,11 @@ export default function CustomerList() {
     setError(null);
 
     try {
-      const params = new URLSearchParams();
-      if (searchTerm.trim()) {
-        params.set("search", searchTerm.trim());
-      }
-      params.set("page", "1");
-      params.set("limit", "10"); // Limit to 10 results
-
-      const url = `/api/customers?${params.toString()}`;
-
-      const response = await authenticatedFetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setResult(data);
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        setError(
-          `API call failed with status: ${response.status} - ${
-            errorData.message || response.statusText
-          }`
-        );
-      }
+      const data =
+        requestMode === "server"
+          ? await searchViaServer()
+          : await searchViaClient();
+      setResult(data);
     } catch (err: any) {
       setError(`Search failed: ${err.message}`);
     } finally {
@@ -86,9 +86,85 @@ export default function CustomerList() {
     }
   };
 
+  const searchViaServer = async (): Promise<CustomerListResult> => {
+    const params = buildSearchParams();
+    const url = `/api/customers?${params.toString()}`;
+
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `API call failed with status: ${response.status} - ${
+          errorData.message || response.statusText
+        }`
+      );
+    }
+
+    return response.json();
+  };
+
+  const searchViaClient = async (): Promise<CustomerListResult> => {
+    const params = buildSearchParams();
+    const baseUrl =
+      process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
+      "https://api.heymantle.com/v1";
+    const url = `${baseUrl}/customers?${params.toString()}`;
+
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `API call failed with status: ${response.status} - ${
+          errorData.message || response.statusText
+        }`
+      );
+    }
+
+    return response.json();
+  };
+
+  const buildSearchParams = (): URLSearchParams => {
+    const params = new URLSearchParams();
+    if (searchTerm.trim()) {
+      params.set("search", searchTerm.trim());
+    }
+    params.set("page", "1");
+    params.set("take", "10");
+    return params;
+  };
+
   return (
     <Card title="Customers" padded>
       <VerticalStack gap="4">
+        {/* Request Mode Toggle */}
+        <HorizontalStack gap="2" blockAlign="center">
+          <Text variant="bodyMd" fontWeight="medium">
+            Request Mode:
+          </Text>
+          <Select
+            id="request-mode"
+            name="request-mode"
+            value={requestMode}
+            onChange={(value: string) => setRequestMode(value as RequestMode)}
+            options={[
+              { label: "Server-side (via API route)", value: "server" },
+              { label: "Client-side (direct to Mantle)", value: "client" },
+            ]}
+            disabled={loading}
+            onFocus={() => {}}
+            onBlur={() => {}}
+            tooltip="Choose between server-side proxy or direct client-side requests to Mantle API"
+          />
+        </HorizontalStack>
+
         {/* Search Input */}
         <HorizontalStack gap="2" blockAlign="end">
           <TextField
@@ -132,44 +208,29 @@ export default function CustomerList() {
         {result && (
           <VerticalStack gap="3">
             <HorizontalStack gap="2" align="space-between" blockAlign="center">
-              <Text variant="bodyMd" color="success">
-                Found {result.customers?.length || 0} customers
-              </Text>
-              {result.page && (
+              <HorizontalStack gap="2" blockAlign="center">
+                <Text variant="bodyMd" color="success">
+                  Found {result.customers?.length || 0} customers
+                </Text>
                 <Text variant="bodySm" color="subdued">
-                  Page {result.page} of {result.totalPages || "unknown"}
+                  (
+                  {requestMode === "server"
+                    ? "via API route"
+                    : "direct to Mantle"}
+                  )
+                </Text>
+              </HorizontalStack>
+              {result.total && (
+                <Text variant="bodySm" color="subdued">
+                  Total: {result.total} customers
                 </Text>
               )}
             </HorizontalStack>
 
             {result.customers && result.customers.length > 0 ? (
               <VerticalStack gap="2">
-                {result.customers.map((customer: Customer) => (
-                  <Card key={customer.id} padded>
-                    <HorizontalStack
-                      gap="3"
-                      align="space-between"
-                      blockAlign="center"
-                    >
-                      <VerticalStack gap="1">
-                        <Link url={`mantle://customers/${customer.id}`}>
-                          <Text variant="bodyMd" fontWeight="medium">
-                            {customer.name}
-                          </Text>
-                        </Link>
-                        {customer.email && (
-                          <Text variant="bodySm" color="subdued">
-                            {customer.email}
-                          </Text>
-                        )}
-                        {customer.tags && customer.tags.length > 0 && (
-                          <Text variant="bodySm" color="subdued">
-                            Tags: {customer.tags.join(", ")}
-                          </Text>
-                        )}
-                      </VerticalStack>
-                    </HorizontalStack>
-                  </Card>
+                {result.customers.map((customer) => (
+                  <CustomerCard key={customer.id} customer={customer} />
                 ))}
               </VerticalStack>
             ) : (
