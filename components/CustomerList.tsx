@@ -1,6 +1,9 @@
 "use client";
-import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
 import { components } from "@/lib/types/mantleApi";
+import {
+  useSharedAuth,
+  useSharedMantleAppBridge,
+} from "@heymantle/app-bridge-react";
 import {
   Button,
   Card,
@@ -58,11 +61,15 @@ export default function CustomerList() {
   const [loading, setLoading] = useState(false);
   const [requestMode, setRequestMode] = useState<RequestMode>("server");
 
-  const { session, isSessionLoading, sessionError, authenticatedFetch } =
-    useSharedMantleAppBridge();
+  const appBridge = useSharedMantleAppBridge();
+  const { isLoading, error: authError } = useSharedAuth();
 
-  // Extract session token from session
-  const sessionToken = extractSessionToken(session);
+  // Get session token from app bridge
+  const sessionToken = appBridge?.currentSession
+    ? typeof appBridge.currentSession === "string"
+      ? appBridge.currentSession
+      : appBridge.currentSession.accessToken
+    : null;
 
   const handleSearch = async () => {
     if (!sessionToken) {
@@ -87,10 +94,14 @@ export default function CustomerList() {
   };
 
   const searchViaServer = async (): Promise<CustomerListResult> => {
+    if (!appBridge) {
+      throw new Error("App Bridge not available");
+    }
+
     const params = buildSearchParams();
     const url = `/api/customers?${params.toString()}`;
 
-    const response = await authenticatedFetch(url, {
+    const response = await appBridge.authenticatedFetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -108,13 +119,17 @@ export default function CustomerList() {
   };
 
   const searchViaClient = async (): Promise<CustomerListResult> => {
+    if (!appBridge) {
+      throw new Error("App Bridge not available");
+    }
+
     const params = buildSearchParams();
     const baseUrl =
       process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
       "https://api.heymantle.com/v1";
     const url = `${baseUrl}/customers?${params.toString()}`;
 
-    const response = await authenticatedFetch(url, {
+    const response = await appBridge.authenticatedFetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -177,19 +192,19 @@ export default function CustomerList() {
                 handleSearch();
               }
             }}
-            disabled={!sessionToken || isSessionLoading}
+            disabled={!sessionToken || isLoading}
           />
           <Button
             onClick={handleSearch}
             loading={loading}
-            disabled={loading || !sessionToken || isSessionLoading}
+            disabled={loading || !sessionToken || isLoading}
           >
             {loading ? "Searching..." : "Search"}
           </Button>
         </HorizontalStack>
 
         {/* Session Status */}
-        {!sessionToken && !sessionError && !isSessionLoading && (
+        {!sessionToken && !authError && !isLoading && (
           <Text variant="bodySm" color="subdued">
             Waiting for session to initialize...
           </Text>

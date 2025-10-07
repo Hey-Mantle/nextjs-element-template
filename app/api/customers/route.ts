@@ -1,11 +1,17 @@
-import { getAuthenticatedUser } from "@/lib/jwt-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const { user, organization } = await getAuthenticatedUser(request);
+  // Get the Authorization header from the client request
+  const authHeader = request.headers.get("authorization");
+  const sessionTokenAuthHeader = request.headers.get(
+    "x-mantle-session-token-auth"
+  );
 
-  if (!user || !organization) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!authHeader) {
+    return NextResponse.json(
+      { error: "No authorization header" },
+      { status: 401 }
+    );
   }
 
   const { searchParams } = new URL(request.url);
@@ -21,29 +27,35 @@ export async function GET(request: NextRequest) {
   params.set("page", page);
   params.set("take", Math.min(parseInt(take, 10), 10).toString());
 
+  // Use the same base URL as the client-side - this should be mantle-kristian.ngrok.io
   const baseUrl =
     process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
     "https://api.heymantle.com/v1";
   const url = `${baseUrl}/customers?${params.toString()}`;
 
-  console.log("API Route - Calling Mantle API with URL:", url);
-
-  // Use fetch directly instead of mantleGet to match client-side approach
+  // Forward the request to the Mantle API with the same headers
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${organization.accessToken}`,
+      Authorization: authHeader, // Forward the JWT as-is
       "Content-Type": "application/json",
+      ...(sessionTokenAuthHeader && {
+        "X-Mantle-Session-Token-Auth": sessionTokenAuthHeader,
+      }), // Forward the session token auth header
     },
   });
 
   if (!response.ok) {
-    throw new Error(`Mantle API call failed with status: ${response.status}`);
+    const errorText = await response.text();
+    return NextResponse.json(
+      {
+        error: `Mantle API call failed with status: ${response.status} - ${errorText}`,
+      },
+      { status: response.status }
+    );
   }
 
   const customers = await response.json();
-
-  console.log("API Route - Mantle API response:", customers);
 
   return NextResponse.json(customers);
 }

@@ -5,6 +5,7 @@ import { prisma } from "./prisma";
 
 /**
  * Verify JWT token with database lookup (for use in API routes)
+ * For managed installs, JWT tokens are signed with MANTLE_ELEMENT_SECRET
  */
 async function verifyJWTToken(
   token: string
@@ -27,7 +28,7 @@ async function verifyJWTToken(
       return null;
     }
 
-    // Look up the organization by mantleId to get the access token for verification
+    // Look up the organization by mantleId
     const organization = await prisma.organization.findUnique({
       where: { mantleId: payload.organizationId },
     });
@@ -36,9 +37,16 @@ async function verifyJWTToken(
       return null;
     }
 
-    // Verify the signature using the organization's access token
+    // Get the element secret for JWT verification (for managed installs)
+    const elementSecret = process.env.MANTLE_ELEMENT_SECRET;
+    if (!elementSecret) {
+      console.error("MANTLE_ELEMENT_SECRET not found in environment variables");
+      return null;
+    }
+
+    // Verify the signature using the element secret
     const expectedSignature = crypto
-      .createHmac("sha256", organization.accessToken)
+      .createHmac("sha256", elementSecret)
       .update(jwtParts[0] + "." + jwtParts[1])
       .digest("base64url");
 

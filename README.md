@@ -80,7 +80,7 @@ The Mantle Element Starter uses the **Mantle App Bridge** to communicate with th
 
 ```typescript
 // Example: Using App Bridge in your components
-import { useMantleAppBridge } from '@/lib/use-mantle-app-bridge';
+import { useMantleAppBridge } from '@heymantle/app-bridge-react';
 
 function MyComponent() {
   const { 
@@ -111,7 +111,7 @@ The starter implements a dual authentication system:
 - **Purpose**: For embedded iframe access within Mantle
 - **Flow**: 
   1. App Bridge provides a JWT session token
-  2. Token is verified using HMAC with organization's access token
+  2. Token is verified using HMAC with the configured element secret (for managed installs)
   3. User and organization data is retrieved/created in local database
   4. Session is established for the current request
 

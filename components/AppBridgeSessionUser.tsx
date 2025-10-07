@@ -1,6 +1,9 @@
 "use client";
 
-import { useSharedMantleAppBridge } from "@/lib/mantle-app-bridge-context";
+import {
+  useSharedAuth,
+  useSharedMantleAppBridge,
+} from "@heymantle/app-bridge-react";
 import {
   Badge,
   Button,
@@ -34,23 +37,13 @@ function decodeJWTPayload(token: string): Record<string, any> | null {
 }
 
 export default function AppBridgeSessionUser() {
-  const {
-    isConnected,
-    session,
-    isSessionLoading,
-    sessionError,
-    user,
-    isUserLoading,
-    userError,
-    refreshSession,
-    refreshUser,
-    appBridge,
-  } = useSharedMantleAppBridge();
+  const appBridge = useSharedMantleAppBridge();
+  const { user, isLoading, error, refresh } = useSharedAuth();
 
   // Get organization ID from app bridge
   const organizationId = appBridge?.currentOrganizationId || null;
 
-  if (!isConnected) {
+  if (!appBridge?.ready) {
     return null;
   }
 
@@ -62,16 +55,16 @@ export default function AppBridgeSessionUser() {
           <Text variant="bodyMd" fontWeight="medium">
             Session:
           </Text>
-          {isSessionLoading ? (
+          {isLoading ? (
             <HorizontalStack gap="2" align="center">
               <Spinner size="small" />
               <Text variant="bodySm">Loading...</Text>
             </HorizontalStack>
-          ) : sessionError ? (
+          ) : error ? (
             <Badge status="critical">
               <Text variant="bodySm">Error</Text>
             </Badge>
-          ) : session ? (
+          ) : appBridge?.currentSession ? (
             <Badge status="success">
               <Text variant="bodySm">Active</Text>
             </Badge>
@@ -80,24 +73,20 @@ export default function AppBridgeSessionUser() {
               <Text variant="bodySm">No Session</Text>
             </Badge>
           )}
-          <Button
-            onClick={refreshSession}
-            size="small"
-            disabled={isSessionLoading}
-          >
+          <Button onClick={refresh} size="small" disabled={isLoading}>
             Refresh
           </Button>
         </HorizontalStack>
 
-        {sessionError && (
+        {error && (
           <Text variant="bodyMd" color="critical">
-            Session Error: {sessionError}
+            Session Error: {error}
           </Text>
         )}
 
-        {session && (
+        {appBridge?.currentSession && (
           <VerticalStack gap="2">
-            {typeof session === "string" ? (
+            {typeof appBridge.currentSession === "string" ? (
               // Handle JWT token string
               <>
                 <HorizontalStack gap="3" align="start">
@@ -108,7 +97,7 @@ export default function AppBridgeSessionUser() {
                     variant="bodyMd"
                     className="font-mono break-all overflow-wrap-anywhere max-w-full"
                   >
-                    {session}
+                    {appBridge.currentSession}
                   </Text>
                 </HorizontalStack>
 
@@ -121,7 +110,9 @@ export default function AppBridgeSessionUser() {
 
                 {/* Decoded JWT Payload */}
                 {(() => {
-                  const decodedPayload = decodeJWTPayload(session);
+                  const decodedPayload = decodeJWTPayload(
+                    appBridge.currentSession as string
+                  );
                   if (decodedPayload) {
                     return (
                       <VerticalStack gap="2">
@@ -165,7 +156,7 @@ export default function AppBridgeSessionUser() {
                     Session ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
-                    {session.id}
+                    {(appBridge.currentSession as any).id}
                   </Text>
                 </HorizontalStack>
 
@@ -174,7 +165,7 @@ export default function AppBridgeSessionUser() {
                     User ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
-                    {session.userId}
+                    {(appBridge.currentSession as any).userId}
                   </Text>
                 </HorizontalStack>
 
@@ -183,7 +174,7 @@ export default function AppBridgeSessionUser() {
                     Organization ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
-                    {session.organizationId}
+                    {(appBridge.currentSession as any).organizationId}
                   </Text>
                 </HorizontalStack>
 
@@ -192,7 +183,9 @@ export default function AppBridgeSessionUser() {
                     Expires:
                   </Text>
                   <Text variant="bodyMd">
-                    {new Date(session.expiresAt).toLocaleString()}
+                    {new Date(
+                      (appBridge.currentSession as any).expiresAt
+                    ).toLocaleString()}
                   </Text>
                 </HorizontalStack>
               </>
@@ -236,12 +229,12 @@ export default function AppBridgeSessionUser() {
           <Text variant="bodyMd" fontWeight="medium">
             User:
           </Text>
-          {isUserLoading ? (
+          {isLoading ? (
             <HorizontalStack gap="2" align="center">
               <Spinner size="small" />
               <Text variant="bodySm">Loading...</Text>
             </HorizontalStack>
-          ) : userError ? (
+          ) : error ? (
             <Badge status="critical">
               <Text variant="bodySm">Error</Text>
             </Badge>
@@ -254,14 +247,14 @@ export default function AppBridgeSessionUser() {
               <Text variant="bodySm">No User</Text>
             </Badge>
           )}
-          <Button onClick={refreshUser} size="small" disabled={isUserLoading}>
+          <Button onClick={refresh} size="small" disabled={isLoading}>
             Refresh
           </Button>
         </HorizontalStack>
 
-        {userError && (
+        {error && (
           <Text variant="bodyMd" color="critical">
-            User Error: {userError}
+            User Error: {error}
           </Text>
         )}
 
