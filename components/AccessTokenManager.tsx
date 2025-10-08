@@ -32,7 +32,13 @@ interface AccessTokenInfo {
   };
 }
 
-export default function AccessTokenManager() {
+interface AccessTokenManagerProps {
+  onTokenStatusChange?: (hasToken: boolean) => void;
+}
+
+export default function AccessTokenManager({
+  onTokenStatusChange,
+}: AccessTokenManagerProps) {
   const { mantle, isReady } = useAppBridge();
   const { authenticatedFetch } = useAuthenticatedFetch();
   const [isLoading, setIsLoading] = useState(false);
@@ -64,13 +70,16 @@ export default function AccessTokenManager() {
       if (response.ok) {
         const data = await response.json();
         setTokenInfo(data.tokenInfo);
+        onTokenStatusChange?.(!!data.tokenInfo);
       } else {
         console.log("No token found or error loading status");
         setTokenInfo(null);
+        onTokenStatusChange?.(false);
       }
     } catch (err) {
       console.error("Failed to load token status:", err);
       setTokenInfo(null);
+      onTokenStatusChange?.(false);
     } finally {
       setIsLoadingStatus(false);
     }
@@ -104,8 +113,7 @@ export default function AccessTokenManager() {
       const data = await response.json();
       setTokenInfo(data.tokenInfo);
       setAction("Access token granted successfully!");
-      // Refresh token status to ensure we have the latest data
-      await loadTokenStatus();
+      onTokenStatusChange?.(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -139,8 +147,7 @@ export default function AccessTokenManager() {
       const data = await response.json();
       setTokenInfo(data.tokenInfo);
       setAction("Access token refreshed successfully!");
-      // Refresh token status to ensure we have the latest data
-      await loadTokenStatus();
+      onTokenStatusChange?.(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -173,8 +180,7 @@ export default function AccessTokenManager() {
 
       setTokenInfo(null);
       setAction("Access token revoked successfully!");
-      // Refresh token status to ensure we have the latest data
-      await loadTokenStatus();
+      onTokenStatusChange?.(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

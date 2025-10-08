@@ -1,6 +1,5 @@
-import AccessTokenManager from "@/components/AccessTokenManager";
 import AppBridgeDebug from "@/components/AppBridgeDebug";
-import CustomerList from "@/components/CustomerList";
+import HomePageContent from "@/components/HomePageContent";
 import PageHeader from "@/components/PageHeader";
 import { prisma } from "@/lib/prisma";
 import { Layout, Page, VerticalStack } from "@heymantle/litho";
@@ -83,8 +82,7 @@ export default async function Home({
       <Layout>
         <VerticalStack gap="6">
           <PageHeader />
-          <AccessTokenManager />
-          <CustomerList />
+          <HomePageContent />
         </VerticalStack>
       </Layout>
       <AppBridgeDebug />

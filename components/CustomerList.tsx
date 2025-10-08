@@ -23,7 +23,7 @@ type CustomerListResult = components["schemas"]["Pagination"] & {
   customers: Customer[];
 };
 
-type RequestMode = "server" | "client";
+type RequestMode = "server" | "client" | "access-token";
 
 // Helper function to extract session token
 const extractSessionToken = (session: any): string | null => {
@@ -55,7 +55,13 @@ const CustomerCard = ({ customer }: { customer: Customer }) => (
   </Card>
 );
 
-export default function CustomerList() {
+interface CustomerListProps {
+  hasAccessToken?: boolean;
+}
+
+export default function CustomerList({
+  hasAccessToken = false,
+}: CustomerListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [result, setResult] = useState<CustomerListResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +89,13 @@ export default function CustomerList() {
     }
   }, [mantle, isReady, sessionToken, userLoading]);
 
+  // Switch away from access-token mode if no access token is available
+  useEffect(() => {
+    if (hasAccessToken === false && requestMode === "access-token") {
+      setRequestMode("server");
+    }
+  }, [hasAccessToken, requestMode]);
+
   const handleSearch = async () => {
     if (!sessionToken) {
       setError("No session token available");
@@ -96,7 +109,9 @@ export default function CustomerList() {
       const data =
         requestMode === "server"
           ? await searchViaServer()
-          : await searchViaClient();
+          : requestMode === "client"
+          ? await searchViaClient()
+          : await searchViaAccessToken();
       setResult(data);
     } catch (err: any) {
       setError(`Search failed: ${err.message}`);
@@ -158,6 +173,34 @@ export default function CustomerList() {
     return response.json();
   };
 
+  const searchViaAccessToken = async (): Promise<CustomerListResult> => {
+    if (!mantle) {
+      throw new Error("App Bridge not available");
+    }
+
+    const params = buildSearchParams();
+    const url = `/api/customers?${params.toString()}`;
+
+    // Use authenticatedFetch - the server will automatically use access token if available
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `API call failed with status: ${response.status} - ${
+          errorData.message || response.statusText
+        }`
+      );
+    }
+
+    return response.json();
+  };
+
   const buildSearchParams = (): URLSearchParams => {
     const params = new URLSearchParams();
     if (searchTerm.trim()) {
@@ -198,11 +241,18 @@ export default function CustomerList() {
             options={[
               { label: "Server-side (via API route)", value: "server" },
               { label: "Client-side (direct to Mantle)", value: "client" },
+              {
+                label: hasAccessToken
+                  ? "Access Token (via API route)"
+                  : "Access Token (via API route) - Not Available",
+                value: "access-token",
+                disabled: !hasAccessToken,
+              },
             ]}
             disabled={loading}
             onFocus={() => {}}
             onBlur={() => {}}
-            tooltip="Choose between server-side proxy or direct client-side requests to Mantle API"
+            tooltip="Choose between server-side proxy, direct client-side requests, or access token authentication"
           />
         </HorizontalStack>
 
@@ -260,8 +310,10 @@ export default function CustomerList() {
                 <Text variant="bodySm" color="subdued">
                   (
                   {requestMode === "server"
-                    ? "via API route"
-                    : "direct to Mantle"}
+                    ? "via API route (JWT)"
+                    : requestMode === "client"
+                    ? "direct to Mantle"
+                    : "via API route (Access Token)"}
                   )
                 </Text>
               </HorizontalStack>
