@@ -4,6 +4,8 @@ import {
   useAuthenticatedFetch,
   useOrganization,
 } from "@heymantle/app-bridge-react";
+import { AppProvider } from "@heymantle/litho";
+import { MantleProvider } from "@heymantle/react";
 import { useEffect, useState } from "react";
 
 interface MantleProviderWrapperProps {
@@ -68,7 +70,21 @@ export default function MantleProviderWrapper({
     return <>{children}</>;
   }
 
-  // For now, just render children without MantleProvider since the customer API token
-  // approach has CORS issues. The app-bridge-react hooks can be used directly instead.
-  return <>{children}</>;
+  // Wrap children with AppProvider for Litho UI components
+  return (
+    <AppProvider
+      darkModeAvailable
+      darkModeStorageKey="nextjs-litho-dark-mode"
+      embedded={true}
+      onDarkModeChange={() => {}}
+    >
+      <MantleProvider
+        appId={process.env.NEXT_PUBLIC_MANTLE_APP_ID!}
+        customerApiToken={customerApiToken}
+        apiUrl={process.env.NEXT_PUBLIC_MANTLE_APP_API_URL}
+      >
+        {children}
+      </MantleProvider>
+    </AppProvider>
+  );
 }

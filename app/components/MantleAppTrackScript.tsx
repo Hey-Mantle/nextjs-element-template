@@ -1,22 +1,24 @@
 "use client";
-
-import { useUser } from "@heymantle/app-bridge-react";
+import { useMantle } from "@heymantle/react";
 
 export const MantleAppTrackScript = () => {
-  const { user } = useUser();
+  const { customer } = useMantle();
+  const appToken = process.env.NEXT_PUBLIC_MANTLE_APP_TOKEN;
 
-  // For now, we'll use the user ID as a fallback since we can't access customer data
-  // due to CORS issues with the customer API token approach
-  const customerId = user?.id;
+  // Don't render the script if appToken is missing
+  if (!appToken) {
+    console.warn(
+      "NEXT_PUBLIC_MANTLE_APP_TOKEN is not set. Mantle tracking will be disabled."
+    );
+    return null;
+  }
 
-  return customerId ? (
+  return customer?.id ? (
     <script
       async
       src={`${
         process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com"
-      }/js/mantle_apptrack.js?appToken=${
-        process.env.NEXT_PUBLIC_MANTLE_APP_TOKEN
-      }&customerId=${customerId}`}
+      }/js/mantle_apptrack.js?appToken=${appToken}&customerId=${customer.id}`}
     />
   ) : null;
 };

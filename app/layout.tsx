@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import ClientAppProvider from "./components/ClientAppProvider";
+import { MantleAppTrackScript } from "./components/MantleAppTrackScript";
+import MantleProviderWrapper from "./components/MantleProviderWrapper";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -25,7 +26,10 @@ export default function RootLayout({
         <script src={appBridgeScriptUrl} async />
       </head>
       <body className={inter.className}>
-        <ClientAppProvider mantleUrl={mantleUrl}>{children}</ClientAppProvider>
+        <MantleProviderWrapper>
+          <MantleAppTrackScript />
+          {children}
+        </MantleProviderWrapper>
       </body>
     </html>
   );
