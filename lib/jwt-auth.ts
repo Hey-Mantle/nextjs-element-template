@@ -14,7 +14,6 @@ async function verifyJWTToken(
     // Decode the JWT payload
     const jwtParts = token.split(".");
     if (jwtParts.length !== 3) {
-      console.log("JWT Auth - invalid JWT format");
       return null;
     }
 
@@ -40,7 +39,6 @@ async function verifyJWTToken(
     // Get the element secret for JWT verification (for managed installs)
     const elementSecret = process.env.MANTLE_ELEMENT_SECRET;
     if (!elementSecret) {
-      console.error("MANTLE_ELEMENT_SECRET not found in environment variables");
       return null;
     }
 
@@ -114,7 +112,6 @@ async function verifyJWTToken(
 
     return { user, organization };
   } catch (error) {
-    console.error("JWT Auth - verification failed:", error);
     return null;
   }
 }

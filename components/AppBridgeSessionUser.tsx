@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useSharedAuth,
-  useSharedMantleAppBridge,
-} from "@heymantle/app-bridge-react";
+import { useAppBridge, useUser } from "@heymantle/app-bridge-react";
 import {
   Badge,
   Button,
@@ -37,13 +34,13 @@ function decodeJWTPayload(token: string): Record<string, any> | null {
 }
 
 export default function AppBridgeSessionUser() {
-  const appBridge = useSharedMantleAppBridge();
-  const { user, isLoading, error, refresh } = useSharedAuth();
+  const { mantle, isReady } = useAppBridge();
+  const { user, isLoading, error, refetch } = useUser();
 
   // Get organization ID from app bridge
-  const organizationId = appBridge?.currentOrganizationId || null;
+  const organizationId = mantle?.currentOrganizationId || null;
 
-  if (!appBridge?.ready) {
+  if (!isReady) {
     return null;
   }
 
@@ -64,7 +61,7 @@ export default function AppBridgeSessionUser() {
             <Badge status="critical">
               <Text variant="bodySm">Error</Text>
             </Badge>
-          ) : appBridge?.currentSession ? (
+          ) : mantle?.currentSession ? (
             <Badge status="success">
               <Text variant="bodySm">Active</Text>
             </Badge>
@@ -73,7 +70,7 @@ export default function AppBridgeSessionUser() {
               <Text variant="bodySm">No Session</Text>
             </Badge>
           )}
-          <Button onClick={refresh} size="small" disabled={isLoading}>
+          <Button onClick={refetch} size="small" disabled={isLoading}>
             Refresh
           </Button>
         </HorizontalStack>
@@ -84,9 +81,9 @@ export default function AppBridgeSessionUser() {
           </Text>
         )}
 
-        {appBridge?.currentSession && (
+        {mantle?.currentSession && (
           <VerticalStack gap="2">
-            {typeof appBridge.currentSession === "string" ? (
+            {typeof mantle.currentSession === "string" ? (
               // Handle JWT token string
               <>
                 <HorizontalStack gap="3" align="start">
@@ -97,7 +94,7 @@ export default function AppBridgeSessionUser() {
                     variant="bodyMd"
                     className="font-mono break-all overflow-wrap-anywhere max-w-full"
                   >
-                    {appBridge.currentSession}
+                    {mantle.currentSession}
                   </Text>
                 </HorizontalStack>
 
@@ -111,7 +108,7 @@ export default function AppBridgeSessionUser() {
                 {/* Decoded JWT Payload */}
                 {(() => {
                   const decodedPayload = decodeJWTPayload(
-                    appBridge.currentSession as string
+                    mantle.currentSession as string
                   );
                   if (decodedPayload) {
                     return (
@@ -156,7 +153,7 @@ export default function AppBridgeSessionUser() {
                     Session ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
-                    {(appBridge.currentSession as any).id}
+                    {(mantle.currentSession as any).id}
                   </Text>
                 </HorizontalStack>
 
@@ -165,7 +162,7 @@ export default function AppBridgeSessionUser() {
                     User ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
-                    {(appBridge.currentSession as any).userId}
+                    {(mantle.currentSession as any).userId}
                   </Text>
                 </HorizontalStack>
 
@@ -174,7 +171,7 @@ export default function AppBridgeSessionUser() {
                     Organization ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
-                    {(appBridge.currentSession as any).organizationId}
+                    {(mantle.currentSession as any).organizationId}
                   </Text>
                 </HorizontalStack>
 
@@ -184,7 +181,7 @@ export default function AppBridgeSessionUser() {
                   </Text>
                   <Text variant="bodyMd">
                     {new Date(
-                      (appBridge.currentSession as any).expiresAt
+                      (mantle.currentSession as any).expiresAt
                     ).toLocaleString()}
                   </Text>
                 </HorizontalStack>
@@ -247,7 +244,7 @@ export default function AppBridgeSessionUser() {
               <Text variant="bodySm">No User</Text>
             </Badge>
           )}
-          <Button onClick={refresh} size="small" disabled={isLoading}>
+          <Button onClick={refetch} size="small" disabled={isLoading}>
             Refresh
           </Button>
         </HorizontalStack>

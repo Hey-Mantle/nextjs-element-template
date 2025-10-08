@@ -1,29 +1,47 @@
 "use client";
 
 import {
-  useSharedAuth,
-  useSharedMantleAppBridge,
+  useAppBridge,
+  useOrganization,
+  useUser,
 } from "@heymantle/app-bridge-react";
 import { useEffect, useState } from "react";
 
 export default function AppBridgeDebug() {
-  const appBridge = useSharedMantleAppBridge();
-  const { user, isLoading, error } = useSharedAuth();
+  const {
+    mantle,
+    isReady,
+    isConnecting,
+    error: appBridgeError,
+  } = useAppBridge();
+  const { user, isLoading: userLoading, error: userError } = useUser();
+  const {
+    organization,
+    isLoading: orgLoading,
+    error: orgError,
+  } = useOrganization();
   const [debugInfo, setDebugInfo] = useState<any>({});
 
   useEffect(() => {
     const info = {
-      // App Bridge info
-      appBridgeReady: appBridge?.ready,
-      appBridgeConnected: appBridge?.isConnected,
-      currentSession: appBridge?.currentSession,
-      currentUser: appBridge?.currentUser,
-      currentOrganizationId: appBridge?.currentOrganizationId,
+      // App Bridge connection
+      appBridgeReady: isReady,
+      appBridgeConnected: mantle?.isConnected,
+      appBridgeError: appBridgeError,
 
-      // Auth info
-      authUser: user,
-      authLoading: isLoading,
-      authError: error,
+      // Session data (from App Bridge)
+      currentSession: mantle?.currentSession,
+      currentOrganizationId: mantle?.currentOrganizationId,
+
+      // User data (from hooks)
+      user: user,
+      userLoading: userLoading,
+      userError: userError,
+
+      // Organization data (from hooks)
+      organization: organization,
+      organizationLoading: orgLoading,
+      organizationError: orgError,
 
       // Environment info
       isInIframe:
@@ -37,7 +55,17 @@ export default function AppBridgeDebug() {
     };
 
     setDebugInfo(info);
-  }, [appBridge, user, isLoading, error]);
+  }, [
+    mantle,
+    isReady,
+    appBridgeError,
+    user,
+    userLoading,
+    userError,
+    organization,
+    orgLoading,
+    orgError,
+  ]);
 
   return (
     <div

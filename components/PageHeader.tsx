@@ -1,12 +1,15 @@
 "use client";
-import { useEmbeddedAuth } from "@/lib/embedded-auth-context";
+import { useOrganization, useUser } from "@heymantle/app-bridge-react";
 import { Button, HorizontalStack, Text, VerticalStack } from "@heymantle/litho";
 import { useState } from "react";
 import UserInfoDisplay from "./UserInfoDisplay";
 
 export default function PageHeader() {
-  const { user, organization } = useEmbeddedAuth();
   const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+
+  // Get user and organization data directly from App Bridge
+  const { user } = useUser();
+  const { organization } = useOrganization();
 
   return (
     <>
@@ -19,18 +22,22 @@ export default function PageHeader() {
         </VerticalStack>
 
         <HorizontalStack gap="4" align="center">
-          <Button onClick={() => setIsDebugModalOpen(true)}>User Info</Button>
+          {user && organization && (
+            <Button onClick={() => setIsDebugModalOpen(true)}>User Info</Button>
+          )}
         </HorizontalStack>
       </HorizontalStack>
 
-      <ui-modal
-        title="Debug Information"
-        size="large"
-        open={isDebugModalOpen}
-        onClose={() => setIsDebugModalOpen(false)}
-      >
-        <UserInfoDisplay />
-      </ui-modal>
+      {user && organization && (
+        <ui-modal
+          title="Debug Information"
+          size="large"
+          open={isDebugModalOpen}
+          onClose={() => setIsDebugModalOpen(false)}
+        >
+          <UserInfoDisplay />
+        </ui-modal>
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEmbeddedAuth } from "@/lib/embedded-auth-context";
+import { useOrganization, useUser } from "@heymantle/app-bridge-react";
 import {
   Badge,
   Card,
@@ -11,11 +11,20 @@ import {
 
 /**
  * Component that displays the current authenticated user and organization information
- * using the embedded auth context
+ * using the App Bridge hooks directly
  */
 export default function UserInfoDisplay() {
-  const { user, organization, isAuthenticated, isLoading, error } =
-    useEmbeddedAuth();
+  // Get user and organization data directly from App Bridge
+  const { user, isLoading: userLoading, error: userError } = useUser();
+  const {
+    organization,
+    isLoading: orgLoading,
+    error: orgError,
+  } = useOrganization();
+
+  const isLoading = userLoading || orgLoading;
+  const error = userError || orgError;
+  const isAuthenticated = !!(user && organization);
 
   if (isLoading) {
     return (
@@ -88,20 +97,12 @@ export default function UserInfoDisplay() {
                 {user.id}
               </Text>
             </HorizontalStack>
-            <HorizontalStack gap="2">
-              <Text variant="bodyMd" fontWeight="medium">
-                Mantle User ID:
-              </Text>
-              <Text variant="bodyMd" as="code">
-                {user.userId}
-              </Text>
-            </HorizontalStack>
-            {user.emailVerified && (
+            {user.role && (
               <HorizontalStack gap="2">
                 <Text variant="bodyMd" fontWeight="medium">
-                  Email Verified:
+                  Role:
                 </Text>
-                <Badge status="success">Verified</Badge>
+                <Text variant="bodyMd">{user.role}</Text>
               </HorizontalStack>
             )}
           </VerticalStack>
@@ -125,22 +126,33 @@ export default function UserInfoDisplay() {
               {organization.id}
             </Text>
           </HorizontalStack>
-          <HorizontalStack gap="2">
-            <Text variant="bodyMd" fontWeight="medium">
-              Mantle ID:
-            </Text>
-            <Text variant="bodyMd" as="code">
-              {organization.mantleId}
-            </Text>
-          </HorizontalStack>
-          {organization.apiToken && (
+          {organization.customerTags &&
+            organization.customerTags.length > 0 && (
+              <HorizontalStack gap="2">
+                <Text variant="bodyMd" fontWeight="medium">
+                  Customer Tags:
+                </Text>
+                <HorizontalStack gap="1">
+                  {organization.customerTags.map((tag, index) => (
+                    <Badge key={index} status="info">
+                      {tag}
+                    </Badge>
+                  ))}
+                </HorizontalStack>
+              </HorizontalStack>
+            )}
+          {organization.contactTags && organization.contactTags.length > 0 && (
             <HorizontalStack gap="2">
               <Text variant="bodyMd" fontWeight="medium">
-                API Token:
+                Contact Tags:
               </Text>
-              <Text variant="bodyMd" as="code">
-                {organization.apiToken.substring(0, 20)}...
-              </Text>
+              <HorizontalStack gap="1">
+                {organization.contactTags.map((tag, index) => (
+                  <Badge key={index} status="info">
+                    {tag}
+                  </Badge>
+                ))}
+              </HorizontalStack>
             </HorizontalStack>
           )}
         </VerticalStack>

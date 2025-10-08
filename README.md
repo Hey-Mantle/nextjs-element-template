@@ -80,7 +80,7 @@ The Mantle Element Starter uses the **Mantle App Bridge** to communicate with th
 
 ```typescript
 // Example: Using App Bridge in your components
-import { useMantleAppBridge } from '@heymantle/app-bridge-react';
+import { useAppBridge } from '@heymantle/app-bridge-react';
 
 function MyComponent() {
   const { 
@@ -88,7 +88,7 @@ function MyComponent() {
     session, 
     user, 
     authenticatedFetch 
-  } = useMantleAppBridge();
+  } = useAppBridge();
 
   if (!isConnected) {
     return <div>Connecting to Mantle...</div>;

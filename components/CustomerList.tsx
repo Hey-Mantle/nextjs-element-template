@@ -1,8 +1,9 @@
 "use client";
 import { components } from "@/lib/types/mantleApi";
 import {
-  useSharedAuth,
-  useSharedMantleAppBridge,
+  useAppBridge,
+  useAuthenticatedFetch,
+  useUser,
 } from "@heymantle/app-bridge-react";
 import {
   Button,
@@ -14,7 +15,7 @@ import {
   TextField,
   VerticalStack,
 } from "@heymantle/litho";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Types from OpenAPI schema
 type Customer = components["schemas"]["Customer"];
@@ -61,15 +62,26 @@ export default function CustomerList() {
   const [loading, setLoading] = useState(false);
   const [requestMode, setRequestMode] = useState<RequestMode>("server");
 
-  const appBridge = useSharedMantleAppBridge();
-  const { isLoading, error: authError } = useSharedAuth();
+  const {
+    mantle,
+    isReady,
+    isConnecting,
+    error: appBridgeError,
+  } = useAppBridge();
+  const { authenticatedFetch } = useAuthenticatedFetch();
+  const { user, isLoading: userLoading, error: userError } = useUser();
 
   // Get session token from app bridge
-  const sessionToken = appBridge?.currentSession
-    ? typeof appBridge.currentSession === "string"
-      ? appBridge.currentSession
-      : appBridge.currentSession.accessToken
+  const sessionToken = mantle?.currentSession
+    ? extractSessionToken(mantle.currentSession)
     : null;
+
+  // Request session when App Bridge is ready
+  useEffect(() => {
+    if (mantle && isReady && !sessionToken && !userLoading) {
+      mantle.requestSession();
+    }
+  }, [mantle, isReady, sessionToken, userLoading]);
 
   const handleSearch = async () => {
     if (!sessionToken) {
@@ -94,14 +106,14 @@ export default function CustomerList() {
   };
 
   const searchViaServer = async (): Promise<CustomerListResult> => {
-    if (!appBridge) {
+    if (!mantle) {
       throw new Error("App Bridge not available");
     }
 
     const params = buildSearchParams();
     const url = `/api/customers?${params.toString()}`;
 
-    const response = await appBridge.authenticatedFetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -119,7 +131,7 @@ export default function CustomerList() {
   };
 
   const searchViaClient = async (): Promise<CustomerListResult> => {
-    if (!appBridge) {
+    if (!mantle) {
       throw new Error("App Bridge not available");
     }
 
@@ -129,7 +141,7 @@ export default function CustomerList() {
       "https://api.heymantle.com/v1";
     const url = `${baseUrl}/customers?${params.toString()}`;
 
-    const response = await appBridge.authenticatedFetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -155,6 +167,20 @@ export default function CustomerList() {
     params.set("take", "10");
     return params;
   };
+
+  // If no app bridge context is available, show a message
+  if (!mantle) {
+    return (
+      <Card title="Customers" padded>
+        <VerticalStack gap="4" align="center">
+          <Text variant="bodyMd" color="subdued">
+            Customer list is not available during setup. Please configure your
+            environment variables first.
+          </Text>
+        </VerticalStack>
+      </Card>
+    );
+  }
 
   return (
     <Card title="Customers" padded>
@@ -192,21 +218,25 @@ export default function CustomerList() {
                 handleSearch();
               }
             }}
-            disabled={!sessionToken || isLoading}
+            disabled={!sessionToken || isConnecting || userLoading}
           />
           <Button
             onClick={handleSearch}
             loading={loading}
-            disabled={loading || !sessionToken || isLoading}
+            disabled={loading || !sessionToken || isConnecting || userLoading}
           >
             {loading ? "Searching..." : "Search"}
           </Button>
         </HorizontalStack>
 
         {/* Session Status */}
-        {!sessionToken && !authError && !isLoading && (
+        {!sessionToken && !appBridgeError && !isConnecting && (
           <Text variant="bodySm" color="subdued">
-            Waiting for session to initialize...
+            {isReady
+              ? userLoading
+                ? "Loading user session..."
+                : "Waiting for session..."
+              : "Waiting for App Bridge to initialize..."}
           </Text>
         )}
 

@@ -1,6 +1,5 @@
 import AppBridgeDebug from "@/components/AppBridgeDebug";
 import CustomerList from "@/components/CustomerList";
-// EmbeddedAuth is now handled in ClientAppProvider
 import PageHeader from "@/components/PageHeader";
 import { prisma } from "@/lib/prisma";
 import { Layout, Page, VerticalStack } from "@heymantle/litho";
@@ -65,15 +64,9 @@ export default async function Home({
       // If not in iframe (direct access to install URL), always kick off OAuth
       // to ensure the session is still valid in Mantle
       if (!isEmbedded) {
-        console.log(
-          "🏠 Home: Organization exists but not in iframe, OAuth redirect needed"
-        );
         needsOAuthRedirect = true;
         organizationId = requestOrganizationId;
       } else {
-        console.log(
-          "🏠 Home: Organization exists and in iframe, no OAuth redirect needed"
-        );
         // Still need to pass organizationId to client components even if not redirecting
         organizationId = requestOrganizationId;
       }

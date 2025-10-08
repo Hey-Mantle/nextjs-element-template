@@ -1,6 +1,6 @@
 "use client";
 
-import { useSharedMantleAppBridge } from "@heymantle/app-bridge-react";
+import { useAppBridge } from "@heymantle/app-bridge-react";
 import { useEffect, useRef, useState } from "react";
 
 interface ClientOnlyModalProps {
@@ -27,7 +27,7 @@ export function ClientOnlyModal({
   onAction,
   children,
 }: ClientOnlyModalProps) {
-  const appBridge = useSharedMantleAppBridge();
+  const appBridge = useAppBridge();
   const modalRef = useRef<HTMLElement>(null);
   const [isElementDefined, setIsElementDefined] = useState(false);
 
@@ -56,8 +56,8 @@ export function ClientOnlyModal({
     if (onAction) {
       modalElement.addEventListener("action", handleAction);
     }
-    if (appBridge && onHide) {
-      appBridge.on("closeModal", onHide);
+    if (appBridge?.mantle && onHide) {
+      appBridge.mantle.on("closeModal", onHide);
     }
 
     return () => {
@@ -66,15 +66,15 @@ export function ClientOnlyModal({
       if (onAction) {
         modalElement.removeEventListener("action", handleAction);
       }
-      if (appBridge && onHide) {
-        appBridge.off("closeModal", onHide);
+      if (appBridge?.mantle && onHide) {
+        appBridge.mantle.off("closeModal", onHide);
       }
     };
     // Re-run this effect if the modal is re-opened or handlers change.
   }, [open, isElementDefined, appBridge, onHide, onAction]);
 
   // Render nothing until we're connected and the custom element is defined.
-  if (!appBridge?.ready || !isElementDefined) {
+  if (!appBridge?.isReady || !isElementDefined) {
     return null;
   }
 
