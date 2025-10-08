@@ -22,9 +22,22 @@ export default function MantleProviderWrapper({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Request session when App Bridge is ready
+  useEffect(() => {
+    if (mantle && isReady && !mantle.currentSession) {
+      mantle.requestSession();
+    }
+  }, [mantle, isReady]);
+
   useEffect(() => {
     async function syncSessionAndGetCustomerApiToken() {
-      if (!isReady || !mantle || !organization || !authenticatedFetch) {
+      if (
+        !isReady ||
+        !mantle ||
+        !organization ||
+        !authenticatedFetch ||
+        !mantle.currentSession
+      ) {
         return;
       }
 
@@ -59,6 +72,11 @@ export default function MantleProviderWrapper({
 
     syncSessionAndGetCustomerApiToken();
   }, [isReady, mantle, organization, authenticatedFetch]);
+
+  // Don't render anything until App Bridge is ready and we have a session
+  if (!isReady || !mantle?.currentSession) {
+    return <div>Loading Mantle...</div>;
+  }
 
   // Show loading state while fetching the customer API token
   if (isLoading) {

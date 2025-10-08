@@ -1,3 +1,4 @@
+import AccessTokenManager from "@/components/AccessTokenManager";
 import AppBridgeDebug from "@/components/AppBridgeDebug";
 import CustomerList from "@/components/CustomerList";
 import PageHeader from "@/components/PageHeader";
@@ -82,6 +83,7 @@ export default async function Home({
       <Layout>
         <VerticalStack gap="6">
           <PageHeader />
+          <AccessTokenManager />
           <CustomerList />
         </VerticalStack>
       </Layout>
