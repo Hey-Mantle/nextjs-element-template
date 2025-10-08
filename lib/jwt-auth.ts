@@ -117,6 +117,68 @@ async function verifyJWTToken(
 }
 
 /**
+ * Verify JWT token and extract payload without database lookup
+ * This is used for initial authentication when organization might not exist yet
+ */
+function verifyJWTTokenPayload(token: string): {
+  user: { id: string; email: string; name: string };
+  organization: { id: string; name: string };
+} | null {
+  try {
+    // Decode the JWT payload
+    const jwtParts = token.split(".");
+    if (jwtParts.length !== 3) {
+      return null;
+    }
+
+    // Decode the payload (base64url decode)
+    const payload = JSON.parse(
+      Buffer.from(jwtParts[1], "base64url").toString()
+    );
+
+    // Check if JWT is expired
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+
+    // Get the element secret for JWT verification
+    const elementSecret = process.env.MANTLE_ELEMENT_SECRET;
+    if (!elementSecret) {
+      return null;
+    }
+
+    // Verify the signature using the element secret
+    const expectedSignature = crypto
+      .createHmac("sha256", elementSecret)
+      .update(jwtParts[0] + "." + jwtParts[1])
+      .digest("base64url");
+
+    if (jwtParts[2] !== expectedSignature) {
+      return null;
+    }
+
+    // Extract user and organization data from payload
+    if (!payload.user || !payload.organization) {
+      return null;
+    }
+
+    return {
+      user: {
+        id: payload.user.id,
+        email: payload.user.email,
+        name: payload.user.name || "",
+      },
+      organization: {
+        id: payload.organization.id,
+        name: payload.organization.name,
+      },
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
  * Get authenticated user from JWT token in request headers
  */
 export async function getAuthenticatedUser(request: NextRequest): Promise<{
@@ -142,4 +204,33 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<{
   }
 
   return { ...verifiedToken, sessionToken };
+}
+
+/**
+ * Get authenticated user from JWT token payload (without database lookup)
+ * This is used for initial authentication when organization might not exist yet
+ */
+export function getAuthenticatedUserFromPayload(request: NextRequest): {
+  user: { id: string; email: string; name: string } | null;
+  organization: { id: string; name: string } | null;
+  sessionToken: string | null;
+} {
+  let sessionToken: string | null = null;
+
+  // Check Authorization header (Bearer token)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    sessionToken = authHeader.substring(7);
+  }
+
+  if (!sessionToken) {
+    return { user: null, organization: null, sessionToken: null };
+  }
+
+  const payload = verifyJWTTokenPayload(sessionToken);
+  if (!payload) {
+    return { user: null, organization: null, sessionToken: null };
+  }
+
+  return { ...payload, sessionToken };
 }

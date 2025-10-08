@@ -11,7 +11,7 @@
     "generate:mantle-api-types": "npx openapi-typescript ${SPEC_URL:-https://app.heymantle.com/openapi/core-api.json} -o ./lib/types/mantleApi.ts"
   },
   "dependencies": {
-    "@heymantle/app-bridge-react": "^1.1.0",
+    "@heymantle/app-bridge-react": "^1.1.1",
     "@heymantle/client": "^1.1.63",
     "@heymantle/litho": "^0.0.4",
     "@heymantle/react": "^0.0.66",

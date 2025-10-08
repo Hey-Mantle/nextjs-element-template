@@ -220,7 +220,7 @@ const customers = await mantleGet(organization, '/customers', {
 The starter includes example API endpoints:
 
 - `GET /api/customers` - Fetch paginated customers with filters
-- `POST /api/auth/verify-session` - Verify session tokens
+- `POST /api/sync-session` - Sync session data and return customer API token
 - `GET /api/auth/initiate` - Initiate OAuth flow
 
 ## 🎨 UI Components
