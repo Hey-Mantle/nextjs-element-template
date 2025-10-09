@@ -146,7 +146,6 @@ export async function GET(request: NextRequest) {
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `DATABASE_URL` | SQLite database file path | `file:./dev.db` |
-| `AUTH_SECRET` | NextAuth.js secret key | `your-random-secret` |
 | `NEXT_PUBLIC_HOST` | Your app host | `localhost:3000`
 | `NEXT_PUBLIC_MANTLE_APP_ID` | Your Mantle app ID | `app_1234567890` |
 | `NEXT_PUBLIC_MANTLE_ELEMENT_ID` | Your element ID | `elem_1234567890` |
@@ -272,8 +271,7 @@ For iframe testing, you should be using HTTPS by default to avoid problems with 
 
 - **Content Security Policy**: Configured for iframe embedding
 - **JWT Verification**: HMAC-based token verification
-- **OAuth Integration**: Secure OAuth 2.0 flow
-- **Session Management**: Secure session handling with NextAuth.js
+- **JWT Authentication**: Secure token-based authentication
 
 ## 📱 Embedding in Mantle
 
@@ -324,6 +322,5 @@ npx prisma migrate deploy
 - [Mantle Documentation](https://coreapi.heymantle.dev/reference/introduction)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Prisma Documentation](https://www.prisma.io/docs)
-- [NextAuth.js Documentation](https://next-auth.js.org)
 
 **Need help?** Check out our [Mantle Discord](https://discord.gg/Dmz5srvn) or open an issue on GitHub.
