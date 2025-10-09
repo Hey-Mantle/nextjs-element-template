@@ -27,9 +27,8 @@ type RequestMode = "server" | "client" | "access-token";
 
 // Helper function to extract session token
 const extractSessionToken = (session: any): string | null => {
-  if (!session) return null;
   if (typeof session === "string") return session;
-  return session.accessToken || session.token || session.sessionToken || null;
+  return null;
 };
 
 // Customer card component
@@ -126,6 +125,7 @@ export default function CustomerList({
     }
 
     const params = buildSearchParams();
+    params.set("requestMode", "jwt"); // Specify JWT mode for server-side requests
     const url = `/api/customers?${params.toString()}`;
 
     const response = await authenticatedFetch(url, {
@@ -179,9 +179,10 @@ export default function CustomerList({
     }
 
     const params = buildSearchParams();
+    params.set("requestMode", "access-token"); // Specify access token mode
     const url = `/api/customers?${params.toString()}`;
 
-    // Use authenticatedFetch - the server will automatically use access token if available
+    // Use authenticatedFetch - the server will use access token mode
     const response = await authenticatedFetch(url, {
       method: "GET",
       headers: {

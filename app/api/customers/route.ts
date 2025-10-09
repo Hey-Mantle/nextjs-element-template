@@ -3,12 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  // Try access token authentication first, fall back to JWT if no access token
-  try {
-    const accessTokenResult = await handleAccessTokenRequest(request);
-    return accessTokenResult;
-  } catch (error) {
-    // If access token fails, fall back to JWT authentication
+  // Get the request mode from query parameters
+  const { searchParams } = new URL(request.url);
+  const requestMode = searchParams.get("requestMode");
+
+  // Route to appropriate handler based on request mode
+  if (requestMode === "access-token") {
+    return handleAccessTokenRequest(request);
+  } else {
+    // Default to JWT for "jwt" mode or any other mode
     return handleJWTRequest(request);
   }
 }
