@@ -154,43 +154,6 @@ export async function GET(request: NextRequest) {
 | `MANTLE_APP_API_KEY` | Your app's API key | `ak_1234567890` |
 | `MANTLE_ELEMENT_SECRET` | Your element's secret | `es_1234567890` |
 
-### Optional Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MANTLE_CORE_API_URL` | Custom API endpoint | `https://app.heymantle.com/api/v1` |
-| `MANTLE_AUTHORIZE_URL` | Custom OAuth authorize URL | Auto-generated |
-| `MANTLE_TOKEN_URL` | Custom OAuth token URL | Auto-generated |
-| `MANTLE_USER_INFO_URL` | Custom user info URL | Auto-generated |
-
-## 🗄️ Database Schema
-
-The starter uses Prisma with SQLite for development. The schema includes:
-
-- **User**: User accounts with Mantle integration
-- **Organization**: Mantle organizations with API tokens
-- **UserOrganization**: Many-to-many relationship
-- **Account**: OAuth account information
-
-```prisma
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  userId        String?   // Mantle's internal user ID
-  // ... other fields
-}
-
-model Organization {
-  id          String   @id @default(cuid())
-  mantleId    String   @unique
-  name        String
-  accessToken String   // OAuth access token
-  apiToken    String?  // Mantle API token
-  // ... other fields
-}
-```
-
 ## 🔌 API Integration
 
 ### Type-Safe API Calls
@@ -266,61 +229,3 @@ npm run lint             # Run ESLint
 ### HTTPS Development
 
 For iframe testing, you should be using HTTPS by default to avoid problems with mixed protocols. `npm run dev` uses `https` by default.
-
-## 🔒 Security Features
-
-- **Content Security Policy**: Configured for iframe embedding
-- **JWT Verification**: HMAC-based token verification
-- **JWT Authentication**: Secure token-based authentication
-
-## 📱 Embedding in Mantle
-
-### Iframe Configuration
-
-Your element will be embedded in Mantle with these characteristics:
-
-- **Same-origin policy**: Configured via CSP headers
-- **PostMessage communication**: Secure cross-origin messaging
-- **Session sharing**: Automatic session token passing
-- **Navigation control**: Parent window navigation support
-
-### App Bridge Events
-
-The starter handles these App Bridge events:
-
-- `ready` - App Bridge is ready
-- `session` - Session data received
-- `user` - User data received
-- `error` - Connection or authentication errors
-
-## 🚀 Deployment
-
-### Production Considerations
-
-1. **Environment Variables**: Set all required variables in production
-2. **Database**: Use PostgreSQL or MySQL for production
-3. **HTTPS**: Ensure HTTPS is enabled for iframe embedding
-4. **CSP Headers**: Verify Content Security Policy configuration
-
-### Database Migration
-
-```bash
-# For production database
-npx prisma migrate deploy
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📚 Resources
-
-- [Mantle Documentation](https://coreapi.heymantle.dev/reference/introduction)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Prisma Documentation](https://www.prisma.io/docs)
-
-**Need help?** Check out our [Mantle Discord](https://discord.gg/Dmz5srvn) or open an issue on GitHub.
