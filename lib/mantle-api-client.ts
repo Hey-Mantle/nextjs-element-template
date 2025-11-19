@@ -6,8 +6,13 @@ import {
 } from "openapi-typescript-helpers";
 import { paths } from "./types/mantleApi";
 
+// Derive API URL from Mantle URL if using a custom instance (like ngrok)
+const mantleUrl = process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com";
 const baseUrl =
-  process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL || "https://api.heymantle.com/v1";
+  process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
+  (mantleUrl !== "https://app.heymantle.com" 
+    ? `${mantleUrl}/api/v1` 
+    : "https://api.heymantle.com/v1");
 
 // Base client for traditional OAuth (server-side)
 const client = createClient<paths>({

@@ -151,9 +151,13 @@ export default function CustomerList({
     }
 
     const params = buildSearchParams();
+    // If using a custom Mantle instance (like ngrok), derive API URL from Mantle URL
+    const mantleUrl = process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com";
     const baseUrl =
       process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
-      "https://api.heymantle.com/v1";
+      (mantleUrl !== "https://app.heymantle.com" 
+        ? `${mantleUrl}/api/v1` 
+        : "https://api.heymantle.com/v1");
     const url = `${baseUrl}/customers?${params.toString()}`;
 
     const response = await authenticatedFetch(url, {

@@ -4,6 +4,10 @@ const nextConfig = {
     const mantleUrl =
       process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com";
 
+    // Build frame-ancestors directive
+    // Allow 'self' and the configured Mantle URL
+    const frameAncestors = [`'self'`, mantleUrl].join(" ");
+
     return [
       {
         // Apply CSP headers to all routes
@@ -11,7 +15,7 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: `frame-ancestors 'self' ${mantleUrl}`,
+            value: `frame-ancestors ${frameAncestors}`,
           },
         ],
       },

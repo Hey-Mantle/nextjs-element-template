@@ -78,9 +78,13 @@ async function handleAccessTokenRequest(request: NextRequest) {
   params.set("take", Math.min(parseInt(take, 10), 10).toString());
 
   // Use the same base URL as the client-side
+  // If using a custom Mantle instance (like ngrok), derive API URL from Mantle URL
+  const mantleUrl = process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com";
   const baseUrl =
     process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
-    "https://api.heymantle.com/v1";
+    (mantleUrl !== "https://app.heymantle.com" 
+      ? `${mantleUrl}/api/v1` 
+      : "https://api.heymantle.com/v1");
   const url = `${baseUrl}/customers?${params.toString()}`;
 
   // Forward the request to the Mantle API with the access token
@@ -133,10 +137,14 @@ async function handleJWTRequest(request: NextRequest) {
   params.set("page", page);
   params.set("take", Math.min(parseInt(take, 10), 10).toString());
 
-  // Use the same base URL as the client-side - this should be mantle-kristian.ngrok.io
+  // Use the same base URL as the client-side
+  // If using a custom Mantle instance (like ngrok), derive API URL from Mantle URL
+  const mantleUrl = process.env.NEXT_PUBLIC_MANTLE_URL || "https://app.heymantle.com";
   const baseUrl =
     process.env.NEXT_PUBLIC_MANTLE_CORE_API_URL ||
-    "https://api.heymantle.com/v1";
+    (mantleUrl !== "https://app.heymantle.com" 
+      ? `${mantleUrl}/api/v1` 
+      : "https://api.heymantle.com/v1");
   const url = `${baseUrl}/customers?${params.toString()}`;
 
   // Forward the request to the Mantle API with the same headers

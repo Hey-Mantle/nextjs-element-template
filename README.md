@@ -12,9 +12,9 @@ A Next.js starter template for building Mantle elements with authentication and 
 
 ### Installation
 1. Before you start, make sure you [Create an Element](https://app.heymantle.com/extensions) in Mantle.
-  Make sure to set the URL to the root of this application. For example, https://localhost:3000 for local development.
-  Set the Redirect URIs to https://localhost:3009/api/auth/callback/MantleOAuth
-  Click "Embed this element in the Mantle Admin"
+   - Set the URL to the root of this application. For example, `https://localhost:3000` for local development.
+   - Set the Redirect URIs to `https://localhost:3000/api/auth/callback/MantleOAuth`
+   - Click "Embed this element in the Mantle Admin"
 2. **Create a next project based on this one:**
    ```bash
    npx create-next-app@latest my-mantle-element --example https://github.com/Hey-Mantle/nextjs-element-template
@@ -41,12 +41,16 @@ A Next.js starter template for building Mantle elements with authentication and 
    NEXT_PUBLIC_MANTLE_APP_ID="your-app-id"
    NEXT_PUBLIC_MANTLE_ELEMENT_ID="your-element-id"
    NEXT_PUBLIC_MANTLE_ELEMENT_HANDLE="your-element-handle"
+   # IMPORTANT: Set this to the exact URL of your Mantle instance (including ngrok URLs for local dev)
+   # This controls which origins can embed your element in an iframe via Content-Security-Policy
    NEXT_PUBLIC_MANTLE_URL="https://app.heymantle.com"
    MANTLE_APP_API_KEY="your-app-api-key"
    MANTLE_ELEMENT_SECRET="your-element-secret"
    
    # Optional: Custom Mantle Core API URL
-   MANTLE_CORE_API_URL="https://app.heymantle.com/api/v1"
+   # If not set, will be derived from NEXT_PUBLIC_MANTLE_URL + /api/v1
+   # Only set this if your API is at a different URL than the default pattern
+   NEXT_PUBLIC_MANTLE_CORE_API_URL="https://app.heymantle.com/api/v1"
    ```
 
 6. **Set up the database:**
@@ -210,8 +214,7 @@ function MyPage() {
 
 ```bash
 # Development
-npm run dev              # Start development server
-npm run dev:https        # Start with HTTPS (for iframe testing)
+npm run dev              # Start development server with HTTPS (for iframe testing)
 
 # Database
 npx prisma migrate dev   # Run database migrations
@@ -228,4 +231,10 @@ npm run lint             # Run ESLint
 
 ### HTTPS Development
 
-For iframe testing, you should be using HTTPS by default to avoid problems with mixed protocols. `npm run dev` uses `https` by default.
+For iframe testing, you should be using HTTPS by default to avoid problems with mixed protocols. `npm run dev` uses HTTPS by default on port 3000.
+
+**Note:** If you encounter "localhost refused to connect" or iframe rendering issues in Chrome:
+- Ensure your development server is running on HTTPS (default with `npm run dev`)
+- Verify the port matches your Mantle element configuration (default is 3000)
+- Check that your browser allows self-signed certificates for localhost
+- **If using ngrok or a custom Mantle instance**: Set `NEXT_PUBLIC_MANTLE_URL` to match your Mantle host URL (e.g., `https://mantle-kristian.ngrok.io`). This is required for the Content-Security-Policy `frame-ancestors` directive to allow iframe embedding.
