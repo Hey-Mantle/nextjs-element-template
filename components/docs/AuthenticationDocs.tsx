@@ -4,7 +4,6 @@ import { useAppBridge } from "@heymantle/app-bridge-react";
 import {
   Button,
   Card,
-  HorizontalStack,
   Text,
   VerticalStack,
 } from "@heymantle/litho";
@@ -39,12 +38,11 @@ export default function AuthenticationDocs() {
   };
 
   return (
-    <VerticalStack gap="6">
+    <VerticalStack gap="6" className="w-full">
       {/* Client-Side Authentication */}
-      <Card>
-        <HorizontalStack gap="4" align="start">
-          <VerticalStack gap="2" style={{ flex: 1 }}>
-            <Text variant="headingMd">Client-Side authenticatedFetch</Text>
+      <Card title="Client-Side authenticatedFetch" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
             <Text variant="bodyMd">
               Use <code>mantle.authenticatedFetch()</code> to make authenticated requests directly to
               your server or Mantle Core API. The App Bridge automatically includes the session token
@@ -57,7 +55,7 @@ export default function AuthenticationDocs() {
               <CodeBlock language="json">{clientFetchResult}</CodeBlock>
             )}
           </VerticalStack>
-          <div style={{ flex: 1 }}>
+          <VerticalStack gap="4">
             <CodeBlock language="typescript">
 {`import { useAppBridge } from '@heymantle/app-bridge-react';
 
@@ -75,15 +73,14 @@ function MyComponent() {
   return <button onClick={fetchData}>Fetch Data</button>;
 }`}
             </CodeBlock>
-          </div>
-        </HorizontalStack>
+          </VerticalStack>
+        </div>
       </Card>
 
       {/* Server-Side Authentication */}
-      <Card>
-        <HorizontalStack gap="4" align="start">
-          <VerticalStack gap="2" style={{ flex: 1 }}>
-            <Text variant="headingMd">Server-Side Authentication</Text>
+      <Card title="Server-Side Authentication" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
             <Text variant="bodyMd">
               On the server, validate the JWT token from the Authorization header and optionally proxy
               requests to Mantle Core API.
@@ -93,7 +90,7 @@ function MyComponent() {
               <CodeBlock language="json">{serverFetchResult}</CodeBlock>
             )}
           </VerticalStack>
-          <div style={{ flex: 1 }}>
+          <VerticalStack gap="4">
             <CodeBlock language="typescript">
 {`// app/api/customers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
@@ -127,21 +124,20 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(await response.json());
 }`}
             </CodeBlock>
-          </div>
-        </HorizontalStack>
+          </VerticalStack>
+        </div>
       </Card>
 
       {/* Background Job Token Exchange */}
-      <Card>
-        <HorizontalStack gap="4" align="start">
-          <VerticalStack gap="2" style={{ flex: 1 }}>
-            <Text variant="headingMd">Long-Term Session Token Exchange</Text>
+      <Card title="Long-Term Session Token Exchange" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
             <Text variant="bodyMd">
               For background jobs, exchange the short-term session token for a long-term access token
               that can be used for extended operations.
             </Text>
           </VerticalStack>
-          <div style={{ flex: 1 }}>
+          <VerticalStack gap="4">
             <CodeBlock language="typescript">
 {`// app/api/exchange-token/route.ts
 import { NextRequest, NextResponse } from 'next/server';
@@ -183,32 +179,29 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ accessToken });
 }`}
             </CodeBlock>
-          </div>
-        </HorizontalStack>
+          </VerticalStack>
+        </div>
       </Card>
 
       {/* Key Points */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Key Points</Text>
-          <VerticalStack gap="2">
-            <Text variant="bodyMd">
-              • <strong>Client-side:</strong> Use <code>mantle.authenticatedFetch()</code> for all
-              API requests from React components
-            </Text>
-            <Text variant="bodyMd">
-              • <strong>Server-side:</strong> Validate JWT tokens using{" "}
-              <code>verifyJWTTokenPayload()</code> from the Authorization header
-            </Text>
-            <Text variant="bodyMd">
-              • <strong>Background jobs:</strong> Exchange short-term session tokens for long-term
-              access tokens
-            </Text>
-            <Text variant="bodyMd">
-              • <strong>Token expiry:</strong> Session tokens expire after a short period (typically
-              1 hour). The App Bridge automatically refreshes tokens when needed.
-            </Text>
-          </VerticalStack>
+      <Card title="Key Points" padded>
+        <VerticalStack gap="2">
+          <Text variant="bodyMd">
+            • <strong>Client-side:</strong> Use <code>mantle.authenticatedFetch()</code> for all
+            API requests from React components
+          </Text>
+          <Text variant="bodyMd">
+            • <strong>Server-side:</strong> Validate JWT tokens using{" "}
+            <code>verifyJWTTokenPayload()</code> from the Authorization header
+          </Text>
+          <Text variant="bodyMd">
+            • <strong>Background jobs:</strong> Exchange short-term session tokens for long-term
+            access tokens
+          </Text>
+          <Text variant="bodyMd">
+            • <strong>Token expiry:</strong> Session tokens expire after a short period (typically
+            1 hour). The App Bridge automatically refreshes tokens when needed.
+          </Text>
         </VerticalStack>
       </Card>
     </VerticalStack>

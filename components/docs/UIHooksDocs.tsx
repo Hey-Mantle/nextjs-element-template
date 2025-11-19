@@ -9,34 +9,26 @@ import CodeBlock from "@/components/CodeBlock";
 
 export default function UIHooksDocs() {
   return (
-    <VerticalStack gap="6">
+    <VerticalStack gap="6" className="w-full">
       {/* Overview */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Overview</Text>
-          <Text variant="bodyMd">
-            UI Hooks allow you to add custom actions and links to Mantle pages. Custom Data
-            Definitions let you store and retrieve custom data on Mantle resources (like tickets or
-            customers).
-          </Text>
-        </VerticalStack>
+      <Card title="Overview" padded>
+        <Text variant="bodyMd">
+          UI Hooks allow you to add custom actions and links to Mantle pages. Custom Data
+          Definitions let you store and retrieve custom data on Mantle resources (like tickets or
+          customers).
+        </Text>
       </Card>
 
-      {/* UI Hooks */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">UI Hooks</Text>
-          <Text variant="bodyMd">
-            UI Hooks are defined in your Mantle app configuration and allow you to inject custom
-            actions into Mantle pages. For example, you can add a button to ticket pages that opens
-            your Element.
-          </Text>
-
-          <Text variant="bodyMd" fontWeight="semibold">
-            Hook Definition Example
-          </Text>
-
-          <CodeBlock language="javascript">
+      {/* Hook Definition Example */}
+      <Card title="Hook Definition Example" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Define hooks in your Mantle app configuration. Each hook requires a scope and a context function that returns data for the hook.
+            </Text>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="javascript">
 {`// constants/ui_hooks.js
 const HOOK_DEFINITIONS = {
   "ticket.actions": {
@@ -77,13 +69,21 @@ module.exports = {
   getHookContextFunction,
   hasRequiredScopeForHook,
 };`}
-          </CodeBlock>
+                </CodeBlock>
+          </VerticalStack>
+        </div>
+      </Card>
 
-          <Text variant="bodyMd" fontWeight="semibold">
-            Using UI Hooks in Your Element
-          </Text>
-
-          <CodeBlock language="tsx">
+      {/* Using UI Hooks in Your Element */}
+      <Card title="Using UI Hooks in Your Element" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              In your Element, you can access hook context via URL params. When Mantle opens your Element from a hook, it passes resourceId, resourceType, and organizationId.
+            </Text>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="tsx">
 {`// In your Element, you can access hook context via URL params
 // When Mantle opens your Element from a hook, it passes:
 // - resourceId: The ID of the resource (ticket, customer, etc.)
@@ -104,24 +104,29 @@ export default function HookPage({ searchParams }) {
     </div>
   );
 }`}
-          </CodeBlock>
-        </VerticalStack>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
       </Card>
 
       {/* Custom Data Definitions */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Custom Data Definitions</Text>
-          <Text variant="bodyMd">
-            Custom Data Definitions allow you to store structured data on Mantle resources. This
-            data can be used in UI Hooks, reports, or your own Element pages.
-          </Text>
+      <Card title="Custom Data Definitions" padded>
+        <Text variant="bodyMd">
+          Custom Data Definitions allow you to store structured data on Mantle resources. This
+          data can be used in UI Hooks, reports, or your own Element pages.
+        </Text>
+      </Card>
 
-          <Text variant="bodyMd" fontWeight="semibold">
-            Data Types
-          </Text>
-
-          <CodeBlock language="javascript">
+      {/* Data Types */}
+      <Card title="Data Types" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Custom data supports multiple data types including strings, booleans, numbers, dates, and JSON. Choose the appropriate type for your data.
+            </Text>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="javascript">
 {`// constants/custom_data.js
 const CustomDataTypeTypes = {
   STRING: "string",
@@ -138,13 +143,21 @@ const CustomDataOwnerTypes = {
   CUSTOMER: "customer",
   TICKET: "ticket",
 };`}
-          </CodeBlock>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
+      </Card>
 
-          <Text variant="bodyMd" fontWeight="semibold">
-            Creating Custom Data
-          </Text>
-
-          <CodeBlock language="typescript">
+      {/* Creating Custom Data */}
+      <Card title="Creating Custom Data" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Store custom data on Mantle resources using authenticated API requests. Use namespaces to organize your data and prevent conflicts.
+            </Text>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="typescript">
 {`// Store custom data on a ticket
 const response = await mantle.authenticatedFetch('/api/custom-data', {
   method: 'POST',
@@ -158,13 +171,21 @@ const response = await mantle.authenticatedFetch('/api/custom-data', {
     dataType: 'number_integer',
   }),
 });`}
-          </CodeBlock>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
+      </Card>
 
-          <Text variant="bodyMd" fontWeight="semibold">
-            Retrieving Custom Data
-          </Text>
-
-          <CodeBlock language="typescript">
+      {/* Retrieving Custom Data */}
+      <Card title="Retrieving Custom Data" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              In your UI Hook context function, fetch custom data from the database and build a nested lookup object for easy access in your Element.
+            </Text>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="typescript">
 {`// In your UI Hook context function
 const customDataRecords = await prisma.customData.findMany({
   where: {
@@ -188,19 +209,21 @@ const customDataRecords = await prisma.customData.findMany({
 // Build nested lookup object
 const customDataLookup = buildCustomDataLookup(customDataRecords);
 // Returns: { 'my-app': { 'priority-score': 85 } }`}
-          </CodeBlock>
-        </VerticalStack>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
       </Card>
 
       {/* Integration Example */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Complete Integration Example</Text>
-          <Text variant="bodyMd">
-            Here's how UI Hooks and Custom Data work together:
-          </Text>
-
-          <CodeBlock language="typescript">
+      <Card title="Complete Integration Example" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Here's how UI Hooks and Custom Data work together. Define a hook that includes custom data in its context, then use that data in your Element.
+            </Text>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="typescript">
 {`// 1. Define a UI Hook that uses custom data
 const HOOK_DEFINITIONS = {
   "ticket.actions": {
@@ -245,34 +268,31 @@ export default function TicketActions({ searchParams }) {
     </div>
   );
 }`}
-          </CodeBlock>
-        </VerticalStack>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
       </Card>
 
       {/* Best Practices */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Best Practices</Text>
-          <VerticalStack gap="2">
-            <Text variant="bodyMd">
-              • Use namespaces to organize custom data (e.g., "my-app", "analytics")
-            </Text>
-            <Text variant="bodyMd">
-              • Define required scopes for UI Hooks to ensure proper permissions
-            </Text>
-            <Text variant="bodyMd">
-              • Cache custom data lookups for performance
-            </Text>
-            <Text variant="bodyMd">
-              • Use appropriate data types for your custom data values
-            </Text>
-            <Text variant="bodyMd">
-              • Keep hook context functions fast - they run on every hook render
-            </Text>
-          </VerticalStack>
+      <Card title="Best Practices" padded>
+        <VerticalStack gap="2">
+          <Text variant="bodyMd">
+            • Use namespaces to organize custom data (e.g., "my-app", "analytics")
+          </Text>
+          <Text variant="bodyMd">
+            • Define required scopes for UI Hooks to ensure proper permissions
+          </Text>
+          <Text variant="bodyMd">
+            • Cache custom data lookups for performance
+          </Text>
+          <Text variant="bodyMd">
+            • Use appropriate data types for your custom data values
+          </Text>
+          <Text variant="bodyMd">
+            • Keep hook context functions fast - they run on every hook render
+          </Text>
         </VerticalStack>
       </Card>
     </VerticalStack>
   );
 }
-

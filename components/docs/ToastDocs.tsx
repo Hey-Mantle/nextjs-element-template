@@ -29,57 +29,44 @@ export default function ToastDocs() {
   };
 
   return (
-    <VerticalStack gap="6">
-      {/* API Reference - Moved to top */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">API Reference</Text>
-          <VerticalStack gap="2">
-            <Text variant="bodyMd">
-              • <code>mantle.showSuccess(message: string)</code> - Show success toast
-            </Text>
-            <Text variant="bodyMd">
-              • <code>mantle.showError(message: string)</code> - Show error toast
-            </Text>
-            <Text variant="bodyMd">
-              • <code>mantle.showToast(message: string, status?: 'success' | 'error')</code> - Show
-              toast with custom status
-            </Text>
-          </VerticalStack>
-        </VerticalStack>
-      </Card>
-
-      {/* Overview */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Overview</Text>
+    <VerticalStack gap="6" className="w-full">
+      {/* API Reference */}
+      <Card title="API Reference" padded>
+        <VerticalStack gap="2">
           <Text variant="bodyMd">
-            Toast notifications provide user feedback for actions and errors. They appear at the
-            top of the Mantle interface and automatically dismiss after a few seconds.
+            • <code>mantle.showSuccess(message: string)</code> - Show success toast
+          </Text>
+          <Text variant="bodyMd">
+            • <code>mantle.showError(message: string)</code> - Show error toast
+          </Text>
+          <Text variant="bodyMd">
+            • <code>mantle.showToast(message: string, status?: 'success' | 'error')</code> - Show
+            toast with custom status
           </Text>
         </VerticalStack>
       </Card>
 
-      {/* Examples Section */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Examples</Text>
-          <VerticalStack gap="6">
-            {/* Success Toast */}
-            <HorizontalStack gap="4" align="start">
-              <VerticalStack gap="2" style={{ flex: 1 }}>
-                <Text variant="bodyMd" fontWeight="semibold">
-                  Success Toast
-                </Text>
-                <Text variant="bodySm" color="subdued">
-                  Use <code>mantle.showSuccess()</code> to display success messages.
-                </Text>
-                <Button onClick={showSuccessToast} disabled={!isReady}>
-                  Show Success Toast
-                </Button>
-              </VerticalStack>
-              <div style={{ flex: 1 }}>
-                <CodeBlock language="tsx">
+      {/* Overview */}
+      <Card title="Overview" padded>
+        <Text variant="bodyMd">
+          Toast notifications provide user feedback for actions and errors. They appear at the
+          top of the Mantle interface and automatically dismiss after a few seconds.
+        </Text>
+      </Card>
+
+      {/* Success Toast */}
+      <Card title="Success Toast" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Use <code>mantle.showSuccess()</code> to display success messages.
+            </Text>
+            <Button onClick={showSuccessToast} disabled={!isReady}>
+              Show Success Toast
+            </Button>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="tsx">
 {`import { useAppBridge } from '@heymantle/app-bridge-react';
 
 function MyComponent() {
@@ -100,25 +87,24 @@ function MyComponent() {
 
   return <button onClick={handleSave}>Save</button>;
 }`}
-                </CodeBlock>
-              </div>
-            </HorizontalStack>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
+      </Card>
 
-            {/* Error Toast */}
-            <HorizontalStack gap="4" align="start">
-              <VerticalStack gap="2" style={{ flex: 1 }}>
-                <Text variant="bodyMd" fontWeight="semibold">
-                  Error Toast
-                </Text>
-                <Text variant="bodySm" color="subdued">
-                  Use <code>mantle.showError()</code> to display error messages.
-                </Text>
-                <Button onClick={showErrorToast} disabled={!isReady}>
-                  Show Error Toast
-                </Button>
-              </VerticalStack>
-              <div style={{ flex: 1 }}>
-                <CodeBlock language="tsx">
+      {/* Error Toast */}
+      <Card title="Error Toast" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Use <code>mantle.showError()</code> to display error messages.
+            </Text>
+            <Button onClick={showErrorToast} disabled={!isReady}>
+              Show Error Toast
+            </Button>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="tsx">
 {`const handleDelete = async () => {
   try {
     await deleteItem();
@@ -127,25 +113,24 @@ function MyComponent() {
     mantle.showError('Failed to delete item');
   }
 };`}
-                </CodeBlock>
-              </div>
-            </HorizontalStack>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
+      </Card>
 
-            {/* Custom Toast */}
-            <HorizontalStack gap="4" align="start">
-              <VerticalStack gap="2" style={{ flex: 1 }}>
-                <Text variant="bodyMd" fontWeight="semibold">
-                  Custom Toast
-                </Text>
-                <Text variant="bodySm" color="subdued">
-                  Use <code>mantle.showToast()</code> with a status parameter for more control.
-                </Text>
-                <Button onClick={showCustomToast} disabled={!isReady}>
-                  Show Custom Toast
-                </Button>
-              </VerticalStack>
-              <div style={{ flex: 1 }}>
-                <CodeBlock language="tsx">
+      {/* Custom Toast */}
+      <Card title="Custom Toast" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Use <code>mantle.showToast()</code> with a status parameter for more control.
+            </Text>
+            <Button onClick={showCustomToast} disabled={!isReady}>
+              Show Custom Toast
+            </Button>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="tsx">
 {`// Show toast with custom status
 mantle.showToast('Custom message', 'success');
 mantle.showToast('Custom message', 'error');
@@ -153,22 +138,21 @@ mantle.showToast('Custom message', 'error');
 // Convenience methods
 mantle.showSuccess('Success message');
 mantle.showError('Error message');`}
-                </CodeBlock>
-              </div>
-            </HorizontalStack>
+            </CodeBlock>
+          </VerticalStack>
+        </div>
+      </Card>
 
-            {/* Real-World Example */}
-            <HorizontalStack gap="4" align="start">
-              <VerticalStack gap="2" style={{ flex: 1 }}>
-                <Text variant="bodyMd" fontWeight="semibold">
-                  Real-World Example
-                </Text>
-                <Text variant="bodySm" color="subdued">
-                  Here's a complete example showing toast usage in a form submission with proper error handling.
-                </Text>
-              </VerticalStack>
-              <div style={{ flex: 1 }}>
-                <CodeBlock language="tsx">
+      {/* Real-World Example */}
+      <Card title="Real-World Example" padded>
+        <div className="grid grid-cols-2 gap-6 w-full items-start">
+          <VerticalStack gap="4">
+            <Text variant="bodySm" color="subdued">
+              Here's a complete example showing toast usage in a form submission with proper error handling.
+            </Text>
+          </VerticalStack>
+          <VerticalStack gap="4">
+            <CodeBlock language="tsx">
 {`import { useAppBridge } from '@heymantle/app-bridge-react';
 import { useState } from 'react';
 
@@ -214,11 +198,9 @@ function ContactForm() {
     </form>
   );
 }`}
-                </CodeBlock>
-              </div>
-            </HorizontalStack>
+            </CodeBlock>
           </VerticalStack>
-        </VerticalStack>
+        </div>
       </Card>
     </VerticalStack>
   );
