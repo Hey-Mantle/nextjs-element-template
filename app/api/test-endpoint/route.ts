@@ -1,0 +1,10 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    message: "This is a test endpoint for authenticated requests",
+    timestamp: new Date().toISOString(),
+    method: "GET",
+  });
+}
+

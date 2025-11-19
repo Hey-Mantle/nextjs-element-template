@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { MantleAppTrackScript } from "./components/MantleAppTrackScript";
 import MantleProviderWrapper from "./components/MantleProviderWrapper";
+import DocsNavigation from "@/components/DocsNavigation";
+import AppBridgeNavigation from "@/components/AppBridgeNavigation";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Mantle Element Starter",
-  description: "A Next.js starter template for Mantle Elements using Litho UI",
+  title: "Mantle Element Documentation",
+  description: "Live documentation and examples for Mantle Elements",
 };
 
 export default function RootLayout({
@@ -28,6 +30,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <MantleProviderWrapper>
           <MantleAppTrackScript />
+          <AppBridgeNavigation />
+          <DocsNavigation />
           {children}
         </MantleProviderWrapper>
       </body>
