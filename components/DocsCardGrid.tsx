@@ -101,7 +101,10 @@ export default function DocsCardGrid() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {section.cards.map((card) => {
               const CardContent = (
-                <Card className="h-full hover:shadow-lg transition-shadow">
+                <Card
+                  className="h-full hover:shadow-lg transition-shadow"
+                  padded
+                >
                   <Stack gap="4">
                     {/* Preview Image */}
                     <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-md flex items-center justify-center overflow-hidden">
@@ -159,4 +162,3 @@ export default function DocsCardGrid() {
     </Stack>
   );
 }
-
