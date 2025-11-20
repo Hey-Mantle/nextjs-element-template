@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppBridge } from "@heymantle/app-bridge-react";
-import { Card, Text, VerticalStack } from "@heymantle/litho";
+import { Card, Stack, Text } from "@heymantle/litho";
 import { useEffect, useRef, useState } from "react";
 
 export default function ModalExamplePage() {
@@ -65,19 +65,20 @@ export default function ModalExamplePage() {
       </ui-title-bar>
 
       <div className="p-6">
-        <VerticalStack gap="4">
+        <Stack gap="4">
           <Card>
             <Card.Section>
-              <VerticalStack gap="3">
+              <Stack gap="3">
                 <Text variant="headingMd" fontWeight="bold">
                   This is a rendered iframe src
                 </Text>
                 <Text variant="bodyMd" color="subdued">
-                  This modal page demonstrates the ui-title-bar component within
-                  an iframe context. The app bridge script tag is loaded via the
-                  layout, enabling communication between the iframe and the
-                  parent Mantle application. A <code>ui-title-bar</code> element
-                  is used to control the title and actions of the modal
+                  This modal page demonstrates the <code>ui-title-bar</code>{" "}
+                  component within an iframe context. The app bridge script tag
+                  is loaded via the layout, enabling communication between the
+                  iframe and the parent Mantle application. A{" "}
+                  <code>ui-title-bar</code> element is used to control the title
+                  and actions of the modal
                 </Text>
                 <Text variant="bodySm" color="subdued">
                   Current URL:{" "}
@@ -96,10 +97,10 @@ export default function ModalExamplePage() {
                     as expected.
                   </Text>
                 )}
-              </VerticalStack>
+              </Stack>
             </Card.Section>
           </Card>
-        </VerticalStack>
+        </Stack>
       </div>
     </div>
   );

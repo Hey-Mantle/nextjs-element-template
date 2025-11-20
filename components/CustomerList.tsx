@@ -8,12 +8,11 @@ import {
 import {
   Button,
   Card,
-  HorizontalStack,
   Link,
   Select,
+  Stack,
   Text,
   TextField,
-  VerticalStack,
 } from "@heymantle/litho";
 import { useEffect, useState } from "react";
 
@@ -34,7 +33,7 @@ const extractSessionToken = (session: any): string | null => {
 // Customer card component
 const CustomerCard = ({ customer }: { customer: Customer }) => (
   <Card padded>
-    <VerticalStack gap="1">
+    <Stack gap="1">
       <Link url={`mantle://customers/${customer.id}`}>
         <Text variant="bodyMd" fontWeight="medium">
           {customer.name || `Customer ${customer.id}`}
@@ -50,7 +49,7 @@ const CustomerCard = ({ customer }: { customer: Customer }) => (
           Tags: {customer.tags.join(", ")}
         </Text>
       )}
-    </VerticalStack>
+    </Stack>
   </Card>
 );
 
@@ -220,21 +219,21 @@ export default function CustomerList({
   if (!mantle) {
     return (
       <Card title="Customers" padded>
-        <VerticalStack gap="4" align="center">
+        <Stack gap="4" align="center">
           <Text variant="bodyMd" color="subdued">
             Customer list is not available during setup. Please configure your
             environment variables first.
           </Text>
-        </VerticalStack>
+        </Stack>
       </Card>
     );
   }
 
   return (
     <Card title="Customers" padded>
-      <VerticalStack gap="4">
+      <Stack gap="4">
         {/* Request Mode Toggle */}
-        <HorizontalStack gap="2" blockAlign="center">
+        <Stack horizontal gap="2" blockAlign="center">
           <Text variant="bodyMd" fontWeight="medium">
             Request Mode:
           </Text>
@@ -259,10 +258,10 @@ export default function CustomerList({
             onBlur={() => {}}
             tooltip="Choose between server-side proxy, direct client-side requests, or access token authentication"
           />
-        </HorizontalStack>
+        </Stack>
 
         {/* Search Input */}
-        <HorizontalStack gap="2" blockAlign="end">
+        <Stack horizontal gap="2" blockAlign="end">
           <TextField
             label="Search customers"
             value={searchTerm}
@@ -282,7 +281,7 @@ export default function CustomerList({
           >
             {loading ? "Searching..." : "Search"}
           </Button>
-        </HorizontalStack>
+        </Stack>
 
         {/* Session Status */}
         {!sessionToken && !appBridgeError && !isConnecting && (
@@ -306,9 +305,9 @@ export default function CustomerList({
 
         {/* Results */}
         {result && (
-          <VerticalStack gap="3">
-            <HorizontalStack gap="2" align="space-between" blockAlign="center">
-              <HorizontalStack gap="2" blockAlign="center">
+          <Stack gap="3">
+            <Stack horizontal gap="2" align="space-between" blockAlign="center">
+              <Stack horizontal gap="2" blockAlign="center">
                 <Text variant="bodyMd" color="success">
                   Found {result.customers?.length || 0} customers
                 </Text>
@@ -321,20 +320,20 @@ export default function CustomerList({
                     : "via API route (Access Token)"}
                   )
                 </Text>
-              </HorizontalStack>
+              </Stack>
               {result.total && (
                 <Text variant="bodySm" color="subdued">
                   Total: {result.total} customers
                 </Text>
               )}
-            </HorizontalStack>
+            </Stack>
 
             {result.customers && result.customers.length > 0 ? (
-              <VerticalStack gap="2">
+              <Stack gap="2">
                 {result.customers.map((customer) => (
                   <CustomerCard key={customer.id} customer={customer} />
                 ))}
-              </VerticalStack>
+              </Stack>
             ) : (
               <Card>
                 <Text variant="bodyMd" color="subdued" alignment="center">
@@ -342,9 +341,9 @@ export default function CustomerList({
                 </Text>
               </Card>
             )}
-          </VerticalStack>
+          </Stack>
         )}
-      </VerticalStack>
+      </Stack>
     </Card>
   );
 }

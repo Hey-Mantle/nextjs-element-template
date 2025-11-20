@@ -1,7 +1,7 @@
 "use client";
 
 import CodeBlock from "@/components/CodeBlock";
-import { Button, Card, Text, VerticalStack } from "@heymantle/litho";
+import { Button, Card, Stack, Text } from "@heymantle/litho";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -12,11 +12,11 @@ export default function TitleBarDocs() {
   const router = useRouter();
 
   return (
-    <VerticalStack gap="6" className="w-full">
+    <Stack gap="6" className="w-full">
       {/* ui-title-bar element */}
       <Card title="ui-title-bar element" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               The <code>ui-title-bar</code> element is available for use in your
               app. It configures a title bar to display in the Mantle interface.
@@ -26,7 +26,7 @@ export default function TitleBarDocs() {
               a title, subtitle, back action, and action buttons.
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   children
@@ -79,10 +79,10 @@ export default function TitleBarDocs() {
                   URL string.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`<ui-title-bar title="My Page">
   <button variant="primary">Save</button>
@@ -98,20 +98,20 @@ export default function TitleBarDocs() {
                 <button>Cancel</button>
               </ui-title-bar>
             )}
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* ui-title-bar instance */}
       <Card title="ui-title-bar instance" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               The <code>ui-title-bar</code> element provides instance methods to
               control the title bar.
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   setTitle(title)
@@ -135,10 +135,10 @@ export default function TitleBarDocs() {
                   Set the subtitle of the title bar programmatically.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`import { useRef } from 'react';
 
@@ -151,19 +151,19 @@ titleBarRef.current?.setSubtitle('New Subtitle');
   <button variant="primary">Save</button>
 </ui-title-bar>`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Title Bar with Subtitle */}
       <Card title="Title Bar with Subtitle" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Add a subtitle to provide additional context about the page.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`<ui-title-bar title="My Page" subtitle="Page description">
   <button variant="primary">Action</button>
@@ -177,20 +177,20 @@ titleBarRef.current?.setSubtitle('New Subtitle');
                 <button {...({ variant: "primary" } as any)}>Action</button>
               </ui-title-bar>
             )}
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Title Bar with Back Action */}
       <Card title="Title Bar with Back Action" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Add a back button by providing a <code>backAction</code> prop.
               This can be a function or a URL string.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`<ui-title-bar 
   title="Detail Page" 
@@ -210,9 +210,9 @@ titleBarRef.current?.setSubtitle('New Subtitle');
                 <button {...({ variant: "primary" } as any)}>Save</button>
               </ui-title-bar>
             )}
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
-    </VerticalStack>
+    </Stack>
   );
 }

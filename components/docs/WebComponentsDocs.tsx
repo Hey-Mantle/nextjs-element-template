@@ -1,78 +1,77 @@
 "use client";
 import {
   Card,
-  HorizontalStack,
   Link,
+  Stack,
   Text,
-  VerticalStack,
 } from "@heymantle/litho";
 
 export default function WebComponentsDocs() {
   return (
-    <VerticalStack gap="6">
+    <Stack gap="6">
       {/* Overview */}
       <Card>
-        <VerticalStack gap="4">
+        <Stack gap="4">
           <Text variant="headingMd">Overview</Text>
           <Text variant="bodyMd">
             Mantle provides web components that integrate seamlessly with the
             Mantle UI. These components are invisible in your iframe but render
             in the parent Mantle window.
           </Text>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Component List */}
       <Card>
-        <VerticalStack gap="4">
+        <Stack gap="4">
           <Text variant="headingMd">Available Components</Text>
-          <VerticalStack gap="3">
+          <Stack gap="3">
             <Link url="/docs/web-components/modal">
-              <HorizontalStack gap="2" alignItems="center">
+              <Stack horizontal gap="2" alignItems="center">
                 <Text variant="bodyMd" fontWeight="semibold">
                   ui-modal
                 </Text>
                 <Text variant="bodySm" color="subdued">
                   Display modals and dialogs
                 </Text>
-              </HorizontalStack>
+              </Stack>
             </Link>
 
             <Link url="/docs/web-components/title-bar">
-              <HorizontalStack gap="2" alignItems="center">
+              <Stack horizontal gap="2" alignItems="center">
                 <Text variant="bodyMd" fontWeight="semibold">
                   ui-title-bar
                 </Text>
                 <Text variant="bodySm" color="subdued">
                   Page title bars with actions
                 </Text>
-              </HorizontalStack>
+              </Stack>
             </Link>
 
             <Link url="/docs/web-components/save-bar">
-              <HorizontalStack gap="2" alignItems="center">
+              <Stack horizontal gap="2" alignItems="center">
                 <Text variant="bodyMd" fontWeight="semibold">
                   ui-save-bar
                 </Text>
                 <Text variant="bodySm" color="subdued">
                   Unsaved changes indicator
                 </Text>
-              </HorizontalStack>
+              </Stack>
             </Link>
 
             <Link url="/docs/web-components/nav-menu">
-              <HorizontalStack gap="2" alignItems="center">
+              <Stack horizontal gap="2" alignItems="center">
                 <Text variant="bodyMd" fontWeight="semibold">
                   ui-nav-menu
                 </Text>
                 <Text variant="bodySm" color="subdued">
                   Navigation menus
                 </Text>
-              </HorizontalStack>
+              </Stack>
             </Link>
-          </VerticalStack>
-        </VerticalStack>
+          </Stack>
+        </Stack>
       </Card>
-    </VerticalStack>
+    </Stack>
   );
 }

@@ -2,14 +2,14 @@
 
 import {
   Card,
+  Stack,
   Text,
-  VerticalStack,
 } from "@heymantle/litho";
 import CodeBlock from "@/components/CodeBlock";
 
 export default function CustomDataDocs() {
   return (
-    <VerticalStack gap="6" className="w-full">
+    <Stack gap="6" className="w-full">
       {/* Overview */}
       <Card title="Overview" padded>
         <Text variant="bodyMd">
@@ -21,12 +21,12 @@ export default function CustomDataDocs() {
       {/* Data Types */}
       <Card title="Data Types" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Custom data supports multiple data types including strings, booleans, numbers, dates, and JSON. Choose the appropriate type for your data.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="javascript">
 {`// constants/custom_data.js
 const CustomDataTypeTypes = {
@@ -45,19 +45,19 @@ const CustomDataOwnerTypes = {
   TICKET: "ticket",
 };`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Creating Custom Data */}
       <Card title="Creating Custom Data" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Store custom data on Mantle resources using authenticated API requests. Use namespaces to organize your data and prevent conflicts.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="typescript">
 {`// Store custom data on a ticket
 const response = await mantle.authenticatedFetch('/api/custom-data', {
@@ -73,19 +73,19 @@ const response = await mantle.authenticatedFetch('/api/custom-data', {
   }),
 });`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Retrieving Custom Data */}
       <Card title="Retrieving Custom Data" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Fetch custom data from the database and build a nested lookup object for easy access in your Element or UI Hooks.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="typescript">
 {`// Fetch custom data records
 const customDataRecords = await prisma.customData.findMany({
@@ -111,19 +111,19 @@ const customDataRecords = await prisma.customData.findMany({
 const customDataLookup = buildCustomDataLookup(customDataRecords);
 // Returns: { 'my-app': { 'priority-score': 85 } }`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Using Custom Data in UI Hooks */}
       <Card title="Using Custom Data in UI Hooks" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Include custom data in your UI Hook context to make it available in your Element pages.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="typescript">
 {`// In your UI Hook context function
 const HOOK_DEFINITIONS = {
@@ -147,19 +147,19 @@ const HOOK_DEFINITIONS = {
   },
 };`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Using Custom Data in Elements */}
       <Card title="Using Custom Data in Elements" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Access custom data in your Element pages through the hook context or by fetching it directly from your API.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
 {`// In your Element, access custom data from hook context
 export default function TicketActions({ searchParams }) {
@@ -184,13 +184,13 @@ export default function TicketActions({ searchParams }) {
   );
 }`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Best Practices */}
       <Card title="Best Practices" padded>
-        <VerticalStack gap="2">
+        <Stack gap="2">
           <Text variant="bodyMd">
             • Use namespaces to organize custom data (e.g., "my-app", "analytics")
           </Text>
@@ -206,9 +206,9 @@ export default function TicketActions({ searchParams }) {
           <Text variant="bodyMd">
             • Consider data retention policies for custom data
           </Text>
-        </VerticalStack>
+        </Stack>
       </Card>
-    </VerticalStack>
+    </Stack>
   );
 }
 

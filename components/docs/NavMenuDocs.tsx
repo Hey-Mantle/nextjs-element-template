@@ -1,15 +1,15 @@
 "use client";
 
 import CodeBlock from "@/components/CodeBlock";
-import { Card, Text, VerticalStack } from "@heymantle/litho";
+import { Card, Stack, Text } from "@heymantle/litho";
 
 export default function NavMenuDocs() {
   return (
-    <VerticalStack gap="6" className="w-full">
+    <Stack gap="6" className="w-full">
       {/* ui-nav-menu element */}
       <Card title="ui-nav-menu element" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               The <code>ui-nav-menu</code> element is available for use in your
               app. It configures a navigation menu to display in the Mantle
@@ -20,7 +20,7 @@ export default function NavMenuDocs() {
               automatically sync with your app's routing.
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   children
@@ -33,10 +33,10 @@ export default function NavMenuDocs() {
                   items. Use <code>href</code> for navigation.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`<ui-nav-menu>
   <a href="/docs/authentication">Authentication</a>
@@ -45,20 +45,20 @@ export default function NavMenuDocs() {
   <a href="/docs/toasts">Toast Notifications</a>
 </ui-nav-menu>`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Anchor tag attributes */}
       <Card title="Anchor tag attributes" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               When using anchor tags as children of <code>ui-nav-menu</code>,
               you can use these attributes:
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   href
@@ -109,10 +109,10 @@ export default function NavMenuDocs() {
                   still appear in the navigation.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`<ui-nav-menu>
   <a href="/docs/authentication" active>Authentication</a>
@@ -120,14 +120,14 @@ export default function NavMenuDocs() {
   <a href="/docs/navigation">Navigation</a>
 </ui-nav-menu>`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Example: Active State Management */}
       <Card title="Example: Active State Management" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               This app uses <code>ui-nav-menu</code> to display the
               documentation navigation. The active state is managed by checking
@@ -138,8 +138,8 @@ export default function NavMenuDocs() {
               See <code>components/DocsNavigation.tsx</code> for the full
               implementation.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`import { usePathname } from "next/navigation";
 
@@ -171,21 +171,21 @@ export default function DocsNavigation() {
   );
 }`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Mantle Relative URLs */}
       <Card title="Mantle Relative URLs" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               You can link to Mantle pages using the <code>mantle://</code>{" "}
               protocol. This allows navigation to Mantle's built-in pages like
               customers, reports, settings, etc.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`<ui-nav-menu>
   <a href="/customers">My App Customers</a>
@@ -194,9 +194,9 @@ export default function DocsNavigation() {
   <a href="mantle://settings">Mantle Settings</a>
 </ui-nav-menu>`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
-    </VerticalStack>
+    </Stack>
   );
 }

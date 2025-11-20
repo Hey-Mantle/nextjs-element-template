@@ -1,7 +1,7 @@
 import AppPage from "@/components/AppPage";
 import DocsCardGrid from "@/components/DocsCardGrid";
 import { prisma } from "@/lib/prisma";
-import { Layout, VerticalStack } from "@heymantle/litho";
+import { Layout, Stack } from "@heymantle/litho";
 import { redirect } from "next/navigation";
 
 export default async function Home({
@@ -83,9 +83,9 @@ export default async function Home({
       fullWidth
     >
       <Layout>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <DocsCardGrid />
-        </VerticalStack>
+        </Stack>
       </Layout>
     </AppPage>
   );

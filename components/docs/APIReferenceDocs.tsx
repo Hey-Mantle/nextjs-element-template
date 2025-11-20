@@ -1,16 +1,16 @@
 "use client";
 
 import CodeBlock from "@/components/CodeBlock";
-import { Card, Text, VerticalStack } from "@heymantle/litho";
+import { Card, Stack, Text } from "@heymantle/litho";
 
 export default function APIReferenceDocs() {
   return (
-    <VerticalStack gap="6" className="w-full">
+    <Stack gap="6" className="w-full">
       {/* Session Management */}
       <Card title="Session Management" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 requestSession()
               </Text>
@@ -19,17 +19,17 @@ export default function APIReferenceDocs() {
                 caching. Returns a Promise that resolves to the session token
                 (JWT string).
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const token = await mantle.requestSession();
 // Returns: Promise<string> - Session token (JWT)`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 getSessionToken()
               </Text>
@@ -37,22 +37,22 @@ export default function APIReferenceDocs() {
                 Get session token - simple async method that returns just the
                 token string.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const token = await mantle.getSessionToken();
 // Returns: Promise<string> - Session token`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* User & Organization */}
       <Card title="User & Organization" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 getUser()
               </Text>
@@ -60,17 +60,17 @@ export default function APIReferenceDocs() {
                 Get user data with intelligent caching. Returns a Promise that
                 resolves to the user object with id, name, email, and roles.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const user = await mantle.getUser();
 // Returns: Promise<MantleUser>`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 getOrganization()
               </Text>
@@ -79,21 +79,21 @@ export default function APIReferenceDocs() {
                 Promise that resolves to the organization object with id, name,
                 and other properties.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const org = await mantle.getOrganization();
 // Returns: Promise<MantleOrganization>`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Authenticated Fetch */}
       <Card title="Authenticated Fetch" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="2">
+          <Stack gap="2">
             <Text variant="bodyMd" fontWeight="semibold">
               authenticatedFetch(url, options?)
             </Text>
@@ -102,7 +102,7 @@ export default function APIReferenceDocs() {
               token authorization. This method wraps the native fetch() API and
               automatically handles token management, expiry, and retries.
             </Text>
-            <VerticalStack gap="1" style={{ marginTop: "0.5rem" }}>
+            <Stack gap="1" style={{ marginTop: "0.5rem" }}>
               <Text variant="bodySm" fontWeight="semibold">
                 Parameters:
               </Text>
@@ -123,9 +123,9 @@ export default function APIReferenceDocs() {
               <Text variant="bodySm" color="subdued">
                 Promise&lt;Response&gt; - Standard fetch Response object
               </Text>
-            </VerticalStack>
-          </VerticalStack>
-          <VerticalStack gap="4">
+            </Stack>
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="typescript">
               {`const response = await mantle.authenticatedFetch('/api/endpoint', {
   method: 'POST',
@@ -134,15 +134,15 @@ export default function APIReferenceDocs() {
 });
 // Returns: Promise<Response>`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Navigation */}
       <Card title="Navigation" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 setPath(path)
               </Text>
@@ -151,16 +151,16 @@ export default function APIReferenceDocs() {
                 keeps the Mantle parent window URL synchronized with your app's
                 navigation.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.setPath('/my-page');`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 redirect(url)
               </Text>
@@ -168,16 +168,16 @@ export default function APIReferenceDocs() {
                 Redirect to a URL. Can be used for external URLs or internal
                 navigation.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.redirect('https://example.com');`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 openInNewTab(url)
               </Text>
@@ -185,21 +185,21 @@ export default function APIReferenceDocs() {
                 Open URL in a new browser tab. Useful for external links or
                 documentation.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.openInNewTab('https://example.com');`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Toast Notifications */}
       <Card title="Toast Notifications" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 showSuccess(message)
               </Text>
@@ -208,16 +208,16 @@ export default function APIReferenceDocs() {
                 Mantle interface and automatically dismisses after a few
                 seconds.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`mantle.showSuccess('Operation completed!');`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 showError(message)
               </Text>
@@ -225,16 +225,16 @@ export default function APIReferenceDocs() {
                 Show an error toast notification. Use this to display error
                 messages to users.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`mantle.showError('Something went wrong');`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 showToast(message, status?)
               </Text>
@@ -242,27 +242,27 @@ export default function APIReferenceDocs() {
                 Show a toast with custom status. Use this for more control over
                 toast appearance.
               </Text>
-              <VerticalStack gap="1" style={{ marginTop: "0.5rem" }}>
+              <Stack gap="1" style={{ marginTop: "0.5rem" }}>
                 <Text variant="bodySm" color="subdued">
                   • <code>status</code> - "success" | "error" (optional)
                 </Text>
-              </VerticalStack>
-            </VerticalStack>
-            <VerticalStack gap="4">
+              </Stack>
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`mantle.showToast('Custom message', 'success');
 mantle.showToast('Custom message', 'error');`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Page Management */}
       <Card title="Page Management" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 setPage(options)
               </Text>
@@ -270,27 +270,27 @@ mantle.showToast('Custom message', 'error');`}
                 Set page title and subtitle in the Mantle interface. Updates the
                 page header displayed in the parent window.
               </Text>
-              <VerticalStack gap="1" style={{ marginTop: "0.5rem" }}>
+              <Stack gap="1" style={{ marginTop: "0.5rem" }}>
                 <Text variant="bodySm" color="subdued">
                   • <code>title</code> - Page title (string)
                 </Text>
                 <Text variant="bodySm" color="subdued">
                   • <code>subtitle</code> - Page subtitle (string, optional)
                 </Text>
-              </VerticalStack>
-            </VerticalStack>
-            <VerticalStack gap="4">
+              </Stack>
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.setPage({
   title: 'My Page',
   subtitle: 'Page description',
 });`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 setPagePrimaryAction(action)
               </Text>
@@ -298,32 +298,32 @@ mantle.showToast('Custom message', 'error');`}
                 Set the primary action button in the page header. This appears
                 as a prominent button in the Mantle page header.
               </Text>
-              <VerticalStack gap="1" style={{ marginTop: "0.5rem" }}>
+              <Stack gap="1" style={{ marginTop: "0.5rem" }}>
                 <Text variant="bodySm" color="subdued">
                   • <code>label</code> - Button label (string)
                 </Text>
                 <Text variant="bodySm" color="subdued">
                   • <code>onClick</code> - Click handler function
                 </Text>
-              </VerticalStack>
-            </VerticalStack>
-            <VerticalStack gap="4">
+              </Stack>
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.setPagePrimaryAction({
   label: 'Save',
   onClick: () => handleSave(),
 });`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Save Bar */}
       <Card title="Save Bar" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 showSaveBar()
               </Text>
@@ -331,16 +331,16 @@ mantle.showToast('Custom message', 'error');`}
                 Show the save bar at the bottom of the page. Use this to
                 indicate unsaved changes.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.showSaveBar();`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 hideSaveBar()
               </Text>
@@ -348,16 +348,16 @@ mantle.showToast('Custom message', 'error');`}
                 Hide the save bar. Call this after changes are saved or
                 discarded.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.hideSaveBar();`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 setSaveBarOptions(options)
               </Text>
@@ -365,7 +365,7 @@ mantle.showToast('Custom message', 'error');`}
                 Configure the save bar with custom message and actions. Use this
                 to customize the save bar appearance and behavior.
               </Text>
-              <VerticalStack gap="1" style={{ marginTop: "0.5rem" }}>
+              <Stack gap="1" style={{ marginTop: "0.5rem" }}>
                 <Text variant="bodySm" color="subdued">
                   • <code>message</code> - Message to display (string)
                 </Text>
@@ -375,9 +375,9 @@ mantle.showToast('Custom message', 'error');`}
                 <Text variant="bodySm" color="subdued">
                   • <code>saveAction</code> - Save button config (object)
                 </Text>
-              </VerticalStack>
-            </VerticalStack>
-            <VerticalStack gap="4">
+              </Stack>
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.setSaveBarOptions({
   message: 'You have unsaved changes',
@@ -385,16 +385,16 @@ mantle.showToast('Custom message', 'error');`}
   saveAction: { label: 'Save' },
 });`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Modal Management */}
       <Card title="Modal Management" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 closeModal()
               </Text>
@@ -403,16 +403,16 @@ mantle.showToast('Custom message', 'error');`}
                 convenience method that sends the appropriate message to close
                 the modal.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.closeModal();`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 showModalBackgroundOverlay()
               </Text>
@@ -420,37 +420,37 @@ mantle.showToast('Custom message', 'error');`}
                 Show a background overlay behind modals. Useful for creating
                 layered modal experiences.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.showModalBackgroundOverlay();`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 hideModalBackgroundOverlay()
               </Text>
               <Text variant="bodySm" color="subdued">
                 Hide the modal background overlay.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.hideModalBackgroundOverlay();`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Asset Library */}
       <Card title="Asset Library" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 showAssetLibrary()
               </Text>
@@ -458,37 +458,37 @@ mantle.showToast('Custom message', 'error');`}
                 Show the Mantle asset library. Allows users to select assets
                 from their Mantle account.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.showAssetLibrary();`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 hideAssetLibrary()
               </Text>
               <Text variant="bodySm" color="subdued">
                 Hide the asset library.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`await mantle.hideAssetLibrary();`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
 
       {/* Properties */}
       <Card title="Read-Only Properties" padded>
-        <VerticalStack gap="6">
+        <Stack gap="6">
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 isReady
               </Text>
@@ -496,18 +496,18 @@ mantle.showToast('Custom message', 'error');`}
                 True when App Bridge is ready to receive messages. Check this
                 before making API calls.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`if (mantle.isReady) {
   // Safe to make API calls
 }`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 initialized
               </Text>
@@ -515,18 +515,18 @@ mantle.showToast('Custom message', 'error');`}
                 True after receiving setup message from parent. This indicates
                 full initialization is complete.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`if (mantle.initialized) {
   // Fully initialized and ready
 }`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 currentSession
               </Text>
@@ -534,17 +534,17 @@ mantle.showToast('Custom message', 'error');`}
                 Current session token (string | null). This is the JWT token
                 used for authenticated requests.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const token = mantle.currentSession;
 // Returns: string | null`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 currentUser
               </Text>
@@ -552,17 +552,17 @@ mantle.showToast('Custom message', 'error');`}
                 Current user object (MantleUser | null). Contains user id, name,
                 email, and roles.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const user = mantle.currentUser;
 // Returns: MantleUser | null`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 currentOrganization
               </Text>
@@ -570,17 +570,17 @@ mantle.showToast('Custom message', 'error');`}
                 Current organization object. Contains organization id, name, and
                 other properties.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const org = mantle.currentOrganization;
 // Returns: MantleOrganization | null`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
 
           <div className="grid grid-cols-2 gap-6 w-full items-start">
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="bodyMd" fontWeight="semibold">
                 currentOrganizationId
               </Text>
@@ -588,16 +588,16 @@ mantle.showToast('Custom message', 'error');`}
                 Current organization ID (string | null). Quick access to the
                 organization identifier.
               </Text>
-            </VerticalStack>
-            <VerticalStack gap="4">
+            </Stack>
+            <Stack gap="4">
               <CodeBlock language="typescript">
                 {`const orgId = mantle.currentOrganizationId;
 // Returns: string | null`}
               </CodeBlock>
-            </VerticalStack>
+            </Stack>
           </div>
-        </VerticalStack>
+        </Stack>
       </Card>
-    </VerticalStack>
+    </Stack>
   );
 }

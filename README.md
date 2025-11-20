@@ -194,15 +194,15 @@ The starter includes example API endpoints:
 The starter uses **Mantle Litho** for consistent UI components:
 
 ```typescript
-import { Button, Page, VerticalStack } from '@heymantle/litho';
+import { Button, Page, Stack } from '@heymantle/litho';
 
 function MyPage() {
   return (
     <Page title="My Element" subtitle="Built with Mantle">
-      <VerticalStack gap="4">
+      <Stack gap="4">
         <Button primary>Primary Action</Button>
         <Button>Secondary Action</Button>
-      </VerticalStack>
+      </Stack>
     </Page>
   );
 }

@@ -19,7 +19,7 @@ export default function AppPage({
   children,
 }: AppPageProps) {
   return (
-    <Page title="" subtitle="" fullWidth={fullWidth}>
+    <Page title="" subtitle="" fullWidth={fullWidth} className="p-4">
       <ui-title-bar
         title={title}
         subtitle={subtitle}
@@ -29,4 +29,3 @@ export default function AppPage({
     </Page>
   );
 }
-

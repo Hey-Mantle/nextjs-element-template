@@ -8,9 +8,8 @@ import {
   Badge,
   Button,
   Card,
-  HorizontalStack,
+  Stack,
   Text,
-  VerticalStack,
 } from "@heymantle/litho";
 import { useEffect, useRef, useState } from "react";
 
@@ -203,7 +202,7 @@ export default function AccessTokenManager({
 
   return (
     <Card>
-      <VerticalStack gap="4">
+      <Stack gap="4">
         <Text variant="headingMd">Access Token Management</Text>
 
         {action && (
@@ -221,7 +220,7 @@ export default function AccessTokenManager({
         {isLoadingStatus ? (
           <Text variant="bodyMd">Loading token status...</Text>
         ) : !tokenInfo ? (
-          <VerticalStack gap="3">
+          <Stack gap="3">
             <Text variant="bodyMd">
               No access token found. Request an access token to enable
               long-running operations.
@@ -229,32 +228,32 @@ export default function AccessTokenManager({
             <Button onClick={handleRequestAccessToken} disabled={isLoading}>
               {isLoading ? "Requesting..." : "Request Access Token"}
             </Button>
-          </VerticalStack>
+          </Stack>
         ) : (
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               Access token is active and ready for use.
             </Text>
 
             {/* Token Information */}
-            <VerticalStack gap="2">
+            <Stack gap="2">
               <Text variant="headingSm">Token Information</Text>
 
-              <HorizontalStack gap="2" align="start">
+              <Stack horizontal gap="2" align="start">
                 <Text variant="bodyMd" color="subdued">
                   Type:
                 </Text>
                 {getTokenTypeBadge(tokenInfo.tokenType)}
-              </HorizontalStack>
+              </Stack>
 
-              <HorizontalStack gap="2" align="start">
+              <Stack horizontal gap="2" align="start">
                 <Text variant="bodyMd" color="subdued">
                   Scopes:
                 </Text>
                 <Text variant="bodyMd">{tokenInfo.scope}</Text>
-              </HorizontalStack>
+              </Stack>
 
-              <HorizontalStack gap="2" align="start">
+              <Stack horizontal gap="2" align="start">
                 <Text variant="bodyMd" color="subdued">
                   User:
                 </Text>
@@ -262,45 +261,45 @@ export default function AccessTokenManager({
                   {tokenInfo.user?.name || "Unknown"} (
                   {tokenInfo.user?.email || "Unknown"})
                 </Text>
-              </HorizontalStack>
+              </Stack>
 
-              <HorizontalStack gap="2" align="start">
+              <Stack horizontal gap="2" align="start">
                 <Text variant="bodyMd" color="subdued">
                   Organization:
                 </Text>
                 <Text variant="bodyMd">
                   {tokenInfo.organization?.name || "Unknown"}
                 </Text>
-              </HorizontalStack>
+              </Stack>
 
-              <HorizontalStack gap="2" align="start">
+              <Stack horizontal gap="2" align="start">
                 <Text variant="bodyMd" color="subdued">
                   Created:
                 </Text>
                 <Text variant="bodyMd">{formatDate(tokenInfo.createdAt)}</Text>
-              </HorizontalStack>
+              </Stack>
 
-              <HorizontalStack gap="2" align="start">
+              <Stack horizontal gap="2" align="start">
                 <Text variant="bodyMd" color="subdued">
                   Updated:
                 </Text>
                 <Text variant="bodyMd">{formatDate(tokenInfo.updatedAt)}</Text>
-              </HorizontalStack>
+              </Stack>
 
               {tokenInfo.expiresAt && (
-                <HorizontalStack gap="2" align="start">
+                <Stack horizontal gap="2" align="start">
                   <Text variant="bodyMd" color="subdued">
                     Expires:
                   </Text>
                   <Text variant="bodyMd">
                     {formatDate(tokenInfo.expiresAt)}
                   </Text>
-                </HorizontalStack>
+                </Stack>
               )}
-            </VerticalStack>
+            </Stack>
 
             {/* Action Buttons */}
-            <HorizontalStack gap="2">
+            <Stack horizontal gap="2">
               {tokenInfo.tokenType === "offline" && (
                 <Button onClick={handleRefreshToken} disabled={isLoading}>
                   {isLoading ? "Refreshing..." : "Refresh Token"}
@@ -310,10 +309,10 @@ export default function AccessTokenManager({
               <Button onClick={handleRevokeToken} disabled={isLoading}>
                 {isLoading ? "Revoking..." : "Revoke Token"}
               </Button>
-            </HorizontalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
         )}
-      </VerticalStack>
+      </Stack>
     </Card>
   );
 }

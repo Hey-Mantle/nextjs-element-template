@@ -1,9 +1,8 @@
 import {
   Card,
-  HorizontalStack,
   Page,
+  Stack,
   Text,
-  VerticalStack,
 } from "@heymantle/litho";
 import { redirect } from "next/navigation";
 
@@ -69,27 +68,27 @@ export default function SetupPage() {
       title="Setup Required!"
       subtitle="Configure your environment variables to continue"
     >
-      <VerticalStack gap="6">
+      <Stack gap="6">
         <Card>
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="headingMd">Environment Variable Status</Text>
 
-            <VerticalStack gap="3">
+            <Stack gap="3">
               {statuses.map((status) => (
                 <EnvironmentVariableStatus key={status.name} status={status} />
               ))}
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
         </Card>
-      </VerticalStack>
+      </Stack>
     </Page>
   );
 }
 
 function EnvironmentVariableStatus({ status }: { status: EnvVarStatus }) {
   return (
-    <VerticalStack gap="2">
-      <HorizontalStack gap="3" align="center">
+    <Stack gap="2">
+      <Stack horizontal gap="3" align="center">
         <div
           className={`w-3 h-3 rounded-full ${
             status.ok ? "bg-green-500" : "bg-red-500"
@@ -103,12 +102,12 @@ function EnvironmentVariableStatus({ status }: { status: EnvVarStatus }) {
         <Text variant="bodySm" color={status.ok ? "success" : "critical"}>
           {status.ok ? "Set" : "Missing"}
         </Text>
-      </HorizontalStack>
+      </Stack>
       <div className="ml-6">
         <Text variant="bodySm" color="subdued">
           {status.description}
         </Text>
       </div>
-    </VerticalStack>
+    </Stack>
   );
 }

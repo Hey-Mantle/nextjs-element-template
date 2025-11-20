@@ -2,7 +2,7 @@
 
 import CodeBlock from "@/components/CodeBlock";
 import { useAppBridge } from "@heymantle/app-bridge-react";
-import { Button, Card, Text, VerticalStack } from "@heymantle/litho";
+import { Button, Card, Stack, Text } from "@heymantle/litho";
 
 export default function ToastDocs() {
   const { mantle, isReady } = useAppBridge();
@@ -23,16 +23,16 @@ export default function ToastDocs() {
   };
 
   return (
-    <VerticalStack gap="6" className="w-full">
+    <Stack gap="6" className="w-full">
       {/* Success Toast */}
       <Card title="Success Toast" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Use <code>mantle.showSuccess()</code> to display success messages.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`import { useAppBridge } from '@heymantle/app-bridge-react';
 
@@ -58,19 +58,19 @@ function MyComponent() {
             <Button onClick={showSuccessToast} disabled={!isReady}>
               Show Success Toast
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Error Toast */}
       <Card title="Error Toast" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Use <code>mantle.showError()</code> to display error messages.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const handleDelete = async () => {
   try {
@@ -84,20 +84,20 @@ function MyComponent() {
             <Button onClick={showErrorToast} disabled={!isReady}>
               Show Error Toast
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* Custom Toast */}
       <Card title="Custom Toast" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Use <code>mantle.showToast()</code> with a status parameter for
               more control.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`// Show toast with custom status
 mantle.showToast('Custom message', 'success');
@@ -110,9 +110,9 @@ mantle.showError('Error message');`}
             <Button onClick={showCustomToast} disabled={!isReady}>
               Show Custom Toast
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
-    </VerticalStack>
+    </Stack>
   );
 }

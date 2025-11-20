@@ -76,7 +76,7 @@ export default function MantleProviderWrapper({
   // Show loading state while App Bridge initializes or while fetching session
   // Don't return null as this can cause Next.js to think the page doesn't exist
   if (!isReady || !mantle?.currentSession || isLoading) {
-    return <div>Loading Mantle...</div>;
+    return null;
   }
 
   // If we have an error or no customerApiToken, still render children

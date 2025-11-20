@@ -4,10 +4,9 @@ import { useAppBridge, useUser } from "@heymantle/app-bridge-react";
 import {
   Badge,
   Button,
-  HorizontalStack,
   Spinner,
+  Stack,
   Text,
-  VerticalStack,
 } from "@heymantle/litho";
 
 // Utility function to decode JWT payload without verification
@@ -45,18 +44,18 @@ export default function AppBridgeSessionUser() {
   }
 
   return (
-    <VerticalStack gap="4">
+    <Stack gap="4">
       {/* Session Section */}
-      <VerticalStack gap="3">
-        <HorizontalStack gap="3" align="center">
+      <Stack gap="3">
+        <Stack horizontal gap="3" align="center">
           <Text variant="bodyMd" fontWeight="medium">
             Session:
           </Text>
           {isLoading ? (
-            <HorizontalStack gap="2" align="center">
+            <Stack horizontal gap="2" align="center">
               <Spinner size="small" />
               <Text variant="bodySm">Loading...</Text>
-            </HorizontalStack>
+            </Stack>
           ) : error ? (
             <Badge status="critical">
               <Text variant="bodySm">Error</Text>
@@ -73,7 +72,7 @@ export default function AppBridgeSessionUser() {
           <Button onClick={refetch} size="small" disabled={isLoading}>
             Refresh
           </Button>
-        </HorizontalStack>
+        </Stack>
 
         {error && (
           <Text variant="bodyMd" color="critical">
@@ -82,11 +81,11 @@ export default function AppBridgeSessionUser() {
         )}
 
         {mantle?.currentSession && (
-          <VerticalStack gap="2">
+          <Stack gap="2">
             {typeof mantle.currentSession === "string" ? (
               // Handle JWT token string
               <>
-                <HorizontalStack gap="3" align="start">
+                <Stack horizontal gap="3" align="start">
                   <Text variant="bodyMd" fontWeight="medium">
                     Session Token:
                   </Text>
@@ -96,14 +95,14 @@ export default function AppBridgeSessionUser() {
                   >
                     {mantle.currentSession}
                   </Text>
-                </HorizontalStack>
+                </Stack>
 
-                <HorizontalStack gap="3" align="start">
+                <Stack horizontal gap="3" align="start">
                   <Text variant="bodyMd" fontWeight="medium">
                     Type:
                   </Text>
                   <Text variant="bodyMd">JWT Token</Text>
-                </HorizontalStack>
+                </Stack>
 
                 {/* Decoded JWT Payload */}
                 {(() => {
@@ -112,14 +111,14 @@ export default function AppBridgeSessionUser() {
                   );
                   if (decodedPayload) {
                     return (
-                      <VerticalStack gap="2">
+                      <Stack gap="2">
                         <Text variant="bodyMd" fontWeight="medium">
                           Decoded JWT Payload:
                         </Text>
-                        <VerticalStack gap="1">
+                        <Stack gap="1">
                           {Object.entries(decodedPayload).map(
                             ([key, value]) => (
-                              <HorizontalStack key={key} gap="3" align="start">
+                              <Stack horizontal key={key} gap="3" align="start">
                                 <Text
                                   variant="bodySm"
                                   fontWeight="medium"
@@ -135,11 +134,11 @@ export default function AppBridgeSessionUser() {
                                     ? JSON.stringify(value)
                                     : String(value)}
                                 </Text>
-                              </HorizontalStack>
+                              </Stack>
                             )
                           )}
-                        </VerticalStack>
-                      </VerticalStack>
+                        </Stack>
+                      </Stack>
                     );
                   }
                   return null;
@@ -148,34 +147,34 @@ export default function AppBridgeSessionUser() {
             ) : (
               // Handle session object
               <>
-                <HorizontalStack gap="3" align="start">
+                <Stack horizontal gap="3" align="start">
                   <Text variant="bodyMd" fontWeight="medium">
                     Session ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
                     {(mantle.currentSession as any).id}
                   </Text>
-                </HorizontalStack>
+                </Stack>
 
-                <HorizontalStack gap="3" align="start">
+                <Stack horizontal gap="3" align="start">
                   <Text variant="bodyMd" fontWeight="medium">
                     User ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
                     {(mantle.currentSession as any).userId}
                   </Text>
-                </HorizontalStack>
+                </Stack>
 
-                <HorizontalStack gap="3" align="start">
+                <Stack horizontal gap="3" align="start">
                   <Text variant="bodyMd" fontWeight="medium">
                     Organization ID:
                   </Text>
                   <Text variant="bodyMd" className="font-mono">
                     {(mantle.currentSession as any).organizationId}
                   </Text>
-                </HorizontalStack>
+                </Stack>
 
-                <HorizontalStack gap="3" align="start">
+                <Stack horizontal gap="3" align="start">
                   <Text variant="bodyMd" fontWeight="medium">
                     Expires:
                   </Text>
@@ -184,16 +183,16 @@ export default function AppBridgeSessionUser() {
                       (mantle.currentSession as any).expiresAt
                     ).toLocaleString()}
                   </Text>
-                </HorizontalStack>
+                </Stack>
               </>
             )}
-          </VerticalStack>
+          </Stack>
         )}
-      </VerticalStack>
+      </Stack>
 
       {/* Organization ID Section */}
-      <VerticalStack gap="3">
-        <HorizontalStack gap="3" align="center">
+      <Stack gap="3">
+        <Stack horizontal gap="3" align="center">
           <Text variant="bodyMd" fontWeight="medium">
             Organization ID:
           </Text>
@@ -206,31 +205,31 @@ export default function AppBridgeSessionUser() {
               <Text variant="bodySm">Not Available</Text>
             </Badge>
           )}
-        </HorizontalStack>
+        </Stack>
 
         {organizationId && (
-          <HorizontalStack gap="3" align="start">
+          <Stack horizontal gap="3" align="start">
             <Text variant="bodyMd" fontWeight="medium">
               Current Org ID:
             </Text>
             <Text variant="bodyMd" className="font-mono">
               {organizationId}
             </Text>
-          </HorizontalStack>
+          </Stack>
         )}
-      </VerticalStack>
+      </Stack>
 
       {/* User Section */}
-      <VerticalStack gap="3">
-        <HorizontalStack gap="3" align="center">
+      <Stack gap="3">
+        <Stack horizontal gap="3" align="center">
           <Text variant="bodyMd" fontWeight="medium">
             User:
           </Text>
           {isLoading ? (
-            <HorizontalStack gap="2" align="center">
+            <Stack horizontal gap="2" align="center">
               <Spinner size="small" />
               <Text variant="bodySm">Loading...</Text>
-            </HorizontalStack>
+            </Stack>
           ) : error ? (
             <Badge status="critical">
               <Text variant="bodySm">Error</Text>
@@ -247,7 +246,7 @@ export default function AppBridgeSessionUser() {
           <Button onClick={refetch} size="small" disabled={isLoading}>
             Refresh
           </Button>
-        </HorizontalStack>
+        </Stack>
 
         {error && (
           <Text variant="bodyMd" color="critical">
@@ -256,41 +255,41 @@ export default function AppBridgeSessionUser() {
         )}
 
         {user && (
-          <VerticalStack gap="2">
-            <HorizontalStack gap="3" align="start">
+          <Stack gap="2">
+            <Stack horizontal gap="3" align="start">
               <Text variant="bodyMd" fontWeight="medium">
                 Name:
               </Text>
               <Text variant="bodyMd">{user.name}</Text>
-            </HorizontalStack>
+            </Stack>
 
-            <HorizontalStack gap="3" align="start">
+            <Stack horizontal gap="3" align="start">
               <Text variant="bodyMd" fontWeight="medium">
                 Email:
               </Text>
               <Text variant="bodyMd">{user.email}</Text>
-            </HorizontalStack>
+            </Stack>
 
-            <HorizontalStack gap="3" align="start">
+            <Stack horizontal gap="3" align="start">
               <Text variant="bodyMd" fontWeight="medium">
                 User ID:
               </Text>
               <Text variant="bodyMd" className="font-mono">
                 {user.id}
               </Text>
-            </HorizontalStack>
+            </Stack>
 
             {user.role && (
-              <HorizontalStack gap="3" align="start">
+              <Stack horizontal gap="3" align="start">
                 <Text variant="bodyMd" fontWeight="medium">
                   Role:
                 </Text>
                 <Text variant="bodyMd">{user.role}</Text>
-              </HorizontalStack>
+              </Stack>
             )}
-          </VerticalStack>
+          </Stack>
         )}
-      </VerticalStack>
-    </VerticalStack>
+      </Stack>
+    </Stack>
   );
 }

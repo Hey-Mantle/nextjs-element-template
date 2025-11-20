@@ -1,7 +1,7 @@
 "use client";
 
 import CodeBlock from "@/components/CodeBlock";
-import { Button, Card, Text, VerticalStack } from "@heymantle/litho";
+import { Button, Card, Stack, Text } from "@heymantle/litho";
 import { useState } from "react";
 
 export default function SaveBarDocs() {
@@ -9,11 +9,11 @@ export default function SaveBarDocs() {
   const [saveBarVisible1, setSaveBarVisible1] = useState(false);
 
   return (
-    <VerticalStack gap="6" className="w-full">
+    <Stack gap="6" className="w-full">
       {/* ui-save-bar element */}
       <Card title="ui-save-bar element" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               The <code>ui-save-bar</code> element is available for use in your
               app. It configures a save bar to display in the Mantle interface.
@@ -23,7 +23,7 @@ export default function SaveBarDocs() {
               unsaved changes. It provides actions to save or discard changes.
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   children
@@ -62,10 +62,10 @@ export default function SaveBarDocs() {
                   unsaved changes message if not provided.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const [hasChanges, setHasChanges] = useState(false);
 
@@ -111,20 +111,20 @@ export default function SaveBarDocs() {
                 </button>
               </ui-save-bar>
             )}
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
       {/* ui-save-bar instance */}
       <Card title="ui-save-bar instance" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               The <code>ui-save-bar</code> element provides instance methods to
               control the save bar.
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   show()
@@ -160,10 +160,10 @@ export default function SaveBarDocs() {
                   Set the message displayed in the save bar.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`import { useRef } from 'react';
 
@@ -178,9 +178,9 @@ saveBarRef.current?.setMessage('Custom message');
   <button onClick={handleDiscard}>Discard</button>
 </ui-save-bar>`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
-    </VerticalStack>
+    </Stack>
   );
 }

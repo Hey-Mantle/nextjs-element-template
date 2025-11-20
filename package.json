@@ -13,7 +13,7 @@
   "dependencies": {
     "@heymantle/app-bridge-react": "^1.1.1",
     "@heymantle/client": "^1.1.63",
-    "@heymantle/litho": "^0.0.4",
+    "@heymantle/litho": "^0.0.10",
     "@heymantle/react": "^0.0.66",
     "@prisma/client": "^6.16.1",
     "@types/jsonwebtoken": "^9.0.10",

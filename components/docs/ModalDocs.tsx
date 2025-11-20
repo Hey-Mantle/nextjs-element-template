@@ -1,7 +1,7 @@
 "use client";
 
 import CodeBlock from "@/components/CodeBlock";
-import { Button, Card, Text, VerticalStack } from "@heymantle/litho";
+import { Button, Card, Stack, Text } from "@heymantle/litho";
 import { useEffect, useRef, useState } from "react";
 
 export default function ModalDocs() {
@@ -126,7 +126,7 @@ export default function ModalDocs() {
   }, []);
 
   return (
-    <VerticalStack gap="6" className="w-full">
+    <Stack gap="6" className="w-full">
       {/* ui-modal element section */}
       <Card title="ui-modal element" padded>
         <div
@@ -138,7 +138,7 @@ export default function ModalDocs() {
             alignItems: "start",
           }}
         >
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               The <code>ui-modal</code> element is available for use in your
               app. It configures a Modal to display in the Mantle interface.
@@ -150,7 +150,7 @@ export default function ModalDocs() {
               <code>div</code> or <code>form</code>).
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   children
@@ -223,10 +223,10 @@ export default function ModalDocs() {
                   state to control this property.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
@@ -245,7 +245,7 @@ export default function ModalDocs() {
             <Button onClick={() => setBasicModalOpen(true)}>
               Open Basic Modal
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
@@ -260,13 +260,13 @@ export default function ModalDocs() {
             alignItems: "start",
           }}
         >
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodyMd">
               The <code>ui-modal</code> element provides instance properties and
               methods to control the Modal.
             </Text>
 
-            <VerticalStack gap="4" className="mt-4">
+            <Stack gap="4" className="mt-4">
               <div>
                 <Text variant="bodyMd" fontWeight="semibold" className="mb-2">
                   show()
@@ -359,10 +359,10 @@ export default function ModalDocs() {
                   Remove 'show' | 'hide' event listeners.
                 </Text>
               </div>
-            </VerticalStack>
-          </VerticalStack>
+            </Stack>
+          </Stack>
 
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`import { useRef } from 'react';
 
@@ -383,7 +383,7 @@ const handleHide = async () => {
 <button onClick={handleShow}>Show Modal</button>
 <button onClick={handleHide}>Hide Modal</button>`}
             </CodeBlock>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
@@ -398,15 +398,15 @@ const handleHide = async () => {
             alignItems: "start",
           }}
         >
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Use the <code>variant</code> attribute to control modal size:
               small, base, large, or full. The variant can be changed before the
               modal is shown, but after showing it can only be changed between
               small, base, and large.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
@@ -424,7 +424,7 @@ const handleHide = async () => {
             <Button onClick={() => setSizeModalOpen(true)}>
               Open Large Modal
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
@@ -439,14 +439,14 @@ const handleHide = async () => {
             alignItems: "start",
           }}
         >
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Full variant modals take up most of the screen, perfect for
               complex forms or detailed views. Use <code>variant="full"</code>{" "}
               to create a full-screen modal experience.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
@@ -462,7 +462,7 @@ const handleHide = async () => {
             <Button onClick={() => setFullModalOpen(true)}>
               Open Full Modal
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
@@ -477,14 +477,14 @@ const handleHide = async () => {
             alignItems: "start",
           }}
         >
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Add a title bar to your modal using the <code>ui-title-bar</code>{" "}
               element. The title bar appears at the top of the modal and can
               include action buttons.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
@@ -500,7 +500,7 @@ const handleHide = async () => {
             <Button onClick={() => setTitleModalOpen(true)}>
               Open Modal with Title
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
@@ -515,15 +515,15 @@ const handleHide = async () => {
             alignItems: "start",
           }}
         >
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Add action buttons to the title bar. Use{" "}
               <code>variant="primary"</code> for the primary action button.
               Buttons can have onClick handlers or use the <code>onclick</code>{" "}
               attribute.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
@@ -544,7 +544,7 @@ const handleHide = async () => {
             <Button onClick={() => setActionsModalOpen(true)}>
               Open Modal with Actions
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
@@ -559,14 +559,14 @@ const handleHide = async () => {
             alignItems: "start",
           }}
         >
-          <VerticalStack gap="4">
+          <Stack gap="4">
             <Text variant="bodySm" color="subdued">
               Load content from a URL using the <code>src</code> attribute. The
               content loads in an iframe. When using <code>src</code>, any
               children other than ui-title-bar and ui-save-bar are ignored.
             </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
+          </Stack>
+          <Stack gap="4">
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
@@ -581,7 +581,7 @@ const handleHide = async () => {
             <Button onClick={() => setSrcModalOpen(true)}>
               Open Modal with src
             </Button>
-          </VerticalStack>
+          </Stack>
         </div>
       </Card>
 
@@ -665,6 +665,6 @@ const handleHide = async () => {
           <button onClick={() => setSrcModalOpen(false)}>Close</button>
         </ui-title-bar>
       </ui-modal>
-    </VerticalStack>
+    </Stack>
   );
 }

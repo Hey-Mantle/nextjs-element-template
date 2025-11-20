@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Link, Text, VerticalStack } from "@heymantle/litho";
+import { Card, Link, Stack, Text } from "@heymantle/litho";
 import Image from "next/image";
 
 interface DocCard {
@@ -92,7 +92,7 @@ const docSections: DocSection[] = [
 
 export default function DocsCardGrid() {
   return (
-    <VerticalStack gap="8">
+    <Stack gap="8">
       {docSections.map((section) => (
         <div key={section.title}>
           <Text variant="headingLg" fontWeight="semibold" className="mb-4">
@@ -102,7 +102,7 @@ export default function DocsCardGrid() {
             {section.cards.map((card) => {
               const CardContent = (
                 <Card className="h-full hover:shadow-lg transition-shadow">
-                  <VerticalStack gap="4">
+                  <Stack gap="4">
                     {/* Preview Image */}
                     <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-md flex items-center justify-center overflow-hidden">
                       {card.image ? (
@@ -129,7 +129,7 @@ export default function DocsCardGrid() {
                     <Text variant="bodySm" color="subdued">
                       {card.description}
                     </Text>
-                  </VerticalStack>
+                  </Stack>
                 </Card>
               );
 
@@ -156,7 +156,7 @@ export default function DocsCardGrid() {
           </div>
         </div>
       ))}
-    </VerticalStack>
+    </Stack>
   );
 }
 
