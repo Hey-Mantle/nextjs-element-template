@@ -17,11 +17,16 @@ declare module "react" {
         HTMLElement
       > & {
         title?: string;
+        subtitle?: string;
+        backAction?: (() => void) | string;
       };
       "ui-save-bar": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
-      >;
+      > & {
+        visible?: boolean;
+        message?: string;
+      };
       "ui-nav-menu": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement

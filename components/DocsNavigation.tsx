@@ -16,35 +16,69 @@ export default function DocsNavigation() {
       <a href="/" rel="home">
         Dashboard
       </a>
-      <a href="/docs/authentication" active={isActive("/docs/authentication")}>
+      <a
+        href="/docs/authentication"
+        {...(isActive("/docs/authentication") && { active: "" })}
+      >
         Authentication
       </a>
-      <a href="/docs/web-components" active={isActive("/docs/web-components")}>
-        Web Components
+      <a
+        href="/docs/web-components/modal"
+        {...(isActive("/docs/web-components/modal") && { active: "" })}
+      >
+        ui-modal
       </a>
-      <a href="/docs/web-components/modal" active={isActive("/docs/web-components/modal")}>
-        • ui-modal
+      <a
+        href="/docs/web-components/title-bar"
+        {...(isActive("/docs/web-components/title-bar") && { active: "" })}
+      >
+        ui-title-bar
       </a>
-      <a href="/docs/web-components/title-bar" active={isActive("/docs/web-components/title-bar")}>
-        • ui-title-bar
+      <a
+        href="/docs/web-components/save-bar"
+        {...(isActive("/docs/web-components/save-bar") && { active: "" })}
+      >
+        ui-save-bar
       </a>
-      <a href="/docs/web-components/save-bar" active={isActive("/docs/web-components/save-bar")}>
-        • ui-save-bar
+      <a
+        href="/docs/web-components/nav-menu"
+        {...(isActive("/docs/web-components/nav-menu") && { active: "" })}
+      >
+        ui-nav-menu
       </a>
-      <a href="/docs/web-components/nav-menu" active={isActive("/docs/web-components/nav-menu")}>
-        • ui-nav-menu
-      </a>
-      <a href="/docs/navigation" active={isActive("/docs/navigation")}>
+      <a
+        href="/docs/navigation"
+        {...(isActive("/docs/navigation") && { active: "" })}
+      >
         Navigation
       </a>
-      <a href="/docs/toasts" active={isActive("/docs/toasts")}>
+      <a href="/docs/toasts" {...(isActive("/docs/toasts") && { active: "" })}>
         Toast Notifications
       </a>
-      <a href="/docs/ui-hooks" active={isActive("/docs/ui-hooks")}>
-        UI Hooks & Custom Data
+      <a
+        href="/docs/ui-hooks"
+        {...(isActive("/docs/ui-hooks") && { active: "" })}
+      >
+        UI Hooks
       </a>
-      <a href="/docs/api-reference" active={isActive("/docs/api-reference")}>
-        API Reference
+      <a
+        href="/docs/custom-data"
+        {...(isActive("/docs/custom-data") && { active: "" })}
+      >
+        Custom Data
+      </a>
+      <a
+        href="/docs/api-reference"
+        {...(isActive("/docs/api-reference") && { active: "" })}
+      >
+        App Bridge API Reference
+      </a>
+      <a
+        href="https://coreapi.heymantle.dev/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Core API Reference
       </a>
     </ui-nav-menu>
   );

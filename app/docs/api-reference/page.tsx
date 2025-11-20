@@ -1,11 +1,20 @@
-import { Page } from "@heymantle/litho";
+"use client";
+
+import AppPage from "@/components/AppPage";
 import APIReferenceDocs from "@/components/docs/APIReferenceDocs";
+import { useRouter } from "next/navigation";
 
 export default function APIReferencePage() {
+  const router = useRouter();
+
   return (
-    <Page title="API Reference" subtitle="Complete reference for all App Bridge methods" fullWidth>
+    <AppPage
+      title="API Reference"
+      subtitle="Complete reference for all App Bridge methods"
+      backAction={() => router.push("/")}
+      fullWidth
+    >
       <APIReferenceDocs />
-    </Page>
+    </AppPage>
   );
 }
-

@@ -1,15 +1,8 @@
 "use client";
 
-import { useAppBridge } from "@heymantle/app-bridge-react";
-import {
-  Button,
-  Card,
-  HorizontalStack,
-  Link,
-  Text,
-  VerticalStack,
-} from "@heymantle/litho";
 import CodeBlock from "@/components/CodeBlock";
+import { useAppBridge } from "@heymantle/app-bridge-react";
+import { Card, Text, VerticalStack } from "@heymantle/litho";
 
 export default function NavigationDocs() {
   const { mantle, isReady } = useAppBridge();
@@ -21,32 +14,18 @@ export default function NavigationDocs() {
 
   return (
     <VerticalStack gap="6" className="w-full">
-      {/* Overview */}
-      <Card title="Overview" padded>
-        <Text variant="bodyMd">
-          Mantle automatically tracks navigation within your Element to keep URLs synchronized.
-          When users navigate in your app, Mantle updates the parent URL to reflect the current
-          location.
-        </Text>
-      </Card>
-
       {/* Anchor Tags */}
       <Card title="Anchor Tags" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodySm" color="subdued">
-              Regular anchor tags work automatically. Mantle intercepts clicks and updates both the
-              iframe URL and the parent URL.
+              Regular anchor tags work automatically. Mantle intercepts clicks
+              and updates both the iframe URL and the parent URL.
             </Text>
-            <HorizontalStack gap="2">
-              <Link url="/docs/authentication">Authentication Docs</Link>
-              <Link url="/docs/web-components">Web Components</Link>
-              <Link url="/docs/toasts">Toast Notifications</Link>
-            </HorizontalStack>
           </VerticalStack>
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`// Regular anchor tags work automatically
+              {`// Regular anchor tags work automatically
 <Link url="/docs/authentication">Authentication</Link>
 <a href="/docs/web-components">Web Components</a>`}
             </CodeBlock>
@@ -59,16 +38,13 @@ export default function NavigationDocs() {
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodySm" color="subdued">
-              Use <code>mantle.setPath()</code> to navigate programmatically. This updates both the
-              iframe and parent URLs.
+              Use <code>mantle.setPath()</code> to navigate programmatically.
+              This updates both the iframe and parent URLs.
             </Text>
-            <Button onClick={handleProgrammaticNavigation} disabled={!isReady}>
-              Navigate Programmatically
-            </Button>
           </VerticalStack>
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`import { useAppBridge } from '@heymantle/app-bridge-react';
+              {`import { useAppBridge } from '@heymantle/app-bridge-react';
 
 function MyComponent() {
   const { mantle, isReady } = useAppBridge();
@@ -90,13 +66,14 @@ function MyComponent() {
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodySm" color="subdued">
-              Extend Next.js <code>useRouter</code> to automatically sync navigation with Mantle.
-              This ensures URLs stay synchronized when using Next.js router methods.
+              Extend Next.js <code>useRouter</code> to automatically sync
+              navigation with Mantle. This ensures URLs stay synchronized when
+              using Next.js router methods.
             </Text>
           </VerticalStack>
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`// hooks/useMantleRouter.ts
+              {`// hooks/useMantleRouter.ts
 import { useRouter as useNextRouter } from 'next/navigation';
 import { useAppBridge } from '@heymantle/app-bridge-react';
 import { useEffect } from 'react';
@@ -148,13 +125,13 @@ function MyComponent() {
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodySm" color="subdued">
-              Mantle automatically tracks navigation events using the History API. You can also use
-              the Navigation API for more control.
+              Mantle automatically tracks navigation events using the History
+              API. You can also use the Navigation API for more control.
             </Text>
           </VerticalStack>
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`// Mantle automatically tracks these:
+              {`// Mantle automatically tracks these:
 history.pushState(null, '', '/new-path');
 history.replaceState(null, '', '/new-path');
 
@@ -175,10 +152,12 @@ mantle.setPath('/new-path');`}
             • Use <code>mantle.setPath()</code> for programmatic navigation
           </Text>
           <Text variant="bodyMd">
-            • Extend your router (Next.js, React Router, etc.) to sync with Mantle
+            • Extend your router (Next.js, React Router, etc.) to sync with
+            Mantle
           </Text>
           <Text variant="bodyMd">
-            • Keep URLs clean and meaningful - they appear in the parent Mantle window
+            • Keep URLs clean and meaningful - they appear in the parent Mantle
+            window
           </Text>
           <Text variant="bodyMd">
             • Avoid hash-based routing (#) - use path-based routing instead

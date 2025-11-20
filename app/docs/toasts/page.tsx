@@ -1,11 +1,20 @@
-import { Page } from "@heymantle/litho";
+"use client";
+
+import AppPage from "@/components/AppPage";
 import ToastDocs from "@/components/docs/ToastDocs";
+import { useRouter } from "next/navigation";
 
 export default function ToastPage() {
+  const router = useRouter();
+
   return (
-    <Page title="Toast Notifications" subtitle="Show success and error messages" fullWidth>
+    <AppPage
+      title="Toast Notifications"
+      subtitle="Show success and error messages"
+      backAction={() => router.push("/")}
+      fullWidth
+    >
       <ToastDocs />
-    </Page>
+    </AppPage>
   );
 }
-

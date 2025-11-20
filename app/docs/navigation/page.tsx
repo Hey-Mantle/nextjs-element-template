@@ -1,11 +1,20 @@
-import { Page } from "@heymantle/litho";
+"use client";
+
+import AppPage from "@/components/AppPage";
 import NavigationDocs from "@/components/docs/NavigationDocs";
+import { useRouter } from "next/navigation";
 
 export default function NavigationPage() {
+  const router = useRouter();
+
   return (
-    <Page title="Navigation" subtitle="Keep URLs synchronized with Mantle" fullWidth>
+    <AppPage
+      title="Navigation"
+      subtitle="Keep URLs synchronized with Mantle"
+      backAction={() => router.push("/")}
+      fullWidth
+    >
       <NavigationDocs />
-    </Page>
+    </AppPage>
   );
 }
-

@@ -1,16 +1,12 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  Text,
-  VerticalStack,
-} from "@heymantle/litho";
 import CodeBlock from "@/components/CodeBlock";
+import { Button, Card, Text, VerticalStack } from "@heymantle/litho";
 import { useState } from "react";
 
 export default function SaveBarDocs() {
-  const [saveBarVisible, setSaveBarVisible] = useState(false);
+  const [showSaveBar1, setShowSaveBar1] = useState(false);
+  const [saveBarVisible1, setSaveBarVisible1] = useState(false);
 
   return (
     <VerticalStack gap="6" className="w-full">
@@ -19,10 +15,12 @@ export default function SaveBarDocs() {
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodyMd">
-              The <code>ui-save-bar</code> element is available for use in your app. It configures a save bar to display in the Mantle interface.
+              The <code>ui-save-bar</code> element is available for use in your
+              app. It configures a save bar to display in the Mantle interface.
             </Text>
             <Text variant="bodyMd">
-              The save bar appears at the bottom of the page when there are unsaved changes. It provides actions to save or discard changes.
+              The save bar appears at the bottom of the page when there are
+              unsaved changes. It provides actions to save or discard changes.
             </Text>
 
             <VerticalStack gap="4" className="mt-4">
@@ -34,7 +32,8 @@ export default function SaveBarDocs() {
                   HTMLCollection
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
-                  Button elements are rendered as actions in the save bar. Typically includes a "Save" button and a "Discard" button.
+                  Button elements are rendered as actions in the save bar.
+                  Typically includes a "Save" button and a "Discard" button.
                 </Text>
               </div>
 
@@ -46,7 +45,8 @@ export default function SaveBarDocs() {
                   boolean
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
-                  Boolean to control visibility. Set to <code>true</code> when there are unsaved changes.
+                  Boolean to control visibility. Set to <code>true</code> when
+                  there are unsaved changes.
                 </Text>
               </div>
 
@@ -58,7 +58,8 @@ export default function SaveBarDocs() {
                   string (optional)
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
-                  Message to display in the save bar. Defaults to a standard unsaved changes message if not provided.
+                  Message to display in the save bar. Defaults to a standard
+                  unsaved changes message if not provided.
                 </Text>
               </div>
             </VerticalStack>
@@ -66,16 +67,50 @@ export default function SaveBarDocs() {
 
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`const [hasChanges, setHasChanges] = useState(false);
+              {`const [hasChanges, setHasChanges] = useState(false);
 
 <ui-save-bar visible={hasChanges} message="You have unsaved changes">
   <button variant="primary" onClick={handleSave}>Save</button>
   <button onClick={handleDiscard}>Discard</button>
 </ui-save-bar>`}
             </CodeBlock>
-            <Button onClick={() => setSaveBarVisible(true)} className="mt-2">
-              Show Save Bar
+            <Button
+              onClick={() => {
+                if (!showSaveBar1) {
+                  setShowSaveBar1(true);
+                  // Use setTimeout to ensure component is mounted before setting visible
+                  setTimeout(() => setSaveBarVisible1(true), 0);
+                } else {
+                  setSaveBarVisible1(!saveBarVisible1);
+                }
+              }}
+            >
+              {saveBarVisible1 ? "Hide" : "Show"} Save Bar
             </Button>
+            {showSaveBar1 && (
+              <ui-save-bar
+                visible={saveBarVisible1}
+                message="You have unsaved changes"
+              >
+                <button
+                  {...({ variant: "primary" } as any)}
+                  onClick={() => {
+                    setSaveBarVisible1(false);
+                    setShowSaveBar1(false);
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setSaveBarVisible1(false);
+                    setShowSaveBar1(false);
+                  }}
+                >
+                  Discard
+                </button>
+              </ui-save-bar>
+            )}
           </VerticalStack>
         </div>
       </Card>
@@ -85,7 +120,8 @@ export default function SaveBarDocs() {
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodyMd">
-              The <code>ui-save-bar</code> element provides instance methods to control the save bar.
+              The <code>ui-save-bar</code> element provides instance methods to
+              control the save bar.
             </Text>
 
             <VerticalStack gap="4" className="mt-4">
@@ -129,7 +165,7 @@ export default function SaveBarDocs() {
 
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`import { useRef } from 'react';
+              {`import { useRef } from 'react';
 
 const saveBarRef = useRef<HTMLUISaveBarElement>(null);
 
@@ -145,53 +181,6 @@ saveBarRef.current?.setMessage('Custom message');
           </VerticalStack>
         </div>
       </Card>
-
-      {/* Save Bar with Form */}
-      <Card title="Save Bar with Form" padded>
-        <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <VerticalStack gap="4">
-            <Text variant="bodySm" color="subdued">
-              Use the save bar with forms to indicate unsaved changes. The save bar automatically appears when form values change.
-            </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
-            <CodeBlock language="tsx">
-{`function MyForm() {
-  const [hasChanges, setHasChanges] = useState(false);
-
-  return (
-    <>
-      <form
-        onChange={() => setHasChanges(true)}
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSave();
-          setHasChanges(false);
-        }}
-      >
-        <input name="name" />
-        <input name="email" />
-      </form>
-
-      <ui-save-bar visible={hasChanges}>
-        <button variant="primary" type="submit">Save</button>
-        <button onClick={() => setHasChanges(false)}>Discard</button>
-      </ui-save-bar>
-    </>
-  );
-}`}
-            </CodeBlock>
-          </VerticalStack>
-        </div>
-      </Card>
-
-      {/* Live Example */}
-      <ui-save-bar visible={saveBarVisible} message="You have unsaved changes">
-        <button variant="primary" onClick={() => setSaveBarVisible(false)}>
-          Save
-        </button>
-        <button onClick={() => setSaveBarVisible(false)}>Discard</button>
-      </ui-save-bar>
     </VerticalStack>
   );
 }

@@ -7,9 +7,8 @@ import { useEffect, useRef, useState } from "react";
 export default function ModalDocs() {
   const [basicModalOpen, setBasicModalOpen] = useState(false);
   const [largeModalOpen, setLargeModalOpen] = useState(false);
-  const [maxModalOpen, setMaxModalOpen] = useState(false);
+  const [fullModalOpen, setFullModalOpen] = useState(false);
   const [sizeModalOpen, setSizeModalOpen] = useState(false);
-  const [formModalOpen, setFormModalOpen] = useState(false);
   const [titleModalOpen, setTitleModalOpen] = useState(false);
   const [actionsModalOpen, setActionsModalOpen] = useState(false);
   const [srcModalOpen, setSrcModalOpen] = useState(false);
@@ -18,8 +17,7 @@ export default function ModalDocs() {
   const basicModalRef = useRef<HTMLElement>(null);
   const largeModalRef = useRef<HTMLElement>(null);
   const sizeModalRef = useRef<HTMLElement>(null);
-  const maxModalRef = useRef<HTMLElement>(null);
-  const formModalRef = useRef<HTMLElement>(null);
+  const fullModalRef = useRef<HTMLElement>(null);
   const titleModalRef = useRef<HTMLElement>(null);
   const actionsModalRef = useRef<HTMLElement>(null);
   const srcModalRef = useRef<HTMLElement>(null);
@@ -61,26 +59,15 @@ export default function ModalDocs() {
   }, [sizeModalOpen]);
 
   useEffect(() => {
-    const modal = maxModalRef.current || document.getElementById("max-modal");
+    const modal = fullModalRef.current || document.getElementById("full-modal");
     if (modal) {
-      if (maxModalOpen && !modal.hasAttribute("open")) {
+      if (fullModalOpen && !modal.hasAttribute("open")) {
         modal.setAttribute("open", "");
-      } else if (!maxModalOpen && modal.hasAttribute("open")) {
+      } else if (!fullModalOpen && modal.hasAttribute("open")) {
         modal.removeAttribute("open");
       }
     }
-  }, [maxModalOpen]);
-
-  useEffect(() => {
-    const modal = formModalRef.current || document.getElementById("form-modal");
-    if (modal) {
-      if (formModalOpen && !modal.hasAttribute("open")) {
-        modal.setAttribute("open", "");
-      } else if (!formModalOpen && modal.hasAttribute("open")) {
-        modal.removeAttribute("open");
-      }
-    }
-  }, [formModalOpen]);
+  }, [fullModalOpen]);
 
   useEffect(() => {
     const modal =
@@ -126,8 +113,7 @@ export default function ModalDocs() {
       if (modalId === "basic-modal") setBasicModalOpen(false);
       else if (modalId === "large-modal") setLargeModalOpen(false);
       else if (modalId === "size-modal") setSizeModalOpen(false);
-      else if (modalId === "max-modal") setMaxModalOpen(false);
-      else if (modalId === "form-modal") setFormModalOpen(false);
+      else if (modalId === "full-modal") setFullModalOpen(false);
       else if (modalId === "title-modal") setTitleModalOpen(false);
       else if (modalId === "actions-modal") setActionsModalOpen(false);
       else if (modalId === "src-modal") setSrcModalOpen(false);
@@ -211,7 +197,7 @@ export default function ModalDocs() {
                   variant
                 </Text>
                 <Text variant="bodySm" color="subdued">
-                  'small' | 'base' | 'large' | 'max'
+                  'small' | 'base' | 'large' | 'full'
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
                   Default: "base"
@@ -245,10 +231,12 @@ export default function ModalDocs() {
               {`const [open, setOpen] = useState(false);
 
 <ui-modal id="my-modal" open={open}>
-  <p>Message</p>
-  <ui-title-bar title="Title">
+  <div>
+    <p className="p-2 pl-4">This is modal content</p>
+  </div>
+  <ui-title-bar title="Modal Title">
     <button variant="primary">Label</button>
-    <button onClick={() => setOpen(false)}>Label</button>
+    <button onClick={() => setOpen(false)}>Close</button>
   </ui-title-bar>
 </ui-modal>
 
@@ -395,7 +383,6 @@ const handleHide = async () => {
 <button onClick={handleShow}>Show Modal</button>
 <button onClick={handleHide}>Hide Modal</button>`}
             </CodeBlock>
-            <Button onClick={() => setLargeModalOpen(true)}>Show Modal</Button>
           </VerticalStack>
         </div>
       </Card>
@@ -414,7 +401,7 @@ const handleHide = async () => {
           <VerticalStack gap="4">
             <Text variant="bodySm" color="subdued">
               Use the <code>variant</code> attribute to control modal size:
-              small, base, large, or max. The variant can be changed before the
+              small, base, large, or full. The variant can be changed before the
               modal is shown, but after showing it can only be changed between
               small, base, and large.
             </Text>
@@ -424,7 +411,12 @@ const handleHide = async () => {
               {`const [open, setOpen] = useState(false);
 
 <ui-modal id="my-modal" variant="large" open={open}>
-  <p className="p-2 pl-4">Hello, World!</p>
+  <div>
+    <p className="p-2 pl-4">Hello, World!</p>
+  </div>
+  <ui-title-bar title="Large Modal">
+    <button onClick={() => setOpen(false)}>Close</button>
+  </ui-title-bar>
 </ui-modal>
 
 <button onClick={() => setOpen(true)}>Open Modal</button>`}
@@ -436,8 +428,8 @@ const handleHide = async () => {
         </div>
       </Card>
 
-      {/* Opening a max size Modal */}
-      <Card title="Opening a max size Modal" padded>
+      {/* Full page Modal */}
+      <Card title="Full page Modal" padded>
         <div
           style={{
             display: "grid",
@@ -449,72 +441,26 @@ const handleHide = async () => {
         >
           <VerticalStack gap="4">
             <Text variant="bodySm" color="subdued">
-              Max variant modals take up most of the screen, perfect for complex
-              forms or detailed views. Use <code>variant="max"</code> to create
-              a full-screen modal experience.
+              Full variant modals take up most of the screen, perfect for
+              complex forms or detailed views. Use <code>variant="full"</code>{" "}
+              to create a full-screen modal experience.
             </Text>
           </VerticalStack>
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
-<ui-modal id="my-modal" variant="max" open={open}>
-  <div></div>
-  <ui-title-bar>
-    <button variant="primary">Primary action</button>
-    <button onClick={() => setOpen(false)}>Secondary action</button>
+<ui-modal id="my-modal" variant="full" open={open}>
+  <p className="p-2 pl-4">A full size modal!</p>
+  <ui-title-bar title="Full Modal">
+    <button onClick={() => setOpen(false)}>Close</button>
   </ui-title-bar>
 </ui-modal>
 
 <button onClick={() => setOpen(true)}>Open Modal</button>`}
             </CodeBlock>
-            <Button onClick={() => setMaxModalOpen(true)}>
-              Open Max Modal
-            </Button>
-          </VerticalStack>
-        </div>
-      </Card>
-
-      {/* Using a form in a Modal */}
-      <Card title="Using a form in a Modal" padded>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "1.5rem",
-            width: "100%",
-            alignItems: "start",
-          }}
-        >
-          <VerticalStack gap="4">
-            <Text variant="bodySm" color="subdued">
-              Modals work great with forms. Use the <code>data-save-bar</code>{" "}
-              attribute on your form to automatically integrate with the save
-              bar component.
-            </Text>
-          </VerticalStack>
-          <VerticalStack gap="4">
-            <CodeBlock language="tsx">
-              {`const [open, setOpen] = useState(false);
-
-<ui-modal id="my-modal" variant="max" open={open}>
-  <form data-save-bar>
-    <label>
-      Name:
-      <input name="submitted-name" autocomplete="name" />
-    </label>
-    <button>Save</button>
-  </form>
-  <ui-title-bar>
-    <button variant="primary">Save</button>
-    <button onClick={() => setOpen(false)}>Cancel</button>
-  </ui-title-bar>
-</ui-modal>
-
-<button onClick={() => setOpen(true)}>Open Modal</button>`}
-            </CodeBlock>
-            <Button onClick={() => setFormModalOpen(true)}>
-              Open Form Modal
+            <Button onClick={() => setFullModalOpen(true)}>
+              Open Full Modal
             </Button>
           </VerticalStack>
         </div>
@@ -543,7 +489,9 @@ const handleHide = async () => {
               {`const [open, setOpen] = useState(false);
 
 <ui-modal id="my-modal" open={open}>
-  <p className="p-2 pl-4">Hello, World!</p>
+  <div>
+    <p className="p-2 pl-4">A modal with a title!</p>
+  </div>
   <ui-title-bar title="My Modal"></ui-title-bar>
 </ui-modal>
 
@@ -580,9 +528,13 @@ const handleHide = async () => {
               {`const [open, setOpen] = useState(false);
 
 <ui-modal id="my-modal" open={open}>
-  <p className="p-2 pl-4">Hello, World!</p>
-  <ui-title-bar>
-    <button variant="primary" onClick={() => console.log('Saving')}>Save</button>
+  <div>
+    <p className="p-2 pl-4">A modal with actions!</p>
+  </div>
+  <ui-title-bar title="Modal with Actions">
+    <button variant="primary" onClick={() => console.log("Saving")}>
+      Save
+    </button>
     <button onClick={() => setOpen(false)}>Cancel</button>
   </ui-title-bar>
 </ui-modal>
@@ -618,10 +570,9 @@ const handleHide = async () => {
             <CodeBlock language="tsx">
               {`const [open, setOpen] = useState(false);
 
-<ui-modal id="my-modal" src="/my-route" variant="max" open={open}>
-  <ui-title-bar title="Title">
-    <button variant="primary">Label</button>
-    <button onClick={() => setOpen(false)}>Label</button>
+<ui-modal id="my-modal" src="/" variant="large" open={open}>
+  <ui-title-bar title="Modal with src">
+    <button onClick={() => setOpen(false)}>Close</button>
   </ui-title-bar>
 </ui-modal>
 
@@ -669,55 +620,20 @@ const handleHide = async () => {
       </ui-modal>
 
       <ui-modal
-        ref={maxModalRef}
-        id="max-modal"
-        variant="max"
-        open={maxModalOpen}
+        ref={fullModalRef}
+        id="full-modal"
+        variant="full"
+        open={fullModalOpen}
       >
-        <div>
-          <p>
-            Max variant modals take up most of the screen, perfect for complex
-            forms or detailed views.
-          </p>
-        </div>
-        <ui-title-bar title="Max Modal">
-          <button variant="primary">Primary action</button>
-          <button onClick={() => setMaxModalOpen(false)}>
-            Secondary action
-          </button>
-        </ui-title-bar>
-      </ui-modal>
-
-      <ui-modal
-        ref={formModalRef}
-        id="form-modal"
-        variant="max"
-        open={formModalOpen}
-      >
-        <form data-save-bar>
-          <div style={{ padding: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>
-              Name:
-              <input
-                name="submitted-name"
-                autoComplete="name"
-                style={{ marginLeft: "0.5rem", padding: "0.25rem" }}
-              />
-            </label>
-            <button type="submit" style={{ marginTop: "1rem" }}>
-              Save
-            </button>
-          </div>
-        </form>
-        <ui-title-bar title="Form Modal">
-          <button variant="primary">Save</button>
-          <button onClick={() => setFormModalOpen(false)}>Cancel</button>
+        <p className="p-2 pl-4">A full size modal!</p>
+        <ui-title-bar title="Full Modal">
+          <button onClick={() => setFullModalOpen(false)}>Close</button>
         </ui-title-bar>
       </ui-modal>
 
       <ui-modal ref={titleModalRef} id="title-modal" open={titleModalOpen}>
         <div>
-          <p className="p-2 pl-4">Hello, World!</p>
+          <p className="p-2 pl-4">A modal with a title!</p>
         </div>
         <ui-title-bar title="My Modal"></ui-title-bar>
       </ui-modal>
@@ -728,7 +644,7 @@ const handleHide = async () => {
         open={actionsModalOpen}
       >
         <div>
-          <p className="p-2 pl-4">Hello, World!</p>
+          <p className="p-2 pl-4">A modal with actions!</p>
         </div>
         <ui-title-bar title="Modal with Actions">
           <button variant="primary" onClick={() => console.log("Saving")}>
@@ -741,12 +657,11 @@ const handleHide = async () => {
       <ui-modal
         ref={srcModalRef}
         id="src-modal"
-        src="/docs/web-components/modal"
-        variant="max"
+        src="/modal-example"
+        variant="large"
         open={srcModalOpen}
       >
         <ui-title-bar title="Modal with src">
-          <button variant="primary">Label</button>
           <button onClick={() => setSrcModalOpen(false)}>Close</button>
         </ui-title-bar>
       </ui-modal>

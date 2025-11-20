@@ -1,8 +1,7 @@
-import AppBridgeDebug from "@/components/AppBridgeDebug";
-import DashboardContent from "@/components/DashboardContent";
-import PageHeader from "@/components/PageHeader";
+import AppPage from "@/components/AppPage";
+import DocsCardGrid from "@/components/DocsCardGrid";
 import { prisma } from "@/lib/prisma";
-import { Layout, Page, VerticalStack } from "@heymantle/litho";
+import { Layout, VerticalStack } from "@heymantle/litho";
 import { redirect } from "next/navigation";
 
 export default async function Home({
@@ -78,14 +77,16 @@ export default async function Home({
   }
 
   return (
-    <Page title="" subtitle="" fullWidth>
+    <AppPage
+      title="Mantle Element Documentation"
+      subtitle="Live documentation and examples for Mantle Elements"
+      fullWidth
+    >
       <Layout>
         <VerticalStack gap="6">
-          <PageHeader />
-          <DashboardContent />
+          <DocsCardGrid />
         </VerticalStack>
       </Layout>
-      <AppBridgeDebug />
-    </Page>
+    </AppPage>
   );
 }

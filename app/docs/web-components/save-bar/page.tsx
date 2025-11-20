@@ -1,11 +1,20 @@
-import { Page } from "@heymantle/litho";
+"use client";
+
+import AppPage from "@/components/AppPage";
 import SaveBarDocs from "@/components/docs/SaveBarDocs";
+import { useRouter } from "next/navigation";
 
 export default function SaveBarPage() {
+  const router = useRouter();
+
   return (
-    <Page title="ui-save-bar" subtitle="Unsaved changes indicator" fullWidth>
+    <AppPage
+      title="ui-save-bar"
+      subtitle="Unsaved changes indicator"
+      backAction={() => router.push("/")}
+      fullWidth
+    >
       <SaveBarDocs />
-    </Page>
+    </AppPage>
   );
 }
-

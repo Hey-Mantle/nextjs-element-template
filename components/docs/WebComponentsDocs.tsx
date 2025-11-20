@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Card,
   HorizontalStack,
@@ -7,7 +6,6 @@ import {
   Text,
   VerticalStack,
 } from "@heymantle/litho";
-import CodeBlock from "@/components/CodeBlock";
 
 export default function WebComponentsDocs() {
   return (
@@ -17,8 +15,9 @@ export default function WebComponentsDocs() {
         <VerticalStack gap="4">
           <Text variant="headingMd">Overview</Text>
           <Text variant="bodyMd">
-            Mantle provides web components that integrate seamlessly with the Mantle UI. These
-            components are invisible in your iframe but render in the parent Mantle window.
+            Mantle provides web components that integrate seamlessly with the
+            Mantle UI. These components are invisible in your iframe but render
+            in the parent Mantle window.
           </Text>
         </VerticalStack>
       </Card>
@@ -74,71 +73,6 @@ export default function WebComponentsDocs() {
           </VerticalStack>
         </VerticalStack>
       </Card>
-
-      {/* Basic Usage */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">Basic Usage</Text>
-          <Text variant="bodyMd">
-            All web components work the same way: add them to your JSX and they automatically
-            communicate with the parent Mantle window.
-          </Text>
-
-          <CodeBlock language="tsx">
-{`import { useEffect, useState } from 'react';
-
-export default function MyPage() {
-  const [modalOpen, setModalOpen] = useState(false);
-
-  return (
-    <>
-      <ui-title-bar title="My Page">
-        <button variant="primary" onClick={() => setModalOpen(true)}>
-          Open Modal
-        </button>
-      </ui-title-bar>
-
-      <ui-modal id="my-modal" open={modalOpen}>
-        <div>
-          <p>Modal content here</p>
-          <button onClick={() => setModalOpen(false)}>Close</button>
-        </div>
-        <ui-title-bar title="Modal Title">
-          <button onClick={() => setModalOpen(false)}>Close</button>
-        </ui-title-bar>
-      </ui-modal>
-    </>
-  );
-}`}
-          </CodeBlock>
-        </VerticalStack>
-      </Card>
-
-      {/* React Integration */}
-      <Card>
-        <VerticalStack gap="4">
-          <Text variant="headingMd">React Integration</Text>
-          <Text variant="bodyMd">
-            Web components work seamlessly with React. Use state to control visibility and handle
-            events with React handlers.
-          </Text>
-
-          <CodeBlock language="tsx">
-{`// React state controls component visibility
-const [isOpen, setIsOpen] = useState(false);
-
-// Use React event handlers
-<ui-modal 
-  id="my-modal" 
-  open={isOpen}
-  onClose={() => setIsOpen(false)}
->
-  <div>Content</div>
-</ui-modal>`}
-          </CodeBlock>
-        </VerticalStack>
-      </Card>
     </VerticalStack>
   );
 }
-

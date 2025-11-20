@@ -1,11 +1,20 @@
-import { Page } from "@heymantle/litho";
+"use client";
+
+import AppPage from "@/components/AppPage";
 import UIHooksDocs from "@/components/docs/UIHooksDocs";
+import { useRouter } from "next/navigation";
 
 export default function UIHooksPage() {
+  const router = useRouter();
+
   return (
-    <Page title="UI Hooks & Custom Data" subtitle="Extend Mantle pages with custom actions and data" fullWidth>
+    <AppPage
+      title="UI Hooks"
+      subtitle="Add custom actions and links to Mantle pages"
+      backAction={() => router.push("/")}
+      fullWidth
+    >
       <UIHooksDocs />
-    </Page>
+    </AppPage>
   );
 }
-

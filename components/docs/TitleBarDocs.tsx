@@ -1,13 +1,16 @@
 "use client";
 
-import {
-  Card,
-  Text,
-  VerticalStack,
-} from "@heymantle/litho";
 import CodeBlock from "@/components/CodeBlock";
+import { Button, Card, Text, VerticalStack } from "@heymantle/litho";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function TitleBarDocs() {
+  const [showTitleBar1, setShowTitleBar1] = useState(false);
+  const [showTitleBar2, setShowTitleBar2] = useState(false);
+  const [showTitleBar3, setShowTitleBar3] = useState(false);
+  const router = useRouter();
+
   return (
     <VerticalStack gap="6" className="w-full">
       {/* ui-title-bar element */}
@@ -15,10 +18,12 @@ export default function TitleBarDocs() {
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodyMd">
-              The <code>ui-title-bar</code> element is available for use in your app. It configures a title bar to display in the Mantle interface.
+              The <code>ui-title-bar</code> element is available for use in your
+              app. It configures a title bar to display in the Mantle interface.
             </Text>
             <Text variant="bodyMd">
-              Title bars appear at the top of pages in Mantle. They can include a title, subtitle, back action, and action buttons.
+              Title bars appear at the top of pages in Mantle. They can include
+              a title, subtitle, back action, and action buttons.
             </Text>
 
             <VerticalStack gap="4" className="mt-4">
@@ -30,7 +35,8 @@ export default function TitleBarDocs() {
                   HTMLCollection
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
-                  Button elements are rendered as actions in the title bar. Use <code>variant="primary"</code> for primary actions.
+                  Button elements are rendered as actions in the title bar. Use{" "}
+                  <code>variant="primary"</code> for primary actions.
                 </Text>
               </div>
 
@@ -42,7 +48,8 @@ export default function TitleBarDocs() {
                   string
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
-                  The title of the title bar. Can also be set via <code>document.title</code>.
+                  The title of the title bar. Can also be set via{" "}
+                  <code>document.title</code>.
                 </Text>
               </div>
 
@@ -54,7 +61,8 @@ export default function TitleBarDocs() {
                   string (optional)
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
-                  The subtitle of the title bar. Provides additional context about the page.
+                  The subtitle of the title bar. Provides additional context
+                  about the page.
                 </Text>
               </div>
 
@@ -66,7 +74,9 @@ export default function TitleBarDocs() {
                   Function | string (optional)
                 </Text>
                 <Text variant="bodySm" color="subdued" className="mt-1">
-                  Function or string for back button. If provided, a back button will appear in the title bar. Can be a function callback or a URL string.
+                  Function or string for back button. If provided, a back button
+                  will appear in the title bar. Can be a function callback or a
+                  URL string.
                 </Text>
               </div>
             </VerticalStack>
@@ -74,11 +84,20 @@ export default function TitleBarDocs() {
 
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`<ui-title-bar title="My Page">
+              {`<ui-title-bar title="My Page">
   <button variant="primary">Save</button>
   <button>Cancel</button>
 </ui-title-bar>`}
             </CodeBlock>
+            <Button onClick={() => setShowTitleBar1(!showTitleBar1)}>
+              {showTitleBar1 ? "Hide" : "Show"} Title Bar
+            </Button>
+            {showTitleBar1 && (
+              <ui-title-bar title="My Page">
+                <button {...({ variant: "primary" } as any)}>Save</button>
+                <button>Cancel</button>
+              </ui-title-bar>
+            )}
           </VerticalStack>
         </div>
       </Card>
@@ -88,7 +107,8 @@ export default function TitleBarDocs() {
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodyMd">
-              The <code>ui-title-bar</code> element provides instance methods to control the title bar.
+              The <code>ui-title-bar</code> element provides instance methods to
+              control the title bar.
             </Text>
 
             <VerticalStack gap="4" className="mt-4">
@@ -120,7 +140,7 @@ export default function TitleBarDocs() {
 
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`import { useRef } from 'react';
+              {`import { useRef } from 'react';
 
 const titleBarRef = useRef<HTMLUITitleBarElement>(null);
 
@@ -145,10 +165,18 @@ titleBarRef.current?.setSubtitle('New Subtitle');
           </VerticalStack>
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`<ui-title-bar title="My Page" subtitle="Page description">
+              {`<ui-title-bar title="My Page" subtitle="Page description">
   <button variant="primary">Action</button>
 </ui-title-bar>`}
             </CodeBlock>
+            <Button onClick={() => setShowTitleBar2(!showTitleBar2)}>
+              {showTitleBar2 ? "Hide" : "Show"} Title Bar with Subtitle
+            </Button>
+            {showTitleBar2 && (
+              <ui-title-bar title="My Page" subtitle="Page description">
+                <button {...({ variant: "primary" } as any)}>Action</button>
+              </ui-title-bar>
+            )}
           </VerticalStack>
         </div>
       </Card>
@@ -158,31 +186,33 @@ titleBarRef.current?.setSubtitle('New Subtitle');
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <VerticalStack gap="4">
             <Text variant="bodySm" color="subdued">
-              Add a back button by providing a <code>backAction</code> prop. This can be a function or a URL string.
+              Add a back button by providing a <code>backAction</code> prop.
+              This can be a function or a URL string.
             </Text>
           </VerticalStack>
           <VerticalStack gap="4">
             <CodeBlock language="tsx">
-{`<ui-title-bar 
+              {`<ui-title-bar 
   title="Detail Page" 
-  backAction={() => router.back()}
+  backAction={() => alert("Back pressed!")}
 >
   <button variant="primary">Save</button>
 </ui-title-bar>`}
             </CodeBlock>
+            <Button onClick={() => setShowTitleBar3(!showTitleBar3)}>
+              {showTitleBar3 ? "Hide" : "Show"} Title Bar with Back Action
+            </Button>
+            {showTitleBar3 && (
+              <ui-title-bar
+                title="Detail Page"
+                backAction={() => alert("Back pressed!")}
+              >
+                <button {...({ variant: "primary" } as any)}>Save</button>
+              </ui-title-bar>
+            )}
           </VerticalStack>
         </div>
       </Card>
-
-      {/* Live Examples */}
-      <ui-title-bar title="My Page">
-        <button variant="primary">Save</button>
-        <button>Cancel</button>
-      </ui-title-bar>
-
-      <ui-title-bar title="My Page" subtitle="Page description">
-        <button variant="primary">Action</button>
-      </ui-title-bar>
     </VerticalStack>
   );
 }

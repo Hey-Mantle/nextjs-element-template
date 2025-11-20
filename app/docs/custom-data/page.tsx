@@ -1,20 +1,20 @@
 "use client";
 
 import AppPage from "@/components/AppPage";
-import NavMenuDocs from "@/components/docs/NavMenuDocs";
+import CustomDataDocs from "@/components/docs/CustomDataDocs";
 import { useRouter } from "next/navigation";
 
-export default function NavMenuPage() {
+export default function CustomDataPage() {
   const router = useRouter();
 
   return (
     <AppPage
-      title="ui-nav-menu"
-      subtitle="Navigation menus"
+      title="Custom Data"
+      subtitle="Store and retrieve custom data on Mantle resources"
       backAction={() => router.push("/")}
       fullWidth
     >
-      <NavMenuDocs />
+      <CustomDataDocs />
     </AppPage>
   );
 }

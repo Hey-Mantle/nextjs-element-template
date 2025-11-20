@@ -73,19 +73,26 @@ export default function MantleProviderWrapper({
     syncSessionAndGetCustomerApiToken();
   }, [isReady, mantle, organization, authenticatedFetch]);
 
-  // Don't render anything until App Bridge is ready and we have a session
-  if (!isReady || !mantle?.currentSession) {
+  // Show loading state while App Bridge initializes or while fetching session
+  // Don't return null as this can cause Next.js to think the page doesn't exist
+  if (!isReady || !mantle?.currentSession || isLoading) {
     return <div>Loading Mantle...</div>;
   }
 
-  // Show loading state while fetching the customer API token
-  if (isLoading) {
-    return <div>Loading Mantle...</div>;
-  }
-
-  // Show error state if we couldn't get the customer API token
+  // If we have an error or no customerApiToken, still render children
+  // This allows modal pages to work even when accessed directly (not in iframe)
+  // The children can handle their own error states if needed
   if (error || !customerApiToken) {
-    return <>{children}</>;
+    return (
+      <AppProvider
+        darkModeAvailable
+        darkModeStorageKey="nextjs-litho-dark-mode"
+        embedded={true}
+        onDarkModeChange={() => {}}
+      >
+        {children}
+      </AppProvider>
+    );
   }
 
   // Wrap children with AppProvider for Litho UI components
