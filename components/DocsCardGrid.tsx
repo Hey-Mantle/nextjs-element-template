@@ -8,6 +8,7 @@ interface DocCard {
   description: string;
   href: string;
   image?: string;
+  emoji?: string;
   external?: boolean;
 }
 
@@ -18,58 +19,67 @@ interface DocSection {
 
 const docSections: DocSection[] = [
   {
-    title: "Web Components",
-    cards: [
-      {
-        title: "ui-modal",
-        description: "Display modals and dialogs in the Mantle interface",
-        href: "/docs/web-components/modal",
-      },
-      {
-        title: "ui-title-bar",
-        description: "Page title bars with actions and navigation",
-        href: "/docs/web-components/title-bar",
-      },
-      {
-        title: "ui-save-bar",
-        description: "Unsaved changes indicator and save actions",
-        href: "/docs/web-components/save-bar",
-      },
-      {
-        title: "ui-nav-menu",
-        description: "Navigation menus for app structure",
-        href: "/docs/web-components/nav-menu",
-      },
-    ],
-  },
-  {
     title: "API",
     cards: [
       {
         title: "Authentication",
         description: "Client and server-side authentication patterns",
         href: "/docs/authentication",
+        image: "/images/authentication.png",
       },
       {
         title: "Navigation",
         description: "Programmatic navigation and routing",
         href: "/docs/navigation",
+        image: "/images/navigation.png",
       },
       {
         title: "Toast Notifications",
         description: "Display toast messages and notifications",
         href: "/docs/toasts",
+        image: "/images/toast.png",
       },
       {
         title: "API Reference",
         description: "Complete API documentation and endpoints",
         href: "/docs/api-reference",
+        image: "/images/api-reference.png",
       },
       {
         title: "Core API",
         description: "Mantle Core API reference documentation",
         href: "https://coreapi.heymantle.dev/reference/introduction",
         external: true,
+        image: "/images/core-api.png",
+      },
+    ],
+  },
+  {
+    title: "Web Components",
+    cards: [
+      {
+        title: "ui-modal",
+        description: "Display modals and dialogs in the Mantle interface",
+        href: "/docs/web-components/modal",
+        image: "/images/ui-modal.png",
+      },
+      {
+        title: "ui-title-bar",
+        description: "Page title bars with actions and navigation",
+        href: "/docs/web-components/title-bar",
+        image: "/images/ui-title-bar.png",
+      },
+      {
+        title: "ui-save-bar",
+        description: "Unsaved changes indicator and save actions",
+        href: "/docs/web-components/save-bar",
+        image: "/images/ui-save-bar.png",
+      },
+      {
+        title: "ui-nav-menu",
+        description: "Navigation menus for app structure",
+        href: "/docs/web-components/nav-menu",
+        image: "/images/ui-nav-menu.png",
       },
     ],
   },
@@ -80,11 +90,13 @@ const docSections: DocSection[] = [
         title: "UI Hooks",
         description: "Custom actions and links for Mantle pages",
         href: "/docs/ui-hooks",
+        image: "/images/ui-hooks.png",
       },
       {
         title: "Custom Data",
         description: "Store and retrieve custom data on Mantle resources",
         href: "/docs/custom-data",
+        image: "/images/custom-data.png",
       },
     ],
   },
@@ -116,6 +128,8 @@ export default function DocsCardGrid() {
                           height={200}
                           className="object-cover w-full h-full"
                         />
+                      ) : card.emoji ? (
+                        <div className="text-6xl">{card.emoji}</div>
                       ) : (
                         <div className="text-gray-400 text-4xl font-bold">
                           {card.title.charAt(0).toUpperCase()}
@@ -151,7 +165,7 @@ export default function DocsCardGrid() {
               }
 
               return (
-                <Link key={card.href} url={card.href} className="block h-full">
+                <Link key={card.href} url={card.href}>
                   {CardContent}
                 </Link>
               );
