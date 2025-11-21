@@ -88,83 +88,14 @@ export default function UIHooksDocs() {
         </div>
       </Card>
 
-      {/* Hook Context and Template Variables */}
-      <Card title="Template Variables" padded>
-        <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <Stack gap="4">
-            <Text variant="bodySm" color="subdued">
-              Use template variables in your hook configuration to access
-              resource data. Variables use double curly braces and can reference
-              properties from the hook context, including custom data.
-            </Text>
-          </Stack>
-          <Stack gap="4">
-            <CodeBlock language="json">
-              {`// Access resource properties
-"src": "/page?ticketId={{ ticket.id }}"
-"url": "{{ customer.email }}"
-
-// Access custom data
-"url": "{{ ticket.customData.github.issueUrl }}"
-"condition": "ticket.customData.github.issueUrl != null"
-
-// Access nested properties
-"src": "/page?customerId={{ ticket.customer.id }}"
-
-// Common template variables:
-// - ticket.id, ticket.customData.*
-// - customer.id, customer.email, customer.name
-// - organization.id`}
-            </CodeBlock>
-          </Stack>
-        </div>
-      </Card>
-
-      {/* Conditions */}
-      <Card title="Conditions" padded>
-        <div className="grid grid-cols-2 gap-6 w-full items-start">
-          <Stack gap="4">
-            <Text variant="bodySm" color="subdued">
-              Conditions control when hooks are displayed. Use comparison
-              operators (==, !=, &lt;, &gt;) and logical operators (&&, ||) to
-              create conditional logic based on resource properties or custom
-              data values.
-            </Text>
-          </Stack>
-          <Stack gap="4">
-            <CodeBlock language="json">
-              {`// Show hook only when custom data doesn't exist
-{
-  "condition": "ticket.customData.github.issueUrl == null"
-}
-
-// Show hook only when custom data exists
-{
-  "condition": "ticket.customData.github.issueUrl != null"
-}
-
-// Multiple conditions
-{
-  "condition": "ticket.status == 'open' && ticket.priority == 'high'"
-}
-
-// No condition - always show
-{
-  // Omit "condition" property
-}`}
-            </CodeBlock>
-          </Stack>
-        </div>
-      </Card>
-
       {/* Using UI Hooks in Your Element */}
-      <Card title="Using UI Hooks in Your Element" padded>
+      <Card title="Using UI Hook Data in Your Element's Action Code" padded>
         <div className="grid grid-cols-2 gap-6 w-full items-start">
           <Stack gap="4">
             <Text variant="bodySm" color="subdued">
-              In your Element, you can access hook context via URL params. When
-              Mantle opens your Element from a hook, it passes resourceId,
-              resourceType, and organizationId.
+              In your Action hook src, you can access hook context via URL
+              params. When Mantle opens your Element from a hook, it passes
+              resourceId, resourceType, and organizationId.
             </Text>
           </Stack>
           <Stack gap="4">
