@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "validate": "npm run type-check && npm run lint",
     "generate:mantle-api-types": "npx openapi-typescript ${SPEC_URL:-https://app.heymantle.com/openapi/core-api.json} -o ./lib/types/mantleApi.ts"
   },
   "dependencies": {
@@ -16,27 +18,27 @@
     "@heymantle/litho": "^0.0.10",
     "@heymantle/react": "^0.0.66",
     "@prisma/client": "^6.16.1",
+    "@tailwindcss/postcss": "^4.1.13",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "autoprefixer": "^10.4.16",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.5.3",
+    "openapi-fetch": "^0.10.6",
+    "openapi-typescript": "^7.4.2",
+    "postcss": "^8.4.31",
     "prisma": "^6.16.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-syntax-highlighter": "^16.1.0"
+    "react-syntax-highlighter": "^16.1.0",
+    "tailwindcss": "^4.1.13"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.13",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "autoprefixer": "^10.4.16",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.0.0",
-    "openapi-fetch": "^0.10.2",
-    "openapi-typescript": "^7.4.2",
-    "postcss": "^8.4.31",
-    "tailwindcss": "^4.1.13",
     "typescript": "^5.2.2"
   }
 }
