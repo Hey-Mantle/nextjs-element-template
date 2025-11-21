@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -eou pipefail
+
+# Converts ejson file to secrets manifest
+# all json items are converted to secrets, any items with a _ prefix have their _ stripped
+
+EJSON_FILE="$1"
+OUTPUT_FILE="$2"
+SECRET_NAME="$3"
+K8S_NAMESPACE="$4"
+
+if [[ -z "${SECRET_NAME}" ]]; then
+  echo "SECRET_NAME is required"
+  exit 1
+fi
+
+if [[ -z "${K8S_NAMESPACE}" ]]; then
+  echo "K8S_NAMESPACE is required"
+  exit 1
+fi
+# Check that the ejson file exists.
+if [[ ! -f "${EJSON_FILE}" ]]; then
+  echo "EJSON file not found at ${EJSON_FILE}"
+  exit 1
+fi
+
+# Create the Kubernetes secret manifest header
+cat > "${OUTPUT_FILE}" << EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${SECRET_NAME}
+  namespace: ${K8S_NAMESPACE}
+stringData:
+EOF
+
+# Process each key-value pair in the JSON directly from the decrypted output
+ejson decrypt "${EJSON_FILE}" | jq -r 'to_entries | .[] | "\(.key) \(.value)"' | while read -r key value; do
+  # skip _public_key
+  if [[ "${key}" == "_public_key" ]]; then
+    continue
+  fi
+
+  # strip _ prefix
+  if [[ "${key}" == _* ]]; then
+    key="${key#_}"
+  fi
+  
+  # Add the key-value pair to the secret manifest
+  echo "  ${key}: \"${value}\"" >> "${OUTPUT_FILE}"
+done
+
+echo "Successfully converted ${EJSON_FILE} to ${OUTPUT_FILE}"
+

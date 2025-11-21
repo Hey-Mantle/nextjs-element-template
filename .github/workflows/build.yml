@@ -1,0 +1,230 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set short git commit SHA
+        id: vars
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "COMMIT_SHORT_SHA=$calculatedSha" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "v1.27.1"
+        id: install
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Configure environment
+        run: |
+          # Install eksctl
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+          eksctl version
+
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+          AWS_REGION=${{ vars.AWS_REGION }}
+          CLUSTER_NAME=${{ vars.K8S_CLUSTER_NAME }}
+          K8S_NAMESPACE=${{ vars.K8S_NAMESPACE }}
+          K8S_WEB_SERVICE_TYPE=${{ vars.K8S_WEB_SERVICE_TYPE }}
+          K8S_WEB_SERVICE_PORT=${{ vars.K8S_WEB_SERVICE_PORT }}
+
+          # Configure environment variables.
+          echo "BASE_CONTAINER_IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-base:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WEB_CONTAINER_IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-web:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WEB_CONTAINER_IMAGE_FULL=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-web:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WORKER_CONTAINER_IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-worker:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WORKER_CONTAINER_IMAGE_FULL=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-worker:${GIT_COMMIT}" >> $GITHUB_ENV
+
+          echo "K8S_NAMESPACE=${K8S_NAMESPACE}" >> $GITHUB_ENV
+          echo "K8S_WEB_SERVICE_TYPE=${K8S_WEB_SERVICE_TYPE}" >> $GITHUB_ENV
+          echo "K8S_WEB_SERVICE_PORT=${K8S_WEB_SERVICE_PORT}" >> $GITHUB_ENV
+
+          # write secrets.K8S_SECRETS to a dev/k8s/manifests/secrets.yaml file
+          echo '${{ secrets.K8S_SECRETS }}' > dev/k8s/manifests/secrets.yaml
+          echo '${{ secrets.K8S_SECRETS }}' > dev/k8s/manifests/secrets.prod.yaml
+
+          # Set up kubeconfig
+          eksctl utils write-kubeconfig --cluster=${CLUSTER_NAME} --region=${AWS_REGION}
+
+      - name: Set AWS profile
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile mantle
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile mantle
+
+      - name: Enable BuildKit
+        run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - name: Restore NPM cache
+        id: npm-cache-restore
+        uses: actions/cache@v4
+        with:
+          path: npm-cache
+          key: ${{ runner.os }}-dependencies-v3-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dependencies-v3-
+
+      - name: Next.js cache
+        id: next-cache
+        uses: actions/cache@v4
+        with:
+          path: next-cache
+          key: ${{ runner.os }}-nextjs-v3-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-v3-${{ hashFiles('**/package-lock.json') }}-
+
+      - name: inject cache into docker
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+        with:
+          cache-map: |
+            {
+              "npm-cache": "/root/.npm",
+              "next-cache": "/mantle/.next/cache"
+            }
+          skip-extraction: false
+
+      - name: Setup ejson
+        run: |
+          version="1.5.4"
+          ejsonBinURL="https://github.com/Shopify/ejson/releases/download/v${version}/ejson_${version}_linux_amd64.tar.gz"
+          curl -L $ejsonBinURL -o ejson.tar.gz
+          tar -xzf ejson.tar.gz
+          sudo mv ejson /usr/local/bin
+          ejson --version
+
+          EJSON_PUBLIC_KEY=${{ secrets.EJSON_PUBLIC_KEY }}
+          EJSON_PRIVATE_KEY=${{ secrets.EJSON_PRIVATE_KEY }}
+          mkdir -p /opt/ejson/keys
+          echo $EJSON_PRIVATE_KEY > /opt/ejson/keys/${EJSON_PUBLIC_KEY}
+
+      - name: Build and push Docker images
+        id: build
+        run: |
+          START_TIME=$(date +%s)
+
+          dev/docker/mantle-element-demo/build
+
+          END_TIME=$(date +%s)
+          BUILD_TIME=$((END_TIME - START_TIME))
+          BUILD_TIME_HUMAN=$(printf '%02d:%02d:%02d\n' $((BUILD_TIME/3600)) $(((BUILD_TIME%3600)/60)) $((BUILD_TIME%60)))
+          echo "BUILD_TIME_HUMAN=$BUILD_TIME_HUMAN" >> $GITHUB_ENV
+
+      - name: Notify Slack - Build completed
+        if: ${{ success() && github.ref == 'refs/heads/main' }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+              "text": "🔨 Build completed successfully :white_check_mark: \n\n${{ env.BUILD_TIME_HUMAN }} to build.",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🔨 Build completed successfully* :white_check_mark:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository/Branch:*\n${{ github.repository }}/${{ github.head_ref || github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ env.COMMIT_SHORT_SHA }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Time to Build:*\n${{ env.BUILD_TIME_HUMAN }}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+      - name: Notify Slack - Build Failed
+        if: ${{ failure() && github.ref == 'refs/heads/main' }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+              "text": "🔨 Build failed :x:",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🔨 Build failed* :x:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository/Branch:*\n${{ github.repository }}/${{ github.head_ref || github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ env.COMMIT_SHORT_SHA }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Time to Build:*\n${{ env.BUILD_TIME_HUMAN }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Please check the [GitHub Actions logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details."
+                  }
+                }
+              ]
+            }
+

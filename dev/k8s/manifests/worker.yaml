@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: ${K8S_NAMESPACE}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+        service: mantle-element-demo
+        proc_type: worker
+    spec:
+      nodeSelector:
+        dedicated: workers
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: workers
+          effect: NoSchedule
+      containers:
+        - name: worker
+          image: ${K8S_WORKER_CONTAINER_IMAGE}
+          command: ["npm", "run", "worker"]
+          env:
+            - name: K8S_WORKER_CONTAINER_IMAGE
+              value: ${K8S_WORKER_CONTAINER_IMAGE}
+            - name: K8S_NAMESPACE
+              value: ${K8S_NAMESPACE}
+            - name: K8S_SECRETS_NAME
+              value: ${K8S_SECRETS_NAME}
+          envFrom:
+            - secretRef:
+                name: ${K8S_SECRETS_NAME}
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+

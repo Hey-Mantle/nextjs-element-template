@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   async headers() {
     const mantleUrl =
       process.env.NEXT_PUBLIC_MANTLE_URL ?? "https://app.heymantle.com";

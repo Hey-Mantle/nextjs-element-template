@@ -1,0 +1,416 @@
+#
+# The github_deploy user needs a policy with the following permissions:
+# {
+#     "Version": "2012-10-17",
+#     "Statement": [
+#         {
+#             "Effect": "Allow",
+#             "Action": [
+#                 "ecr:GetAuthorizationToken",
+#                 "ecr:BatchCheckLayerAvailability",
+#                 "ecr:GetDownloadUrlForLayer",
+#                 "ecr:GetRepositoryPolicy",
+#                 "ecr:DescribeRepositories",
+#                 "ecr:ListImages",
+#                 "ecr:DescribeImages",
+#                 "ecr:BatchGetImage",
+#                 "ecr:InitiateLayerUpload",
+#                 "ecr:UploadLayerPart",
+#                 "ecr:CompleteLayerUpload",
+#                 "ecr:PutImage",
+#                 "sts:GetCallerIdentity"
+#             ],
+#             "Resource": "*"
+#         },
+#         {
+#             "Effect": "Allow",
+#             "Action": [
+#                 "eks:DescribeCluster",
+#                 "eks:ListClusters",
+#                 "eks:DescribeClusterVersions",
+#                 "eks:AccessKubernetesApi",
+#                 "eks:ListNodegroups",
+#                 "eks:DescribeNodegroup",
+#                 "eks:ListUpdates",
+#                 "eks:ListFargateProfiles"
+#             ],
+#             "Resource": "*"
+#         },
+#         {
+#             "Effect": "Allow",
+#             "Action": [
+#                 "sts:GetCallerIdentity",
+#                 "sts:AssumeRole"
+#             ],
+#             "Resource": "*"
+#         },
+#         {
+#             "Effect": "Allow",
+#             "Action": [
+#                 "iam:ListRoles",
+#                 "iam:GetRole"
+#             ],
+#             "Resource": "*"
+#         },
+#         {
+#             "Effect": "Allow",
+#             "Action": [
+#                 "eks:UpdateClusterConfig",
+#                 "eks:DescribeUpdate",
+#                 "eks:GetToken"
+#             ],
+#             "Resource": "arn:aws:eks:*:*:cluster/*"
+#         },
+#         {
+#             "Effect": "Allow",
+#             "Action": [
+#                 "eks:DescribeCluster",
+#                 "eks:ListClusters",
+#                 "eks:AccessKubernetesApi",
+#                 "eks:GetToken",
+#                 "eks:DescribeClusterAuth"
+#             ],
+#             "Resource": "arn:aws:eks:*:615499440141:cluster/*"
+#         }
+#     ]
+# }
+# Run this once to create the IAM identity mapping for the github_deploy
+# eksctl create iamidentitymapping \
+# --cluster ${CLUSTER_NAME} \
+# --region ${AWS_REGION} \
+# --arn arn:aws:iam::${AWS_ACCOUNT_ID}:user/github_deploy \
+# --username github-actions \
+# --group system:masters
+
+name: Deploy
+
+on:
+  # Only run when manually triggered
+  workflow_dispatch:
+    inputs:
+      commit:
+        type: string
+        description: "Commit to deploy"
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set short git commit SHA
+        id: vars
+        run: |
+          if [ -n "${{ inputs.commit }}" ]; then
+            GIT_COMMIT=${{ inputs.commit }}
+            GIT_COMMIT=${GIT_COMMIT:0:9}
+          else
+            GIT_COMMIT=$(git rev-parse --short ${{ github.sha }})
+          fi
+          echo "COMMIT_SHORT_SHA=$GIT_COMMIT" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: "Download last deployed commit from S3"
+        run: |
+          set -e
+          aws s3 cp s3://mantle-deploy/mantle-element-demo/last-deployed-commit.txt . || exit 0
+
+          if [ -f "last-deployed-commit.txt" ]; then
+            export LAST_DEPLOYED_COMMIT="$(cat last-deployed-commit.txt)"
+            echo "LAST_DEPLOYED_COMMIT=${LAST_DEPLOYED_COMMIT}" >> $GITHUB_ENV
+            echo "Found previous commit: $LAST_DEPLOYED_COMMIT"
+          else
+            echo "No previous commit found in S3."
+            echo "LAST_DEPLOYED_COMMIT=" >> $GITHUB_ENV
+          fi
+        continue-on-error: true
+
+      - name: "List commits since last deployment"
+        if: ${{ env.LAST_DEPLOYED_COMMIT != '' }}
+        run: |
+          # Make sure we have enough history
+          git fetch --prune --unshallow 2>/dev/null || true
+
+          # Log the commits and escape double quotes, only include those up to the $COMMIT_SHORT_SHA commit
+          git log $LAST_DEPLOYED_COMMIT..${{ env.COMMIT_SHORT_SHA }} --pretty=format:"%h - %s (%an)" | sed 's/"/\\"/g' > commit_list.txt || true
+          cat commit_list.txt
+          COMMITS=$(awk '{printf "%s\\n", $0}' commit_list.txt)
+          echo "COMMITS=$COMMITS" >> $GITHUB_ENV
+
+      - name: "List commits for first deploy"
+        if: ${{ env.LAST_DEPLOYED_COMMIT == '' }}
+        run: echo "No previous deploy found. This looks like the first deployment."
+
+      - name: "Notify Slack: Deploy Started"
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+              "text": ":rocket: Deployment started :rocket:",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*:rocket: Deployment Started* :rocket:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository/Branch:*\n${{ github.repository }}/${{ github.head_ref || github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ env.COMMIT_SHORT_SHA }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Started By:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Commits since last deploy:*\n```${{ env.COMMITS }}```"
+                  }
+                }
+              ]
+            }
+
+      - name: Install Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "v1.27.1"
+        id: install
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Setup ejson
+        run: |
+          version="1.5.4"
+          ejsonBinURL="https://github.com/Shopify/ejson/releases/download/v${version}/ejson_${version}_linux_amd64.tar.gz"
+          curl -L $ejsonBinURL -o ejson.tar.gz
+          tar -xzf ejson.tar.gz
+          sudo mv ejson /usr/local/bin
+          ejson --version
+
+          EJSON_PUBLIC_KEY=${{ secrets.EJSON_PUBLIC_KEY }}
+          EJSON_PRIVATE_KEY=${{ secrets.EJSON_PRIVATE_KEY }}
+          mkdir -p /opt/ejson/keys
+          echo $EJSON_PRIVATE_KEY > /opt/ejson/keys/${EJSON_PUBLIC_KEY}
+
+      - name: Configure environment
+        run: |
+          # Install eksctl
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/eksctl /usr/local/bin
+          eksctl version
+
+          if [ -n "${{ inputs.commit }}" ]; then
+            echo "Commit provided as input, using it: ${{ inputs.commit }}"
+            GIT_COMMIT=${{ inputs.commit }}
+            GIT_COMMIT=${GIT_COMMIT:0:9}
+          else
+            echo "No commit provided as input, using current commit: $(git rev-parse --short ${{ github.sha }})"
+            GIT_COMMIT=$(git rev-parse --short ${{ github.sha }})
+          fi
+
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+          AWS_REGION=${{ vars.AWS_REGION }}
+          CLUSTER_NAME=${{ vars.K8S_CLUSTER_NAME }}
+          K8S_NAMESPACE=${{ vars.K8S_NAMESPACE }}
+          K8S_WEB_SERVICE_TYPE=${{ vars.K8S_WEB_SERVICE_TYPE }}
+          K8S_WEB_SERVICE_PORT=${{ vars.K8S_WEB_SERVICE_PORT }}
+          SKIP_DB_MIGRATE=${{ vars.SKIP_DB_MIGRATE }}
+
+          # Configure environment variables.
+          echo "BASE_CONTAINER_IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-base:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WEB_CONTAINER_IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-web:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WEB_CONTAINER_IMAGE_FULL=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-web:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WORKER_CONTAINER_IMAGE=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-worker:${GIT_COMMIT}" >> $GITHUB_ENV
+          echo "WORKER_CONTAINER_IMAGE_FULL=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/mantle/mantle-element-demo-worker:${GIT_COMMIT}" >> $GITHUB_ENV
+
+          echo "K8S_NAMESPACE=${K8S_NAMESPACE}" >> $GITHUB_ENV
+          echo "K8S_WEB_SERVICE_TYPE=${K8S_WEB_SERVICE_TYPE}" >> $GITHUB_ENV
+          echo "K8S_WEB_SERVICE_PORT=${K8S_WEB_SERVICE_PORT}" >> $GITHUB_ENV
+          echo "SKIP_DB_MIGRATE=${SKIP_DB_MIGRATE}" >> $GITHUB_ENV
+
+          # Set up kubeconfig
+          eksctl utils write-kubeconfig --cluster=${CLUSTER_NAME} --region=${AWS_REGION}
+
+      - name: Set AWS profile
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile mantle
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile mantle
+
+      - name: Verify that images exist in ECR
+        run: |
+          if [ -n "${{ inputs.commit }}" ]; then
+            GIT_COMMIT=${{ inputs.commit }}
+            GIT_COMMIT=${GIT_COMMIT:0:9}
+          else
+            GIT_COMMIT=$(git rev-parse --short ${{ github.sha }})
+          fi
+
+          echo "Verifying images with tag: ${GIT_COMMIT}"
+
+          # Check base image
+          if ! BASE_IMAGE_META=$(aws ecr describe-images --repository-name=mantle/mantle-element-demo-base --image-ids=imageTag=${GIT_COMMIT} 2>&1); then
+            echo "Error checking base image: $BASE_IMAGE_META"
+            echo "Base image does not exist in ECR, make sure to build and push the base image first"
+            exit 1
+          fi
+          echo "Base image exists in ECR"
+
+          # Check web image
+          if ! WEB_IMAGE_META=$(aws ecr describe-images --repository-name=mantle/mantle-element-demo-web --image-ids=imageTag=${GIT_COMMIT} 2>&1); then
+            echo "Error checking web image: $WEB_IMAGE_META"
+            echo "Web image does not exist in ECR, make sure to build and push the web image first"
+            exit 1
+          fi
+          echo "Web image exists in ECR"
+
+          # Check worker image
+          if ! WORKER_IMAGE_META=$(aws ecr describe-images --repository-name=mantle/mantle-element-demo-worker --image-ids=imageTag=${GIT_COMMIT} 2>&1); then
+            echo "Error checking worker image: $WORKER_IMAGE_META"
+            echo "Worker image does not exist in ECR, make sure to build and push the worker image first"
+            exit 1
+          fi
+          echo "Worker image exists in ECR"
+
+          echo "All required images verified and ready for deployment"
+
+      - name: Enable BuildKit
+        run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - name: Deploy to Kubernetes
+        run: |
+          dev/k8s/deploy
+          START_TIME="${{ steps.build.outputs.start_time }}"
+          END_TIME=$(date +%s)
+          DEPLOY_TIME=$((END_TIME - START_TIME))
+          DEPLOY_TIME_HUMAN=$(printf '%02d:%02d:%02d\n' $((DEPLOY_TIME/3600)) $(((DEPLOY_TIME%3600)/60)) $((DEPLOY_TIME%60)))
+          echo "DEPLOY_TIME_HUMAN=$DEPLOY_TIME_HUMAN" >> $GITHUB_ENV
+
+      - name: Notify Slack - Deploy Succeeded
+        if: ${{ success() }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+              "text": ":rocket: Deployment completed successfully :white_check_mark: \n\n${{ env.DEPLOY_TIME_HUMAN }} to deploy.",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*:rocket: Deployment completed successfully* :white_check_mark:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository/Branch:*\n${{ github.repository }}/${{ github.head_ref || github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ env.COMMIT_SHORT_SHA }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Deployed By:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Time to Deploy:*\n${{ env.DEPLOY_TIME_HUMAN }}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+      - name: Notify Slack - Deploy Failed
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+              "text": ":rocket:Deployment failed :x:",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*:rocket: Deployment failed* :x:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository/Branch:*\n${{ github.repository }}/${{ github.head_ref || github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ env.COMMIT_SHORT_SHA }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Actor:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Please check the [GitHub Actions logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details."
+                  }
+                }
+              ]
+            }
+
+      - name: "Save last deployed commit to S3"
+        if: ${{ success() }}
+        run: |
+          echo "${{ env.COMMIT_SHORT_SHA }}" > last-deployed-commit.txt
+          aws s3 cp last-deployed-commit.txt s3://mantle-deploy/mantle-element-demo/last-deployed-commit.txt
+

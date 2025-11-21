@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# NOTE: This script needs to be sourced in order for the environment variables and aliases to be
+# available in the current shell.
+
+# Load environment variables.
+# This script is intended to be sourced from other scripts, so we need to use
+# a relative path to the environment file from the root of the project.
+set -a; source dev/k8s/prod/.env.default; set +a
+if [[ -f dev/k8s/prod/.env ]]; then
+  set -a; source dev/k8s/prod/.env; set +a
+fi
+
+# Configure kubeconfig environment variable.
+# This is used by kubectl and helm to access the Kubernetes cluster.
+export KUBECONFIG="${PWD}/dev/k8s/prod/kubeconfig.yaml"
+
+# Configure kubectl to use the EKS cluster via kubeconfig.
+eksctl utils write-kubeconfig \
+  --cluster "${K8S_CLUSTER_NAME}" \
+  --kubeconfig "${KUBECONFIG}"
+
+# Configure aliases.
+source dev/k8s/prod/aliases
+

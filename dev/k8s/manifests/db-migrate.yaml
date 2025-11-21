@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  namespace: ${K8S_NAMESPACE}
+spec:
+  backoffLimit: 0 # Don't retry
+  ttlSecondsAfterFinished: 300 # Delete the job after 5 minutes
+  activeDeadlineSeconds: 3600 # Run the job for 1 hour at most
+  template:
+    metadata:
+      labels:
+        service: mantle-element-demo
+        proc_type: db-migrate
+        job-type: db-migrate
+    spec:
+      restartPolicy: Never # Don't restart the container if it fails
+      containers:
+        - name: db-migrate
+          image: ${K8S_WORKER_CONTAINER_IMAGE}
+          command: ["/bin/sh", "-c", "npx prisma migrate deploy"]
+          envFrom:
+            - secretRef:
+                name: ${K8S_SECRETS_NAME}
+

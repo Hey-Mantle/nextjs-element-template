@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -eou pipefail
+script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+set -a; source "${script_dir}/.env.default"; set +a
+
+# Create Kubernetes namespace if it doesn't exist.
+echo "Creating Kubernetes namespace \"${K8S_NAMESPACE}\"..."
+kubectl create namespace "${K8S_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
+echo
+
+# Install envsubst if it's not installed.
+if ! command -v envsubst &>/dev/null; then
+    echo "Installing envsubst..."
+    brew install gettext
+fi
+
+"${script_dir}"/deploy-secrets
+
+WEB_CONTAINER_IMAGE_FULL=${WEB_CONTAINER_IMAGE_FULL:-}
+WORKER_CONTAINER_IMAGE_FULL=${WORKER_CONTAINER_IMAGE_FULL:-}
+echo "Using existing container images: ${WEB_CONTAINER_IMAGE_FULL}"
+echo "Web container image: ${WEB_CONTAINER_IMAGE_FULL}"
+echo "Worker container image: ${WORKER_CONTAINER_IMAGE_FULL}"
+export K8S_WEB_CONTAINER_IMAGE="${WEB_CONTAINER_IMAGE_FULL}"
+export K8S_WORKER_CONTAINER_IMAGE="${WORKER_CONTAINER_IMAGE_FULL}"
+echo
+
+# start db-migrate Job resource and wait for it to complete, pipe the output to stdout and stderr at the same time
+# if it fails, exit with an error
+# pipe logs from the job to stdout and stderr
+if [[ "${SKIP_DB_MIGRATE}" != "1" ]]; then
+    echo "Starting db-migrate job..."
+    envsubst < "${script_dir}/manifests/db-migrate.yaml" | kubectl apply -f -
+    echo "Waiting for db-migrate job to complete..."
+    kubectl wait --namespace "${K8S_NAMESPACE}" --for=condition=Ready --timeout=120s pod -l job-name=db-migrate
+    kubectl logs -f job/db-migrate --namespace "${K8S_NAMESPACE}" 2>&1 | tee -a "${script_dir}/deploy.log" &
+    kubectl wait --for=condition=complete --timeout=60s job/db-migrate --namespace "${K8S_NAMESPACE}" 2>&1 | tee -a "${script_dir}/deploy.log" || exit 1
+    echo "db-migrate job completed."
+else
+    echo "Skipping db-migrate job."
+fi
+
+# Apply all manifests except for secrets.
+find "${script_dir}/manifests" -type f -name "*.yaml" | while read -r file; do
+    # Skip files that start with "secrets"
+    basename=$(basename "$file")
+    if [[ "$basename" == secrets* ]]; then
+        continue
+    fi
+    if [[ "$basename" == db-migrate* ]]; then
+        continue
+    fi
+
+    # Apply the manifest.
+    envsubst < "${file}" | kubectl apply -f -
+done
+
+# Done.
+echo "Deployed."
+

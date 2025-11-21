@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+trap 'echo "Error on line $LINENO. Exit code: $?" >&2' ERR
+set -eou pipefail
+script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+set -a; source "${script_dir}/.env.default"; set +a
+
+NODEJS_CONTAINER_IMAGE=${NODEJS_CONTAINER_IMAGE:-node:18-alpine3.20}
+
+# if first arg is "nopush", don't push the images
+NO_PUSH=${1:-}
+
+# Function to print elapsed time in a human readable format
+print_elapsed_time() {
+    local start_time=$1
+    local end_time=$2
+    local elapsed=$((end_time - start_time))
+    echo "⌚️ Build duration: ${elapsed} seconds"
+}
+
+function docker_build() {
+    local start_time=$(date +%s)
+    echo "🚀 Starting build at $(date)"
+
+    # include either --load or --push
+    if [[ -n "${NO_PUSH}" ]]; then
+        LOAD_ARG="--load"
+    else
+        LOAD_ARG="--push"
+    fi
+
+    # Add BUILDKIT_PROGRESS=plain for more detailed output
+    BUILDKIT_PROGRESS=plain DOCKER_BUILDKIT=1 docker buildx build \
+        "${LOAD_ARG}" \
+        --build-arg="GIT_COMMIT=${GIT_COMMIT}" \
+        "${ENV_ARGS[@]}" \
+        "$@"
+    
+    local end_time=$(date +%s)
+    echo "✅ Finished build at $(date)"
+    print_elapsed_time $start_time $end_time
+
+    echo "-----------------------------------"
+}
+
+GIT_COMMIT="$(git rev-parse HEAD)"
+echo "GIT_COMMIT: ${GIT_COMMIT}"
+
+K8S_SECRETS_FILE=${K8S_SECRETS_FILE:-secrets.yaml}
+SECRETS_EJSON_FILE="${SECRETS_EJSON_FILE:-secrets.prod.ejson}"
+K8S_SECRETS_NAME="${K8S_SECRETS_NAME:-mantle-element-demo-secrets}"
+K8S_NAMESPACE="${K8S_NAMESPACE:-mantle-elements}"
+secrets_ejson_path="dev/k8s/manifests/${SECRETS_EJSON_FILE}"
+secrets_manifest_path="dev/k8s/manifests/${K8S_SECRETS_FILE}"
+echo "Converting ejson secrets file to manifest..."
+dev/k8s/convert-ejson-to-manifest ${secrets_ejson_path} ${secrets_manifest_path} ${K8S_SECRETS_NAME} ${K8S_NAMESPACE}
+if [[ ! -f "dev/k8s/manifests/${K8S_SECRETS_FILE}" ]]; then
+    echo "Error: dev/k8s/manifests/${K8S_SECRETS_FILE} does not exist"
+    exit 1
+else
+  echo "Reading env vars from secrets.yaml..."
+  # all NEXT_PUBLIC_* env vars from secrets.yaml
+  INCLUDE_ENV_VARS=($(grep -E 'NEXT_PUBLIC_' dev/k8s/manifests/${K8S_SECRETS_FILE} | sed -E 's/^[[:space:]]+([^:]+):[[:space:]]+"?([^"]*)"?$/\1/'))
+  INCLUDE_ENV_VARS+=(NODE_ENV)
+  INCLUDE_ENV_VARS+=(TZ)
+  INCLUDE_ENV_VARS+=(SENTRY_AUTH_TOKEN)
+  echo "INCLUDE_ENV_VARS: ${INCLUDE_ENV_VARS[@]}"
+
+  # read env vars from dev/k8s/manifests/secrets.yaml, data is after the stringData: line
+  echo "Reading env vars from secrets.yaml..."
+  ENV_ARGS=()
+  while IFS= read -r line; do
+      # Skip empty lines
+      if [[ -z "${line// }" ]]; then
+        echo "Skipping empty line"
+        continue
+      fi
+      
+      if [[ $line =~ ^[[:space:]]*([^:]+):[[:space:]]*(.*)$ ]]; then
+          ENV_NAME="${BASH_REMATCH[1]}"
+          ENV_VALUE="${BASH_REMATCH[2]}"
+          # Remove leading/trailing whitespace and quotes from value
+          ENV_VALUE="${ENV_VALUE#\"}"
+          ENV_VALUE="${ENV_VALUE%\"}"
+          
+          if printf '%s\n' "${INCLUDE_ENV_VARS[@]}" | grep -q "^${ENV_NAME}$"; then
+              echo "✓ Including ${ENV_NAME}"
+              if [[ -n "${ENV_VALUE// }" ]]; then  # This will trim whitespace before checking
+                  ENV_ARGS+=("--build-arg" "${ENV_NAME}=${ENV_VALUE}")
+              else
+                  echo "  Skipping: Empty value"
+              fi
+          fi
+      fi
+  done < <(grep -A 500 "stringData:" "dev/k8s/manifests/${K8S_SECRETS_FILE}" | tail -n +2)
+fi
+# echo "ENV_ARGS: ${ENV_ARGS[@]}"
+
+# Build the base image.
+echo "🏗️  Building base image..."
+docker_build \
+    --tag "${BASE_CONTAINER_IMAGE}" \
+    --annotation "git_commit=${GIT_COMMIT}" \
+    --cache-to type=gha,scope=base-v1,mode=max \
+    --cache-from type=gha,scope=base-v1 \
+    --build-arg="NODEJS_IMAGE=${NODEJS_CONTAINER_IMAGE}" \
+    -f "${script_dir}/base.dockerfile" \
+    .
+echo "✅ Finished building base image at $(date)"
+
+# Build the web image.
+echo "🌐 Building web image..."
+docker_build \
+    --tag "${WEB_CONTAINER_IMAGE}" \
+    --cache-to type=gha,scope=web-v1,mode=max \
+    --cache-from type=gha,scope=web-v1 \
+    --cache-from type=gha,scope=base-v1 \
+    --build-arg="BASE_IMAGE=${BASE_CONTAINER_IMAGE}" \
+    --build-arg="NODEJS_IMAGE=${NODEJS_CONTAINER_IMAGE}" \
+    -f "${script_dir}/web.dockerfile" \
+    .
+echo "✅ Finished building web image at $(date)"
+
+# Build the worker image.
+echo "🌐 Building worker image..."
+docker_build \
+    --tag "${WORKER_CONTAINER_IMAGE}" \
+    --cache-to type=gha,scope=worker-v1,mode=max \
+    --cache-from type=gha,scope=worker-v1 \
+    --cache-from type=gha,scope=base-v1 \
+    --build-arg="BASE_IMAGE=${BASE_CONTAINER_IMAGE}" \
+    --build-arg="NODEJS_IMAGE=${NODEJS_CONTAINER_IMAGE}" \
+    -f "${script_dir}/worker.dockerfile" \
+    .
+echo "✅ Finished building worker image at $(date)"
+

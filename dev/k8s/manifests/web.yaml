@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: ${K8S_NAMESPACE}
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+        service: mantle-element-demo
+        proc_type: web
+    spec:
+      nodeSelector:
+        dedicated: web
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: web
+          effect: NoSchedule
+      containers:
+        - name: web
+          image: ${K8S_WEB_CONTAINER_IMAGE}
+          ports:
+            - containerPort: ${K8S_WEB_CONTAINER_PORT}
+          env:
+            - name: K8S_NAMESPACE
+              value: ${K8S_NAMESPACE}
+            - name: K8S_SECRETS_NAME
+              value: ${K8S_SECRETS_NAME}
+          envFrom:
+            - secretRef:
+                name: ${K8S_SECRETS_NAME}
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: ${K8S_NAMESPACE}
+spec:
+  type: ${K8S_WEB_SERVICE_TYPE}
+  ports:
+    - port: ${K8S_WEB_SERVICE_PORT}
+      targetPort: ${K8S_WEB_CONTAINER_PORT}
+      nodePort: ${K8S_WEB_SERVICE_NODE_PORT}
+  selector:
+    app: web
+---
+

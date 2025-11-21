@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# Load environment variables.
+# This script is intended to be sourced from other scripts, so we need to use
+# a relative path to the environment file from the root of the project.
+set -a; source "dev/k8s/.env.default"; set +a
+
+# Create aliases.
+alias k="kubectl --context kind-${K8S_CLUSTER_NAME}"
+alias km="kubectl --context kind-${K8S_CLUSTER_NAME} --namespace ${K8S_NAMESPACE}"
+
