@@ -23,9 +23,46 @@ export default function RootLayout({
   const appBridgeScriptUrl = `${mantleUrl}/app-bridge.js`;
 
   return (
-    <html lang="en">
+    /* suppressHydrationWarning: App Bridge applies CSS variables to <html> on the client
+       during initialization (before React hydrates). This is intentional and expected. */
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <script src={appBridgeScriptUrl} async />
+        {/* Blocking script to apply dark mode immediately before React renders */}
+        {/* This prevents FOUC (Flash of Unstyled Content) by applying theme state from localStorage */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  // Check localStorage for dark mode preference (same key as parent app)
+                  var darkModeStorage = localStorage.getItem('Mantle--DarkMode');
+                  var isDarkMode = false;
+                  
+                  if (darkModeStorage === 'true') {
+                    isDarkMode = true;
+                  } else if (darkModeStorage === 'false') {
+                    isDarkMode = false;
+                  } else {
+                    // Fallback to system preference if no stored preference
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                      isDarkMode = true;
+                    }
+                  }
+                  
+                  // Apply dark mode immediately before React renders
+                  if (isDarkMode) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                  } else {
+                    document.documentElement.removeAttribute('data-theme');
+                  }
+                } catch (e) {
+                  // Silently fail if localStorage is not available
+                }
+              })();
+            `,
+          }}
+        />
+        <script src={appBridgeScriptUrl} async defer />
       </head>
       <body className={inter.className}>
         <MantleProviderWrapper>
