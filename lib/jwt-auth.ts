@@ -138,12 +138,18 @@ function verifyJWTTokenPayload(token: string): {
 
     // Check if JWT is expired
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      console.error("[verifyJWTTokenPayload] JWT expired:", {
+        exp: payload.exp,
+        now: Math.floor(Date.now() / 1000),
+        diff: Math.floor(Date.now() / 1000) - payload.exp,
+      });
       return null;
     }
 
     // Get the element secret for JWT verification
     const elementSecret = process.env.MANTLE_ELEMENT_SECRET;
     if (!elementSecret) {
+      console.error("[verifyJWTTokenPayload] MANTLE_ELEMENT_SECRET not set");
       return null;
     }
 
@@ -154,11 +160,13 @@ function verifyJWTTokenPayload(token: string): {
       .digest("base64url");
 
     if (jwtParts[2] !== expectedSignature) {
+      console.error("[verifyJWTTokenPayload] Signature mismatch");
       return null;
     }
 
     // Extract user and organization data from payload
     if (!payload.user || !payload.organization) {
+      console.error("[verifyJWTTokenPayload] Missing user or organization in payload");
       return null;
     }
 

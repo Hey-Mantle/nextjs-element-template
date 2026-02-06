@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import AppBridgeNavigation from "../components/AppBridgeNavigation";
+import { SWRConfigProvider } from "../components/SWRConfigProvider";
+import ConditionalModalWrapper from "./components/ConditionalModalWrapper";
 import { MantleAppTrackScript } from "./components/MantleAppTrackScript";
 import MantleProviderWrapper from "./components/MantleProviderWrapper";
-import DocsNavigation from "@/components/DocsNavigation";
-import AppBridgeNavigation from "@/components/AppBridgeNavigation";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Mantle Element Documentation",
-  description: "Live documentation and examples for Mantle Elements",
+  title: "Mantle Element Starter",
+  description: "Starter template for Mantle Elements",
 };
 
 export default function RootLayout({
@@ -34,22 +35,19 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  // Check localStorage for dark mode preference (same key as parent app)
                   var darkModeStorage = localStorage.getItem('Mantle--DarkMode');
                   var isDarkMode = false;
-                  
+
                   if (darkModeStorage === 'true') {
                     isDarkMode = true;
                   } else if (darkModeStorage === 'false') {
                     isDarkMode = false;
                   } else {
-                    // Fallback to system preference if no stored preference
                     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                       isDarkMode = true;
                     }
                   }
-                  
-                  // Apply dark mode immediately before React renders
+
                   if (isDarkMode) {
                     document.documentElement.setAttribute('data-theme', 'dark');
                   } else {
@@ -64,12 +62,14 @@ export default function RootLayout({
         />
         <script src={appBridgeScriptUrl} async defer />
       </head>
-      <body className={inter.className}>
+      {/* suppressHydrationWarning: Script applies attributes/classes that may differ between server and client */}
+      <body className={inter.className} suppressHydrationWarning>
         <MantleProviderWrapper>
-          <MantleAppTrackScript />
-          <AppBridgeNavigation />
-          <DocsNavigation />
-          {children}
+          <SWRConfigProvider>
+            <MantleAppTrackScript />
+            <AppBridgeNavigation />
+            <ConditionalModalWrapper>{children}</ConditionalModalWrapper>
+          </SWRConfigProvider>
         </MantleProviderWrapper>
       </body>
     </html>
