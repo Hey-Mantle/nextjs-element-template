@@ -9,8 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "validate": "npm run type-check && npm run lint",
-    "generate:mantle-api-types": "npx openapi-typescript ${SPEC_URL:-https://app.heymantle.com/openapi/core-api.json} -o ./lib/types/mantleApi.ts"
+    "validate": "npm run type-check && npm run lint"
   },
   "dependencies": {
     "@heymantle/app-bridge-react": "^1.1.1",
@@ -21,9 +20,7 @@
     "@tailwindcss/postcss": "^4.1.13",
     "autoprefixer": "^10.4.16",
     "next": "^15.5.9",
-    "openapi-fetch": "^0.10.6",
-    "openapi-typescript": "^7.4.2",
-    "postcss": "^8.4.31",
+"postcss": "^8.4.31",
     "prisma": "^6.16.1",
     "react": "^19.1.2",
     "react-dom": "^19.1.2",

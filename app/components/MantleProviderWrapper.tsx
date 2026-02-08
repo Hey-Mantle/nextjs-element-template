@@ -10,7 +10,6 @@ import {
 } from "@heymantle/app-bridge-react";
 import { AppProvider } from "@heymantle/litho";
 import { MantleProvider } from "@heymantle/react";
-import process from "process";
 import { useCallback, useEffect, useState } from "react";
 
 interface MantleProviderWrapperProps {

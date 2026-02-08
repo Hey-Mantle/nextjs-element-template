@@ -1,28 +1,5 @@
 import { MantleClient } from "@heymantle/client";
 
-// Create a configured Mantle client instance only if environment variables are available
-let mantleClient: MantleClient | null = null;
-
-function createMantleClient(): MantleClient | null {
-  const appId = process.env.NEXT_PUBLIC_MANTLE_APP_ID;
-  const apiKey = process.env.MANTLE_APP_API_KEY;
-
-  if (!appId || !apiKey) {
-    return null;
-  }
-
-  return new MantleClient({
-    appId,
-    apiKey,
-    apiUrl:
-      process.env.NEXT_PUBLIC_MANTLE_APP_API_URL ??
-      "https://appapi.heymantle.com/v1",
-  });
-}
-
-// Initialize the client
-mantleClient = createMantleClient();
-
 export interface MantleIdentifyParams {
   platform: "mantle";
   platformId: string;
@@ -32,7 +9,10 @@ export interface MantleIdentifyParams {
 }
 
 export async function identifyCustomer(params: MantleIdentifyParams) {
-  if (!mantleClient) {
+  const appId = process.env.NEXT_PUBLIC_MANTLE_APP_ID;
+  const apiKey = process.env.MANTLE_APP_API_KEY;
+
+  if (!appId || !apiKey) {
     return {
       customerApiToken: null,
       success: false,
@@ -40,12 +20,18 @@ export async function identifyCustomer(params: MantleIdentifyParams) {
     };
   }
 
-  const response = await mantleClient.identify(params);
+  const client = new MantleClient({
+    appId,
+    apiKey,
+    apiUrl:
+      process.env.NEXT_PUBLIC_MANTLE_APP_API_URL ??
+      "https://appapi.heymantle.com/v1",
+  });
+
+  const response = await client.identify(params);
   if ("apiToken" in response) {
     return { customerApiToken: response.apiToken, success: true };
   } else {
     return { customerApiToken: null, success: false, error: response };
   }
 }
-
-export { mantleClient as default };

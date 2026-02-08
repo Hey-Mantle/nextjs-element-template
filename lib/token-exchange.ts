@@ -8,7 +8,7 @@
 const OFFLINE_TOKEN_TYPE =
   "urn:mantle:params:oauth:token-type:offline-access-token";
 
-interface TokenExchangeResponse {
+export interface TokenExchangeResponse {
   access_token: string;
   token_type: string;
   scope: string;
@@ -75,4 +75,26 @@ export async function exchangeSessionTokenForAccessToken(
   }
 
   return data;
+}
+
+export function computeRefreshTokenExpiry(
+  result: TokenExchangeResponse
+): Date | null {
+  if (!result.refresh_token) return null;
+  if (result.refresh_token_expires_at)
+    return new Date(result.refresh_token_expires_at);
+  if (result.refresh_token_expires_in)
+    return new Date(Date.now() + result.refresh_token_expires_in * 1000);
+  return new Date(Date.now() + 99 * 365 * 24 * 60 * 60 * 1000);
+}
+
+export function buildTokenUpdateData(result: TokenExchangeResponse) {
+  return {
+    accessToken: result.access_token,
+    refreshToken: result.refresh_token || null,
+    refreshTokenExpiresAt: computeRefreshTokenExpiry(result),
+    accessTokenExpiresAt: result.expires_in
+      ? new Date(Date.now() + result.expires_in * 1000)
+      : null,
+  };
 }
